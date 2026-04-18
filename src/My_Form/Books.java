@@ -2,34 +2,91 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package malinaoproject;
+package My_Form;
+
+import My_Classes.DB_connect;
+import java.sql.*;
+import java.util.Vector;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import java.sql.Connection;
 
 /**
  *
  * @author Administrator
  */
 public class Books extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Books.class.getName());
 
     /**
      * Creates new form NewJFrame
      */
+    public static int bookId;
+    private String title = "";
+    private String author = "";
+    private String isbn = "";
+
     public Books() {
-         setUndecorated(true); // REQUIRED for opacity
+        setUndecorated(true); // REQUIRED for opacity
         initComponents();
-          setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
-         jTable1.getTableHeader().setPreferredSize(
-        new java.awt.Dimension(jTable1.getTableHeader().getWidth(), 50)
-    );
-           jTable1.getTableHeader().setFont(
-        jTable1.getTableHeader().getFont().deriveFont(18f)
-    );
-           
-           jTable1.setFont(jTable1.getFont().deriveFont(16f));
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        tbl.getTableHeader().setPreferredSize(
+                new java.awt.Dimension(tbl.getTableHeader().getWidth(), 50)
+        );
+        tbl.getTableHeader().setFont(
+                tbl.getTableHeader().getFont().deriveFont(18f)
+        );
+
+        tbl.setFont(tbl.getFont().deriveFont(16f));
+
+        populateTable();
     }
-    
-    
+
+    private void populateTable() {
+        int colCount;
+
+        try {
+
+            java.sql.Connection cn = DB_connect.getConnection();
+            Statement st = cn.createStatement();
+            ResultSet res = st.executeQuery(
+                    "SELECT b.book_id, b.title, b.author, c.category_name, b.publisher, b.publication_year, b.isbn, b.shelf_location, b.remarks, b.class, b.pages, b.source_of_fund, b.cost_price "
+                    + "FROM book b LEFT JOIN category c ON b.category_id = c.category_id"
+            );
+
+            DefaultTableModel tblModel = (DefaultTableModel) tbl.getModel();
+            tblModel.setRowCount(0);
+
+            while (res.next()) {
+                Vector<Object> row = new Vector<>();
+
+                row.add(res.getInt("book_id"));
+                row.add(res.getString("class"));
+                row.add(res.getString("title"));
+                row.add(res.getString("author"));
+                row.add(res.getString("category_name"));
+                row.add(res.getInt("pages"));
+                row.add(res.getString("source_of_fund"));
+                row.add(res.getString("cost_price"));
+                row.add(res.getString("publisher"));
+                row.add(res.getString("publication_year"));
+                row.add(res.getString("remarks"));
+                row.add(res.getString("isbn"));
+                row.add(res.getString("shelf_location"));
+                tblModel.addRow(row);
+            }
+
+        } catch (SQLException error) {
+            JOptionPane.showMessageDialog(null, error);
+        }
+
+    }
+
+    private String safeValue(DefaultTableModel model, int row, int col) {
+        Object val = model.getValueAt(row, col);
+        return (val == null) ? "" : val.toString();
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -40,53 +97,35 @@ public class Books extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        defaultCalendarRenderer1 = new nauja.utils.jcalendar.renderers.DefaultCalendarRenderer();
-        defaultCalendarRenderer2 = new nauja.utils.jcalendar.renderers.DefaultCalendarRenderer();
-        defaultCalendarRenderer3 = new nauja.utils.jcalendar.renderers.DefaultCalendarRenderer();
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
-        txtDashboard = new javax.swing.JLabel();
-        txtBooks = new javax.swing.JLabel();
         txtMembers = new javax.swing.JLabel();
         txtTransactions = new javax.swing.JLabel();
+        txtReports = new javax.swing.JLabel();
+        txtLogout1 = new javax.swing.JLabel();
+        txtDashboard = new javax.swing.JLabel();
+        txtBooks = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        tbl = new javax.swing.JTable();
         jLabel8 = new javax.swing.JLabel();
-        jTextField8 = new javax.swing.JTextField();
+        txtSearch = new javax.swing.JTextField();
         jLabel14 = new javax.swing.JLabel();
-        jButton2 = new javax.swing.JButton();
-        jButton6 = new javax.swing.JButton();
+        btnShowCopies = new javax.swing.JButton();
+        btnCategory = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
         jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
+        btnAddCopies = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jPanel3.setBackground(new java.awt.Color(204, 204, 255));
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 36)); // NOI18N
         jLabel1.setText("Library Inventory System");
 
-        jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/malinaoproject/Adobe_Express_-_file-removebg-preview.png"))); // NOI18N
-
-        txtDashboard.setBackground(new java.awt.Color(255, 255, 255));
-        txtDashboard.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtDashboard.setText("Dashboard");
-        txtDashboard.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtDashboardMouseClicked(evt);
-            }
-        });
-
-        txtBooks.setBackground(new java.awt.Color(204, 204, 204));
-        txtBooks.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtBooks.setText("Books");
-        txtBooks.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtBooksMouseClicked(evt);
-            }
-        });
+        jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/Adobe_Express_-_file-removebg-preview.png"))); // NOI18N
 
         txtMembers.setBackground(new java.awt.Color(204, 204, 204));
         txtMembers.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
@@ -106,6 +145,42 @@ public class Books extends javax.swing.JFrame {
             }
         });
 
+        txtReports.setBackground(new java.awt.Color(204, 204, 204));
+        txtReports.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtReports.setText("Reports");
+        txtReports.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtReportsMouseClicked(evt);
+            }
+        });
+
+        txtLogout1.setBackground(new java.awt.Color(204, 204, 204));
+        txtLogout1.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtLogout1.setText("Logout");
+        txtLogout1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtLogout1MouseClicked(evt);
+            }
+        });
+
+        txtDashboard.setBackground(new java.awt.Color(255, 255, 255));
+        txtDashboard.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtDashboard.setText("Dashboard");
+        txtDashboard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtDashboardMouseClicked(evt);
+            }
+        });
+
+        txtBooks.setBackground(new java.awt.Color(204, 204, 204));
+        txtBooks.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtBooks.setText("Books");
+        txtBooks.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtBooksMouseClicked(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -115,15 +190,19 @@ public class Books extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(250, 250, 250)
+                .addGap(120, 120, 120)
                 .addComponent(txtDashboard)
-                .addGap(62, 62, 62)
+                .addGap(30, 30, 30)
                 .addComponent(txtBooks)
-                .addGap(61, 61, 61)
+                .addGap(30, 30, 30)
                 .addComponent(txtMembers)
-                .addGap(61, 61, 61)
+                .addGap(30, 30, 30)
                 .addComponent(txtTransactions)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(30, 30, 30)
+                .addComponent(txtReports)
+                .addGap(30, 30, 30)
+                .addComponent(txtLogout1)
+                .addContainerGap(704, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -134,70 +213,93 @@ public class Books extends javax.swing.JFrame {
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(txtDashboard)
-                                .addComponent(txtBooks)
-                                .addComponent(txtMembers)
-                                .addComponent(txtTransactions))))
+                                .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txtMembers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txtTransactions)
+                                .addComponent(txtReports)
+                                .addComponent(txtLogout1))))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(16, 16, 16)
                         .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(17, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jTable1.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 2196, -1));
+
+        tbl.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        tbl.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null}
+                {null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "Book_ID", "Class", "Title", "Author", "Year Published", "Category", "Pages", "Source of Funds", "ISBN", "Shelf Location", "Remarks"
+                "Book_ID", "Class", "Title", "Author", "Category", "Pages", "Source of Funds", "Cost Price", "Publisher", "Year Published", "Remarks", "ISBN", "Shelf Location"
             }
         ));
-        jScrollPane1.setViewportView(jTable1);
+        tbl.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblMouseClicked(evt);
+            }
+        });
+        jScrollPane1.setViewportView(tbl);
+
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 310, 1350, 547));
 
         jLabel8.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel8.setForeground(new java.awt.Color(51, 51, 51));
         jLabel8.setText("SEARCH: ");
+        getContentPane().add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 270, -1, -1));
 
-        jTextField8.addActionListener(new java.awt.event.ActionListener() {
+        txtSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextField8ActionPerformed(evt);
+                txtSearchActionPerformed(evt);
             }
         });
+        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtSearchKeyReleased(evt);
+            }
+        });
+        getContentPane().add(txtSearch, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 267, 231, 30));
 
-        jLabel14.setIcon(new javax.swing.ImageIcon(getClass().getResource("/malinaoproject/1150612 (2).png"))); // NOI18N
+        jLabel14.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/1150612 (2).png"))); // NOI18N
+        getContentPane().add(jLabel14, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 260, -1, 40));
 
-        jButton2.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jButton2.setText("Show Copies");
-        jButton2.addMouseListener(new java.awt.event.MouseAdapter() {
+        btnShowCopies.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        btnShowCopies.setText("Show Copies");
+        btnShowCopies.setEnabled(false);
+        btnShowCopies.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jButton2MouseClicked(evt);
+                btnShowCopiesMouseClicked(evt);
             }
         });
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        btnShowCopies.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                btnShowCopiesActionPerformed(evt);
             }
         });
+        getContentPane().add(btnShowCopies, new org.netbeans.lib.awtextra.AbsoluteConstraints(1130, 250, 150, 44));
 
-        jButton6.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jButton6.setText("Add Category");
-        jButton6.addMouseListener(new java.awt.event.MouseAdapter() {
+        btnCategory.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        btnCategory.setText("Add Category");
+        btnCategory.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jButton6MouseClicked(evt);
+                btnCategoryMouseClicked(evt);
             }
         });
-        jButton6.addActionListener(new java.awt.event.ActionListener() {
+        btnCategory.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton6ActionPerformed(evt);
+                btnCategoryActionPerformed(evt);
             }
         });
+        getContentPane().add(btnCategory, new org.netbeans.lib.awtextra.AbsoluteConstraints(1290, 250, -1, 44));
 
         jLabel6.setFont(new java.awt.Font("Tahoma", 1, 36)); // NOI18N
         jLabel6.setText("Books");
+        getContentPane().add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(720, 140, -1, -1));
 
         jButton3.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jButton3.setText("Add Book");
@@ -211,144 +313,199 @@ public class Books extends javax.swing.JFrame {
                 jButton3ActionPerformed(evt);
             }
         });
+        getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(810, 250, 150, 44));
 
-        jButton4.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jButton4.setText("Add Copies");
-        jButton4.addMouseListener(new java.awt.event.MouseAdapter() {
+        btnAddCopies.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        btnAddCopies.setText("Add Copies");
+        btnAddCopies.setEnabled(false);
+        btnAddCopies.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jButton4MouseClicked(evt);
+                btnAddCopiesMouseClicked(evt);
             }
         });
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
+        btnAddCopies.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
+                btnAddCopiesActionPerformed(evt);
             }
         });
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(85, 85, 85)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel14, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel8)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jTextField8, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(731, 731, 731)
-                                .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton6)
-                                .addGap(4, 4, 4))
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1719, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(870, 870, 870)
-                        .addComponent(jLabel6)))
-                .addContainerGap(385, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel6)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(14, 14, 14)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel14)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(jTextField8, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(jLabel8)))
-                        .addGap(25, 25, 25))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 547, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 633, Short.MAX_VALUE))
-        );
+        getContentPane().add(btnAddCopies, new org.netbeans.lib.awtextra.AbsoluteConstraints(970, 250, 150, 44));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jTextField8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField8ActionPerformed
+    private void txtSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField8ActionPerformed
+    }//GEN-LAST:event_txtSearchActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void btnShowCopiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnShowCopiesActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton2ActionPerformed
+        ShowCopies showcopies = new ShowCopies(bookId, title, author, isbn);
+        showcopies.setVisible(true);
+        this.dispose();
 
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+
+    }//GEN-LAST:event_btnShowCopiesActionPerformed
+
+    private void btnCategoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCategoryActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton6ActionPerformed
+        AddCategory addcategory = new AddCategory();
+        addcategory.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnCategoryActionPerformed
 
-    private void jButton2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton2MouseClicked
-            ShowCopies showcopies = new ShowCopies();
-            showcopies.setVisible(true);
-    }//GEN-LAST:event_jButton2MouseClicked
+    private void btnShowCopiesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnShowCopiesMouseClicked
 
-    private void jButton6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton6MouseClicked
-            AddCategory addcategory = new AddCategory();
-            addcategory.setVisible(true);
-    }//GEN-LAST:event_jButton6MouseClicked
+    }//GEN-LAST:event_btnShowCopiesMouseClicked
+
+    private void btnCategoryMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnCategoryMouseClicked
+        AddCategory addcategory = new AddCategory();
+        addcategory.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnCategoryMouseClicked
 
     private void jButton3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton3MouseClicked
-        AddBook addbook = new AddBook();
-        addbook.setVisible(true);        // TODO add your handling code here:
+
     }//GEN-LAST:event_jButton3MouseClicked
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
+        AddBook ab = new AddBook();
+        ab.setVisible(true);
+        this.dispose();
+
     }//GEN-LAST:event_jButton3ActionPerformed
 
-    private void jButton4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton4MouseClicked
-            AddCopies addcopies = new AddCopies();
-            addcopies.setVisible(true);
-    }//GEN-LAST:event_jButton4MouseClicked
+    private void btnAddCopiesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAddCopiesMouseClicked
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+    }//GEN-LAST:event_btnAddCopiesMouseClicked
+
+    private void btnAddCopiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddCopiesActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton4ActionPerformed
+        AddCopies addcopies = new AddCopies(bookId, title, author, isbn);
+        addcopies.setVisible(true);
+        this.dispose();
 
-    private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
-        dashboard.setVisible(true);
-    }//GEN-LAST:event_txtDashboardMouseClicked
+    }//GEN-LAST:event_btnAddCopiesActionPerformed
 
-    private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
-        book.setVisible(true); // show it
-    }//GEN-LAST:event_txtBooksMouseClicked
+    private void tblMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblMouseClicked
+        // TODO add your handling code here:
+
+        DefaultTableModel model = (DefaultTableModel) tbl.getModel();
+
+        int row = tbl.getSelectedRow();
+
+        if (row == -1) {
+            return;
+        }
+
+        bookId = Integer.parseInt(safeValue(model, row, 0));
+        title = safeValue(model, row, 2);
+        author = safeValue(model, row, 3);
+        isbn = safeValue(model, row, 11);
+        btnAddCopies.setEnabled(true);
+        btnShowCopies.setEnabled(true);
+
+
+    }//GEN-LAST:event_tblMouseClicked
+
+    private void txtSearchKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchKeyReleased
+        // TODO add your handling code here:
+        String search = txtSearch.getText().trim();
+
+        try {
+            Connection con = DB_connect.getConnection();
+
+            String sql
+                    = "SELECT b.book_id, b.title, b.author, c.category_name, b.publisher, "
+                    + "b.publication_year, b.isbn, b.shelf_location, b.remarks, b.class, "
+                    + "b.pages, b.source_of_fund, b.cost_price "
+                    + "FROM book b LEFT JOIN category c ON b.category_id = c.category_id "
+                    + "WHERE b.title LIKE ? OR "
+                    + "b.author LIKE ? OR "
+                    + "c.category_name LIKE ? OR "
+                    + "b.publisher LIKE ? OR "
+                    + "b.isbn LIKE ? OR "
+                    + "b.shelf_location LIKE ?";
+
+            PreparedStatement ps = con.prepareStatement(sql);
+
+            String value = "%" + search + "%";
+
+            ps.setString(1, value);
+            ps.setString(2, value);
+            ps.setString(3, value);
+            ps.setString(4, value);
+            ps.setString(5, value);
+            ps.setString(6, value);
+
+            ResultSet res = ps.executeQuery();
+
+            DefaultTableModel model = (DefaultTableModel) tbl.getModel();
+            model.setRowCount(0);
+
+            while (res.next()) {
+
+                model.addRow(new Object[]{
+                    res.getInt("book_id"),
+                    res.getString("class"),
+                    res.getString("title"),
+                    res.getString("author"),
+                    res.getString("category_name"),
+                    res.getInt("pages"),
+                    res.getString("source_of_fund"),
+                    res.getString("cost_price"),
+                    res.getString("publisher"),
+                    res.getString("publication_year"),
+                    res.getString("remarks"),
+                    res.getString("isbn"),
+                    res.getString("shelf_location")
+
+                });
+            }
+
+        } catch (Exception err) {
+            JOptionPane.showMessageDialog(null, err);
+        }
+    }//GEN-LAST:event_txtSearchKeyReleased
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
         Members member = new Members();
         member.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
         Transactions transaction = new Transactions();
         transaction.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
 
-                          
+    private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
+        Reports report = new Reports();
+        report.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtReportsMouseClicked
 
-   
+    private void txtLogout1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtLogout1MouseClicked
+        // TODO add your handling code here:
+        // TODO add your handling code here:
+        LoginForm login = new LoginForm();
+        login.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtLogout1MouseClicked
+
+    private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
+        Dashboard dashboard = new Dashboard();
+        dashboard.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtDashboardMouseClicked
+
+    private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
+        Books book = new Books(); // create instance
+        book.setVisible(true); // show it
+        this.dispose();
+    }//GEN-LAST:event_txtBooksMouseClicked
+
     /**
      * @param args the command line arguments
      */
@@ -375,13 +532,10 @@ public class Books extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nauja.utils.jcalendar.renderers.DefaultCalendarRenderer defaultCalendarRenderer1;
-    private nauja.utils.jcalendar.renderers.DefaultCalendarRenderer defaultCalendarRenderer2;
-    private nauja.utils.jcalendar.renderers.DefaultCalendarRenderer defaultCalendarRenderer3;
-    private javax.swing.JButton jButton2;
+    private javax.swing.JButton btnAddCopies;
+    private javax.swing.JButton btnCategory;
+    private javax.swing.JButton btnShowCopies;
     private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
-    private javax.swing.JButton jButton6;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel6;
@@ -389,11 +543,13 @@ public class Books extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JTextField jTextField8;
+    private javax.swing.JTable tbl;
     private javax.swing.JLabel txtBooks;
     private javax.swing.JLabel txtDashboard;
+    private javax.swing.JLabel txtLogout1;
     private javax.swing.JLabel txtMembers;
+    private javax.swing.JLabel txtReports;
+    private javax.swing.JTextField txtSearch;
     private javax.swing.JLabel txtTransactions;
     // End of variables declaration//GEN-END:variables
 }

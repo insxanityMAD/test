@@ -2,33 +2,384 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package malinaoproject;
+package My_Form;
+
+import My_Classes.DB_connect;
+import java.sql.*;
+import java.sql.Connection;
+import java.text.SimpleDateFormat;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
  * @author Administrator
  */
 public class Dashboard extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Dashboard.class.getName());
 
     /**
      * Creates new form NewJFrame
      */
     public Dashboard() {
-         setUndecorated(true); // REQUIRED for opacity
+        setUndecorated(true); // REQUIRED for opacity
         initComponents();
-           setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
-              jTable1.getTableHeader().setPreferredSize(
-        new java.awt.Dimension(jTable1.getTableHeader().getWidth(), 50)
-    );
-           jTable1.getTableHeader().setFont(
-        jTable1.getTableHeader().getFont().deriveFont(18f)
-    );
-           
-           jTable1.setFont(jTable1.getFont().deriveFont(16f));
-        
-        
+        setFocusableWindowState(true);
+
+        java.awt.EventQueue.invokeLater(() -> {
+            this.requestFocusInWindow(); // removes focus from txtSearch
+        });
+        txtSearch.setText("Search title by author or title...");
+        txtSearch.setForeground(java.awt.Color.GRAY);
+        txtSearch.addFocusListener(new java.awt.event.FocusAdapter() {
+
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (txtSearch.getText().equals("Search title by author or title...")) {
+                    txtSearch.setText("");
+                    txtSearch.setForeground(java.awt.Color.BLACK);
+                }
+            }
+
+            @Override
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (txtSearch.getText().trim().isEmpty()) {
+                    txtSearch.setText("Search title by author or title...");
+                    txtSearch.setForeground(java.awt.Color.GRAY);
+                }
+            }
+        });
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        setLocationRelativeTo(null);
+
+        tblDashboard.getTableHeader().setPreferredSize(
+                new java.awt.Dimension(tblDashboard.getTableHeader().getWidth(), 50)
+        );
+        tblDashboard.getTableHeader().setFont(
+                tblDashboard.getTableHeader().getFont().deriveFont(18f)
+        );
+
+        tblDashboard.setFont(tblDashboard.getFont().deriveFont(16f));
+        loadDashboardStats();
+        loadTableData("Books");
+
+    }
+
+    public void loadDashboardStats() {
+        try {
+            Connection con = DB_connect.getConnection();
+
+            // Total Books (count all book copies)
+            String sqlTotal = "SELECT COUNT(*) AS total FROM book_copy";
+            PreparedStatement pstTotal = con.prepareStatement(sqlTotal);
+            ResultSet rsTotal = pstTotal.executeQuery();
+            if (rsTotal.next()) {
+                lblTotalBooks.setText(String.valueOf(rsTotal.getInt("total")));
+            }
+
+            // Books Available
+            String sqlAvailable = "SELECT COUNT(*) AS available FROM book_copy WHERE status='Available'";
+            PreparedStatement pstAvailable = con.prepareStatement(sqlAvailable);
+            ResultSet rsAvailable = pstAvailable.executeQuery();
+            if (rsAvailable.next()) {
+                lblBooksAvailable.setText(String.valueOf(rsAvailable.getInt("available")));
+            }
+
+            // Borrowed Books
+            String sqlBorrowed = "SELECT COUNT(*) AS borrowed FROM transaction WHERE status='Borrowed'";
+            PreparedStatement pstBorrowed = con.prepareStatement(sqlBorrowed);
+            ResultSet rsBorrowed = pstBorrowed.executeQuery();
+            if (rsBorrowed.next()) {
+                lblBorrowedBooks.setText(String.valueOf(rsBorrowed.getInt("borrowed")));
+            }
+
+            // Overdue Books (borrowed and past due date)
+            String sqlOverdue = "SELECT COUNT(*) AS overdue FROM transaction "
+                    + "WHERE status='Borrowed' AND due_date < CURDATE()";
+            PreparedStatement pstOverdue = con.prepareStatement(sqlOverdue);
+            ResultSet rsOverdue = pstOverdue.executeQuery();
+            if (rsOverdue.next()) {
+                lblOverdueBooks.setText(String.valueOf(rsOverdue.getInt("overdue")));
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }
+
+    public void loadTableData(String category) {
+        try {
+            Connection con = DB_connect.getConnection();
+            DefaultTableModel model = new DefaultTableModel();
+            tblDashboard.setModel(model);
+            model.setRowCount(0);
+
+            switch (category) {   
+
+                case "Books": {
+                    model.setColumnIdentifiers(new Object[]{
+                        "ID", "Class", "Title", "Author", "Category", "Pages",
+                        "Source of Fund", "Cost Price", "Publisher",
+                        "Publication Year", "Remarks", "ISBN", "Shelf Location"
+                    });
+
+                    Statement st = con.createStatement();
+                    ResultSet res = st.executeQuery(
+                            "SELECT b.book_id, b.title, b.author, c.category_name, b.publisher, "
+                            + "b.publication_year, b.isbn, b.shelf_location, b.remarks, b.class, "
+                            + "b.pages, b.source_of_fund, b.cost_price "
+                            + "FROM book b LEFT JOIN category c ON b.category_id = c.category_id"
+                    );
+
+                    while (res.next()) {
+                        model.addRow(new Object[]{
+                            res.getInt("book_id"),
+                            res.getString("class"),
+                            res.getString("title"),
+                            res.getString("author"),
+                            res.getString("category_name"),
+                            res.getInt("pages"),
+                            res.getString("source_of_fund"),
+                            res.getString("cost_price"),
+                            res.getString("publisher"),
+                            res.getString("publication_year"),
+                            res.getString("remarks"),
+                            res.getString("isbn"),
+                            res.getString("shelf_location")
+                        });
+                    }
+                    break;
+                }
+
+                case "Members": {
+                    model.setColumnIdentifiers(new Object[]{
+                        "ID", "First Name", "Last Name", "Gender", "ID Number", "ID Type",
+                        "Email", "Phone Number", "Address", "Borrower Type",
+                        "Status", "Date of Birth", "Date Registered"
+                    });
+
+                    PreparedStatement ps = con.prepareStatement("SELECT * FROM borrower");
+                    ResultSet res = ps.executeQuery();
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+                    while (res.next()) {
+                        java.sql.Date date = res.getDate("date_registered");
+                        java.sql.Date dob = res.getDate("date_of_birth");
+
+                        model.addRow(new Object[]{
+                            res.getInt("borrower_id"),
+                            res.getString("first_name"),
+                            res.getString("last_name"),
+                            res.getString("gender"),
+                            res.getString("id_number"),
+                            res.getString("id_type"),
+                            res.getString("email"),
+                            res.getString("phone_number"),
+                            res.getString("address"),
+                            res.getString("borrower_type"),
+                            res.getString("status"),
+                            dob != null ? sdf.format(dob) : "",
+                            date != null ? sdf.format(date) : ""
+                        });
+                    }
+                    break;
+                }
+
+                case "Transactions": {
+                    model.setColumnIdentifiers(new Object[]{
+                        "ID", "Borrower", "Book Title", "Acquisition No.",
+                        "Rental Date", "Due Date", "Status"
+                    });
+
+                    PreparedStatement pst = con.prepareStatement(
+                            "SELECT t.transaction_id, "
+                            + "CONCAT(b.first_name, ' ', b.last_name) AS full_name, "
+                            + "bo.title, bc.acquisition_number, t.rental_date, t.due_date, t.status "
+                            + "FROM `transaction` t "
+                            + "JOIN borrower b ON t.borrower_id = b.borrower_id "
+                            + "JOIN book bo ON t.book_id = bo.book_id "
+                            + "JOIN book_copy bc ON t.copy_id = bc.copy_id"
+                    );
+                    ResultSet rs = pst.executeQuery();
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+                    while (rs.next()) {
+                        java.sql.Date rent = rs.getDate("rental_date");
+                        java.sql.Date due = rs.getDate("due_date");
+
+                        model.addRow(new Object[]{
+                            rs.getInt("transaction_id"),
+                            rs.getString("full_name"),
+                            rs.getString("title"),
+                            rs.getString("acquisition_number"),
+                            rent != null ? sdf.format(rent) : "",
+                            due != null ? sdf.format(due) : "",
+                            rs.getString("status")
+                        });
+                    }
+                    break;
+                }
+            }
+
+            // Reapply styling after model change
+            tblDashboard.getTableHeader().setFont(
+                    tblDashboard.getTableHeader().getFont().deriveFont(18f));
+            tblDashboard.setFont(tblDashboard.getFont().deriveFont(16f));
+            tblDashboard.setRowHeight(30);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }
+
+    public void searchTableData(String keyword, String category) {
+        try {
+            Connection con = DB_connect.getConnection();
+            DefaultTableModel model = new DefaultTableModel();
+            tblDashboard.setModel(model);
+            model.setRowCount(0);
+
+            String search = "%" + keyword + "%";
+
+            switch (category) {
+
+                case "Books": {
+                    model.setColumnIdentifiers(new Object[]{
+                        "ID", "Class", "Title", "Author", "Category", "Pages",
+                        "Source of Fund", "Cost Price", "Publisher",
+                        "Publication Year", "Remarks", "ISBN", "Shelf Location"
+                    });
+                    PreparedStatement pst = con.prepareStatement(
+                            "SELECT b.book_id, b.title, b.author, c.category_name, b.publisher, "
+                            + "b.publication_year, b.isbn, b.shelf_location, b.remarks, b.class, "
+                            + "b.pages, b.source_of_fund, b.cost_price "
+                            + "FROM book b LEFT JOIN category c ON b.category_id = c.category_id "
+                            + "WHERE b.title LIKE ? OR b.author LIKE ? OR c.category_name LIKE ?"
+                    );
+                    pst.setString(1, search);
+                    pst.setString(2, search);
+                    pst.setString(3, search);
+                    ResultSet res = pst.executeQuery();
+                    while (res.next()) {
+                        model.addRow(new Object[]{
+                            res.getInt("book_id"),
+                            res.getString("class"),
+                            res.getString("title"),
+                            res.getString("author"),
+                            res.getString("category_name"),
+                            res.getInt("pages"),
+                            res.getString("source_of_fund"),
+                            res.getString("cost_price"),
+                            res.getString("publisher"),
+                            res.getString("publication_year"),
+                            res.getString("remarks"),
+                            res.getString("isbn"),
+                            res.getString("shelf_location")
+                        });
+                    }
+                    break;
+                }
+
+                case "Members": {
+                    model.setColumnIdentifiers(new Object[]{
+                        "ID", "First Name", "Last Name", "Gender", "ID Number", "ID Type",
+                        "Email", "Phone Number", "Address", "Borrower Type",
+                        "Status", "Date of Birth", "Date Registered"
+                    });
+                    PreparedStatement pst = con.prepareStatement(
+                            "SELECT * FROM borrower "
+                            + "WHERE first_name LIKE ? OR last_name LIKE ? "
+                            + "OR email LIKE ? OR id_number LIKE ? OR borrower_type LIKE ?"
+                    );
+                    pst.setString(1, search);
+                    pst.setString(2, search);
+                    pst.setString(3, search);
+                    pst.setString(4, search);
+                    pst.setString(5, search);
+                    ResultSet res = pst.executeQuery();
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                    while (res.next()) {
+                        java.sql.Date date = res.getDate("date_registered");
+                        java.sql.Date dob = res.getDate("date_of_birth");
+                        model.addRow(new Object[]{
+                            res.getInt("borrower_id"),
+                            res.getString("first_name"),
+                            res.getString("last_name"),
+                            res.getString("gender"),
+                            res.getString("id_number"),
+                            res.getString("id_type"),
+                            res.getString("email"),
+                            res.getString("phone_number"),
+                            res.getString("address"),
+                            res.getString("borrower_type"),
+                            res.getString("status"),
+                            dob != null ? sdf.format(dob) : "",
+                            date != null ? sdf.format(date) : ""
+                        });
+                    }
+                    break;
+                }
+
+                case "Transactions": {
+                    model.setColumnIdentifiers(new Object[]{
+                        "ID", "Borrower", "Book Title", "Acquisition No.",
+                        "Rental Date", "Due Date", "Status"
+                    });
+                    PreparedStatement pst = con.prepareStatement(
+                            "SELECT t.transaction_id, "
+                            + "CONCAT(b.first_name, ' ', b.last_name) AS full_name, "
+                            + "bo.title, bc.acquisition_number, t.rental_date, t.due_date, t.status "
+                            + "FROM `transaction` t "
+                            + "JOIN borrower b ON t.borrower_id = b.borrower_id "
+                            + "JOIN book bo ON t.book_id = bo.book_id "
+                            + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                            + "WHERE CONCAT(b.first_name,' ',b.last_name) LIKE ? "
+                            + "OR bo.title LIKE ? OR t.status LIKE ? OR bc.acquisition_number LIKE ?"
+                    );
+                    pst.setString(1, search);
+                    pst.setString(2, search);
+                    pst.setString(3, search);
+                    pst.setString(4, search);
+                    ResultSet rs = pst.executeQuery();
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                    while (rs.next()) {
+                        java.sql.Date rent = rs.getDate("rental_date");
+                        java.sql.Date due = rs.getDate("due_date");
+                        model.addRow(new Object[]{
+                            rs.getInt("transaction_id"),
+                            rs.getString("full_name"),
+                            rs.getString("title"),
+                            rs.getString("acquisition_number"),
+                            rent != null ? sdf.format(rent) : "",
+                            due != null ? sdf.format(due) : "",
+                            rs.getString("status")
+                        });
+                    }
+                    break;
+                }
+            }
+
+            tblDashboard.getTableHeader().setFont(
+                    tblDashboard.getTableHeader().getFont().deriveFont(18f));
+            tblDashboard.setFont(tblDashboard.getFont().deriveFont(16f));
+            tblDashboard.setRowHeight(30);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }
+
+    public void resetDashboard() {
+        // Reset search box
+        txtSearch.setText("Search title by author or title...");
+        txtSearch.setForeground(java.awt.Color.GRAY);
+
+        // Reset category dropdown
+        cmbCategory.setSelectedItem("Books");
+
+        // Reload default table
+        loadTableData("Books");
     }
 
     /**
@@ -46,31 +397,34 @@ public class Dashboard extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        txtBooks = new javax.swing.JLabel();
-        txtDashboard = new javax.swing.JLabel();
-        txtTransactions = new javax.swing.JLabel();
-        txtMembers = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
-        jLabel8 = new javax.swing.JLabel();
+        txtDashboard = new javax.swing.JLabel();
+        txtBooks = new javax.swing.JLabel();
+        txtMembers = new javax.swing.JLabel();
+        txtTransactions = new javax.swing.JLabel();
+        txtReports = new javax.swing.JLabel();
+        txtLogout1 = new javax.swing.JLabel();
+        lblTotalBooks = new javax.swing.JLabel();
         jLabel11 = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
         jLabel15 = new javax.swing.JLabel();
         jLabel17 = new javax.swing.JLabel();
-        jTextField2 = new javax.swing.JTextField();
-        jComboBox1 = new javax.swing.JComboBox<>();
-        jButton1 = new javax.swing.JButton();
+        txtSearch = new javax.swing.JTextField();
+        cmbCategory = new javax.swing.JComboBox<>();
+        btnRefresh = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
-        jTable1.getTableHeader().setFont(
+        tblDashboard = new javax.swing.JTable();
+        tblDashboard.getTableHeader().setFont(
             new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16)
         );
         jLabel18 = new javax.swing.JLabel();
-        jLabel9 = new javax.swing.JLabel();
-        jLabel19 = new javax.swing.JLabel();
-        jLabel20 = new javax.swing.JLabel();
+        lblBorrowedBooks = new javax.swing.JLabel();
+        lblBooksAvailable = new javax.swing.JLabel();
+        lblOverdueBooks = new javax.swing.JLabel();
         jLabel16 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
 
         userButton.setText("Logout");
         userButton.addActionListener(new java.awt.event.ActionListener() {
@@ -92,20 +446,14 @@ public class Dashboard extends javax.swing.JFrame {
         setBackground(new java.awt.Color(204, 0, 153));
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jPanel3.setBackground(new java.awt.Color(204, 204, 255));
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 36)); // NOI18N
         jLabel1.setText("Library Inventory System");
 
-        txtBooks.setBackground(new java.awt.Color(204, 204, 204));
-        txtBooks.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtBooks.setText("Books");
-        txtBooks.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtBooksMouseClicked(evt);
-            }
-        });
+        jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/Adobe_Express_-_file-removebg-preview.png"))); // NOI18N
 
         txtDashboard.setBackground(new java.awt.Color(255, 255, 255));
         txtDashboard.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
@@ -116,12 +464,12 @@ public class Dashboard extends javax.swing.JFrame {
             }
         });
 
-        txtTransactions.setBackground(new java.awt.Color(204, 204, 204));
-        txtTransactions.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtTransactions.setText("Transactions");
-        txtTransactions.addMouseListener(new java.awt.event.MouseAdapter() {
+        txtBooks.setBackground(new java.awt.Color(204, 204, 204));
+        txtBooks.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtBooks.setText("Books");
+        txtBooks.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtTransactionsMouseClicked(evt);
+                txtBooksMouseClicked(evt);
             }
         });
 
@@ -134,7 +482,32 @@ public class Dashboard extends javax.swing.JFrame {
             }
         });
 
-        jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/malinaoproject/Adobe_Express_-_file-removebg-preview.png"))); // NOI18N
+        txtTransactions.setBackground(new java.awt.Color(204, 204, 204));
+        txtTransactions.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtTransactions.setText("Transactions");
+        txtTransactions.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtTransactionsMouseClicked(evt);
+            }
+        });
+
+        txtReports.setBackground(new java.awt.Color(204, 204, 204));
+        txtReports.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtReports.setText("Reports");
+        txtReports.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtReportsMouseClicked(evt);
+            }
+        });
+
+        txtLogout1.setBackground(new java.awt.Color(204, 204, 204));
+        txtLogout1.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtLogout1.setText("Logout");
+        txtLogout1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtLogout1MouseClicked(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -145,15 +518,19 @@ public class Dashboard extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(250, 250, 250)
+                .addGap(120, 120, 120)
                 .addComponent(txtDashboard)
-                .addGap(62, 62, 62)
+                .addGap(30, 30, 30)
                 .addComponent(txtBooks)
-                .addGap(61, 61, 61)
+                .addGap(30, 30, 30)
                 .addComponent(txtMembers)
-                .addGap(61, 61, 61)
+                .addGap(30, 30, 30)
                 .addComponent(txtTransactions)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(30, 30, 30)
+                .addComponent(txtReports)
+                .addGap(30, 30, 30)
+                .addComponent(txtLogout1)
+                .addContainerGap(331, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -163,64 +540,87 @@ public class Dashboard extends javax.swing.JFrame {
                         .addGap(28, 28, 28)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtDashboard)
-                            .addComponent(txtBooks)
-                            .addComponent(txtMembers)
-                            .addComponent(txtTransactions)))
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txtMembers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txtTransactions)
+                                .addComponent(txtReports)
+                                .addComponent(txtLogout1))))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(16, 16, 16)
                         .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(17, Short.MAX_VALUE))
         );
 
-        jLabel8.setBackground(new java.awt.Color(255, 102, 51));
-        jLabel8.setOpaque(true);
+        jPanel1.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1823, -1));
+
+        lblTotalBooks.setBackground(new java.awt.Color(255, 102, 51));
+        lblTotalBooks.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        lblTotalBooks.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblTotalBooks.setText("-");
+        lblTotalBooks.setOpaque(true);
+        jPanel1.add(lblTotalBooks, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 200, 225, 151));
+        jPanel1.add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(214, 235, -1, -1));
 
         jLabel12.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel12.setText("Total Books");
+        jPanel1.add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 160, -1, -1));
 
         jLabel13.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel13.setText("Books Available");
+        jPanel1.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(510, 160, -1, -1));
 
         jLabel14.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel14.setText("Borrowed Books");
+        jPanel1.add(jLabel14, new org.netbeans.lib.awtextra.AbsoluteConstraints(1220, 160, -1, -1));
 
         jLabel15.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel15.setText("Overdue Books");
+        jPanel1.add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(890, 160, -1, -1));
 
         jLabel17.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel17.setText("Category");
+        jPanel1.add(jLabel17, new org.netbeans.lib.awtextra.AbsoluteConstraints(740, 410, -1, -1));
 
-        jTextField2.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jTextField2.setForeground(new java.awt.Color(102, 102, 102));
-        jTextField2.setText("Search title by author or title...");
-        jTextField2.addActionListener(new java.awt.event.ActionListener() {
+        txtSearch.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        txtSearch.setForeground(new java.awt.Color(102, 102, 102));
+        txtSearch.setText("Search title by author or title...");
+        txtSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextField2ActionPerformed(evt);
+                txtSearchActionPerformed(evt);
             }
         });
-
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jComboBox1ActionPerformed(evt);
+        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtSearchKeyReleased(evt);
             }
         });
+        jPanel1.add(txtSearch, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 450, 578, 44));
 
-        jButton1.setBackground(new java.awt.Color(204, 204, 204));
-        jButton1.setText("Advance Search");
-        jButton1.addMouseListener(new java.awt.event.MouseAdapter() {
+        cmbCategory.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Books", "Members", "Transactions" }));
+        cmbCategory.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbCategoryActionPerformed(evt);
+            }
+        });
+        jPanel1.add(cmbCategory, new org.netbeans.lib.awtextra.AbsoluteConstraints(740, 450, 272, 40));
+
+        btnRefresh.setBackground(new java.awt.Color(204, 204, 204));
+        btnRefresh.setText("Refresh");
+        btnRefresh.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jButton1MouseClicked(evt);
+                btnRefreshMouseClicked(evt);
             }
         });
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        btnRefresh.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                btnRefreshActionPerformed(evt);
             }
         });
+        jPanel1.add(btnRefresh, new org.netbeans.lib.awtextra.AbsoluteConstraints(1040, 450, 183, 40));
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        tblDashboard.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null},
                 {null, null, null, null, null},
@@ -245,130 +645,40 @@ public class Dashboard extends javax.swing.JFrame {
                 "Title", "Author", "Category    ", "Status", "Actions"
             }
         ));
-        jScrollPane1.setViewportView(jTable1);
+        jScrollPane1.setViewportView(tblDashboard);
+
+        jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 530, 1360, 343));
 
         jLabel18.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel18.setText("Book Catalog");
+        jPanel1.add(jLabel18, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 410, -1, -1));
 
-        jLabel9.setBackground(new java.awt.Color(255, 102, 51));
-        jLabel9.setOpaque(true);
+        lblBorrowedBooks.setBackground(new java.awt.Color(255, 102, 51));
+        lblBorrowedBooks.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        lblBorrowedBooks.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblBorrowedBooks.setText("-");
+        lblBorrowedBooks.setOpaque(true);
+        jPanel1.add(lblBorrowedBooks, new org.netbeans.lib.awtextra.AbsoluteConstraints(1210, 200, 225, 151));
 
-        jLabel19.setBackground(new java.awt.Color(255, 102, 51));
-        jLabel19.setOpaque(true);
+        lblBooksAvailable.setBackground(new java.awt.Color(255, 102, 51));
+        lblBooksAvailable.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        lblBooksAvailable.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblBooksAvailable.setText("-");
+        lblBooksAvailable.setOpaque(true);
+        jPanel1.add(lblBooksAvailable, new org.netbeans.lib.awtextra.AbsoluteConstraints(490, 200, 225, 151));
 
-        jLabel20.setBackground(new java.awt.Color(255, 102, 51));
-        jLabel20.setOpaque(true);
+        lblOverdueBooks.setBackground(new java.awt.Color(255, 102, 51));
+        lblOverdueBooks.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        lblOverdueBooks.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblOverdueBooks.setText("-");
+        lblOverdueBooks.setOpaque(true);
+        jPanel1.add(lblOverdueBooks, new org.netbeans.lib.awtextra.AbsoluteConstraints(870, 200, 225, 151));
 
-        jLabel16.setIcon(new javax.swing.ImageIcon(getClass().getResource("/malinaoproject/1150612 (2).png"))); // NOI18N
+        jLabel16.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/1150612 (2).png"))); // NOI18N
+        jPanel1.add(jLabel16, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 452, -1, 40));
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(184, 184, 184)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addComponent(jLabel11)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jLabel12)
-                                        .addGap(215, 215, 215))
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(168, 168, 168)))
-                                .addGap(18, 18, 18)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel19, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                        .addComponent(jLabel13)
-                                        .addGap(21, 21, 21))))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel16, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel18)
-                                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 578, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(39, 39, 39)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel17)
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 272, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(27, 27, 27)
-                                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 183, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(205, 205, 205)
-                                .addComponent(jLabel20, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel15)
-                                .addGap(123, 123, 123)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(12, 12, 12)
-                                .addComponent(jLabel14)))
-                        .addGap(251, 251, 251))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1500, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(113, 113, 113)
-                                .addComponent(jLabel11)
-                                .addGap(18, 18, 18))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jLabel12)
-                                .addGap(12, 12, 12)))
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addComponent(jLabel17))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 151, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jLabel18))))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(84, 84, 84)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel15)
-                            .addComponent(jLabel13)
-                            .addComponent(jLabel14))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 151, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel19, javax.swing.GroupLayout.PREFERRED_SIZE, 151, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel20, javax.swing.GroupLayout.PREFERRED_SIZE, 151, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(9, 9, 9)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel16, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addGap(23, 23, 23)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 343, Short.MAX_VALUE)
-                .addContainerGap())
-        );
+        jLabel2.setText("jLabel2");
+        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 270, -1, -1));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -395,41 +705,86 @@ public class Dashboard extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_userButton1ActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void btnRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefreshActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1ActionPerformed
+        String currentCategory = cmbCategory.getSelectedItem().toString();
 
-    private void jButton1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton1MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1MouseClicked
+        // Clear search box
+        txtSearch.setText("Search title by author or title...");
+        txtSearch.setForeground(java.awt.Color.GRAY);
 
-    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jComboBox1ActionPerformed
+        // Reload only the current category
+        loadTableData(currentCategory);
+        loadDashboardStats();
 
-    private void jTextField2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField2ActionPerformed
+        tblDashboard.requestFocusInWindow();
+    }//GEN-LAST:event_btnRefreshActionPerformed
+
+    private void btnRefreshMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnRefreshMouseClicked
         // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField2ActionPerformed
+    }//GEN-LAST:event_btnRefreshMouseClicked
+
+    private void cmbCategoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbCategoryActionPerformed
+        // TODO add your handling code here:
+        if (cmbCategory.getSelectedItem() != null) {
+            loadTableData(cmbCategory.getSelectedItem().toString());
+        }
+    }//GEN-LAST:event_cmbCategoryActionPerformed
+
+    private void txtSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSearchActionPerformed
+
+    private void txtSearchKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchKeyReleased
+        // TODO add your handling code here:
+        String keyword = txtSearch.getText().trim();
+        String category = cmbCategory.getSelectedItem().toString();
+
+        if (keyword.isEmpty() || keyword.equals("Search title by author or title...")) {
+            loadTableData(category);
+        } else {
+            searchTableData(keyword, category);
+        }
+    }//GEN-LAST:event_txtSearchKeyReleased
+
+    private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
+        Dashboard dashboard = new Dashboard();
+        dashboard.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtDashboardMouseClicked
 
     private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
- Books book = new Books(); // create instance
-    book.setVisible(true); // show it
+        Books book = new Books(); // create instance
+        book.setVisible(true); // show it
+        this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
-            Members member = new Members();
-            member.setVisible(true);
+        Members member = new Members();
+        member.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
-       Transactions transaction = new Transactions();
-            transaction.setVisible(true);
+        Transactions transaction = new Transactions();
+        transaction.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
 
-    private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-            Dashboard dashboard = new Dashboard();
-            dashboard.setVisible(true);
-    }//GEN-LAST:event_txtDashboardMouseClicked
+    private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
+       Reports report = new Reports();
+       report.setVisible(true);
+       this.dispose();
+               
+    }//GEN-LAST:event_txtReportsMouseClicked
+
+    private void txtLogout1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtLogout1MouseClicked
+        // TODO add your handling code here:
+         // TODO add your handling code here:
+        LoginForm login = new LoginForm();
+        login.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtLogout1MouseClicked
 
     /**
      * @param args the command line arguments
@@ -457,8 +812,8 @@ public class Dashboard extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JComboBox<String> jComboBox1;
+    private javax.swing.JButton btnRefresh;
+    private javax.swing.JComboBox<String> cmbCategory;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
@@ -468,20 +823,23 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel18;
-    private javax.swing.JLabel jLabel19;
-    private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
-    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPopupMenu jPopupMenu1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JTextField jTextField2;
+    private javax.swing.JLabel lblBooksAvailable;
+    private javax.swing.JLabel lblBorrowedBooks;
+    private javax.swing.JLabel lblOverdueBooks;
+    private javax.swing.JLabel lblTotalBooks;
+    private javax.swing.JTable tblDashboard;
     private javax.swing.JLabel txtBooks;
     private javax.swing.JLabel txtDashboard;
+    private javax.swing.JLabel txtLogout1;
     private javax.swing.JLabel txtMembers;
+    private javax.swing.JLabel txtReports;
+    private javax.swing.JTextField txtSearch;
     private javax.swing.JLabel txtTransactions;
     private javax.swing.JMenuItem userButton;
     private javax.swing.JMenuItem userButton1;

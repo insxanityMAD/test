@@ -2,42 +2,134 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package malinaoproject;
+package My_Form;
 
-
-
+import My_Classes.DB_connect;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import java.sql.*;
+import java.sql.Connection;
+import java.util.Vector;
 
 /**
  *
  * @author Administrator
  */
 public class AddCategory extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(AddCategory.class.getName());
 
     /**
      * Creates new form NewJFrame
      */
+    public String check = "";
+    public int categoryid;
+
     public AddCategory() {
-          setUndecorated(true); // REQUIRED for opacity
+        setUndecorated(true); // REQUIRED for opacity
         initComponents();
-          setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
-           jTable1.getTableHeader().setPreferredSize(
-        new java.awt.Dimension(jTable1.getTableHeader().getWidth(), 50)
-    );
-           jTable1.getTableHeader().setFont(
-        jTable1.getTableHeader().getFont().deriveFont(18f)
-    );
-           
-           jTable1.setFont(jTable1.getFont().deriveFont(16f));
-           
-           
-   
-        
-    
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        tblCategory.getTableHeader().setPreferredSize(
+                new java.awt.Dimension(tblCategory.getTableHeader().getWidth(), 50)
+        );
+        tblCategory.getTableHeader().setFont(
+                tblCategory.getTableHeader().getFont().deriveFont(18f)
+        );
+
+        tblCategory.setFont(tblCategory.getFont().deriveFont(16f));
+        populateTable();
     }
-    
-   
+
+    private void populateTable() {
+
+        try {
+
+            Connection cn = DB_connect.getConnection();
+
+            String sql = "SELECT category_id, category_name FROM category";
+
+            PreparedStatement pst = cn.prepareStatement(sql);
+            ResultSet res = pst.executeQuery();
+
+            DefaultTableModel tblModel = (DefaultTableModel) tblCategory.getModel();
+            tblModel.setRowCount(0);
+
+            while (res.next()) {
+
+                tblModel.addRow(new Object[]{
+                    res.getInt("category_id"),
+                    res.getString("category_name")
+                });
+
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
+        }
+    }
+
+    private void setDefault() {
+        txtCategory.setText("");
+        txtSearch.setText("");
+        txtCategory.setEnabled(false);
+        btnAdd.setEnabled(true);
+        btnUpdate.setEnabled(false);
+        btnSave.setEnabled(false);
+        btnDelete.setEnabled(false);
+        btnClose.setText("Close");
+        populateTable();
+    }
+
+    private void makeEnabled() {
+
+        txtCategory.setEnabled(true);
+
+        btnClose.setEnabled(true);
+    }
+
+    private int Category(String cat) {
+        int id = 0;
+
+        try {
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT category_id FROM category  WHERE category_name = ?";
+            PreparedStatement pst = con.prepareStatement(sql);
+
+            pst.setString(1, cat);
+
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+                id = rs.getInt("category_id");
+            }
+        } catch (Exception err) {
+            JOptionPane.showMessageDialog(null, err);
+        }
+
+        return id;
+    }
+
+    private String existingCategory(int categoryid) {
+        String category = "";
+
+        try {
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT category_name FROM category  WHERE category_id = ?";
+            PreparedStatement pst = con.prepareStatement(sql);
+
+            pst.setInt(1, categoryid);
+
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+                category = rs.getString("category_name");
+            }
+        } catch (Exception err) {
+            JOptionPane.showMessageDialog(null, err);
+        }
+
+        return category;
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -48,59 +140,40 @@ public class AddCategory extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        defaultCalendarRenderer1 = new nauja.utils.jcalendar.renderers.DefaultCalendarRenderer();
-        defaultCalendarRenderer2 = new nauja.utils.jcalendar.renderers.DefaultCalendarRenderer();
-        defaultCalendarRenderer3 = new nauja.utils.jcalendar.renderers.DefaultCalendarRenderer();
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
-        txtBooks = new javax.swing.JLabel();
-        txtDashboard = new javax.swing.JLabel();
         txtMembers = new javax.swing.JLabel();
         txtTransactions = new javax.swing.JLabel();
+        txtReports = new javax.swing.JLabel();
+        txtLogout1 = new javax.swing.JLabel();
+        txtDashboard = new javax.swing.JLabel();
+        txtBooks = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
         jLabel9 = new javax.swing.JLabel();
         jLabel16 = new javax.swing.JLabel();
-        jTextField6 = new javax.swing.JTextField();
-        jButton5 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
+        txtCategory = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
-        jTextField5 = new javax.swing.JTextField();
+        tblCategory = new javax.swing.JTable();
+        txtSearch = new javax.swing.JTextField();
         jLabel15 = new javax.swing.JLabel();
         jLabel17 = new javax.swing.JLabel();
+        jPanel2 = new javax.swing.JPanel();
+        btnAdd = new javax.swing.JButton();
+        btnUpdate = new javax.swing.JButton();
+        btnDelete = new javax.swing.JButton();
+        btnSave = new javax.swing.JButton();
+        btnClose = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jPanel3.setBackground(new java.awt.Color(204, 204, 255));
-        jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 36)); // NOI18N
         jLabel1.setText("Library Inventory System");
-        jPanel3.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(196, 28, -1, 62));
 
-        jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/malinaoproject/Adobe_Express_-_file-removebg-preview.png"))); // NOI18N
-        jPanel3.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(78, 16, -1, 89));
-
-        txtBooks.setBackground(new java.awt.Color(204, 204, 204));
-        txtBooks.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtBooks.setText("Books");
-        txtBooks.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtBooksMouseClicked(evt);
-            }
-        });
-        jPanel3.add(txtBooks, new org.netbeans.lib.awtextra.AbsoluteConstraints(1000, 50, -1, -1));
-
-        txtDashboard.setBackground(new java.awt.Color(255, 255, 255));
-        txtDashboard.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtDashboard.setText("Dashboard");
-        txtDashboard.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtDashboardMouseClicked(evt);
-            }
-        });
-        jPanel3.add(txtDashboard, new org.netbeans.lib.awtextra.AbsoluteConstraints(830, 50, -1, -1));
+        jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/Adobe_Express_-_file-removebg-preview.png"))); // NOI18N
 
         txtMembers.setBackground(new java.awt.Color(204, 204, 204));
         txtMembers.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
@@ -110,7 +183,6 @@ public class AddCategory extends javax.swing.JFrame {
                 txtMembersMouseClicked(evt);
             }
         });
-        jPanel3.add(txtMembers, new org.netbeans.lib.awtextra.AbsoluteConstraints(1130, 50, -1, -1));
 
         txtTransactions.setBackground(new java.awt.Color(204, 204, 204));
         txtTransactions.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
@@ -120,7 +192,85 @@ public class AddCategory extends javax.swing.JFrame {
                 txtTransactionsMouseClicked(evt);
             }
         });
-        jPanel3.add(txtTransactions, new org.netbeans.lib.awtextra.AbsoluteConstraints(1280, 50, -1, -1));
+
+        txtReports.setBackground(new java.awt.Color(204, 204, 204));
+        txtReports.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtReports.setText("Reports");
+        txtReports.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtReportsMouseClicked(evt);
+            }
+        });
+
+        txtLogout1.setBackground(new java.awt.Color(204, 204, 204));
+        txtLogout1.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtLogout1.setText("Logout");
+        txtLogout1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtLogout1MouseClicked(evt);
+            }
+        });
+
+        txtDashboard.setBackground(new java.awt.Color(255, 255, 255));
+        txtDashboard.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtDashboard.setText("Dashboard");
+        txtDashboard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtDashboardMouseClicked(evt);
+            }
+        });
+
+        txtBooks.setBackground(new java.awt.Color(204, 204, 204));
+        txtBooks.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtBooks.setText("Books");
+        txtBooks.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtBooksMouseClicked(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(78, 78, 78)
+                .addComponent(jLabel7)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel1)
+                .addGap(120, 120, 120)
+                .addComponent(txtDashboard)
+                .addGap(30, 30, 30)
+                .addComponent(txtBooks)
+                .addGap(30, 30, 30)
+                .addComponent(txtMembers)
+                .addGap(30, 30, 30)
+                .addComponent(txtTransactions)
+                .addGap(30, 30, 30)
+                .addComponent(txtReports)
+                .addGap(30, 30, 30)
+                .addComponent(txtLogout1)
+                .addContainerGap())
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(16, 16, 16)
+                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(28, 28, 28)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(txtMembers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(txtTransactions)
+                        .addComponent(txtReports)
+                        .addComponent(txtLogout1))
+                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)))
+        );
+
+        getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 2303, -1));
 
         jPanel1.setBackground(new java.awt.Color(204, 204, 204));
 
@@ -132,25 +282,10 @@ public class AddCategory extends javax.swing.JFrame {
         jLabel16.setForeground(new java.awt.Color(51, 51, 51));
         jLabel16.setText("Enter New Category Name: ");
 
-        jTextField6.addActionListener(new java.awt.event.ActionListener() {
+        txtCategory.setEnabled(false);
+        txtCategory.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextField6ActionPerformed(evt);
-            }
-        });
-
-        jButton5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        jButton5.setText("Cancel");
-        jButton5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton5ActionPerformed(evt);
-            }
-        });
-
-        jButton4.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        jButton4.setText("Save");
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
+                txtCategoryActionPerformed(evt);
             }
         });
 
@@ -159,36 +294,32 @@ public class AddCategory extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap(150, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(537, 537, 537)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel9)
+                        .addGap(307, 307, 307))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel16)
-                        .addGap(18, 18, 18)
-                        .addComponent(jTextField6, javax.swing.GroupLayout.PREFERRED_SIZE, 230, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(42, 42, 42)
-                        .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton5))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(840, 840, 840)
-                        .addComponent(jLabel9)))
-                .addContainerGap(707, Short.MAX_VALUE))
+                        .addGap(57, 57, 57)
+                        .addComponent(txtCategory, javax.swing.GroupLayout.PREFERRED_SIZE, 333, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(135, 135, 135))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(20, 20, 20)
+                .addGap(30, 30, 30)
                 .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(51, 51, 51)
+                .addGap(64, 64, 64)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextField6, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel16)
-                    .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(60, Short.MAX_VALUE))
+                    .addComponent(txtCategory, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel16))
+                .addContainerGap(93, Short.MAX_VALUE))
         );
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 137, 1010, 260));
+
+        tblCategory.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null},
                 {null, null},
@@ -199,100 +330,320 @@ public class AddCategory extends javax.swing.JFrame {
                 "Category_ID", "Category Name"
             }
         ));
-        jScrollPane1.setViewportView(jTable1);
-
-        jTextField5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextField5ActionPerformed(evt);
+        tblCategory.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblCategoryMouseClicked(evt);
             }
         });
+        jScrollPane1.setViewportView(tblCategory);
+
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 530, 1237, 325));
+
+        txtSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtSearchActionPerformed(evt);
+            }
+        });
+        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtSearchKeyReleased(evt);
+            }
+        });
+        getContentPane().add(txtSearch, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 480, 301, 38));
 
         jLabel15.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel15.setForeground(new java.awt.Color(51, 51, 51));
         jLabel15.setText("Search Category: ");
+        getContentPane().add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 440, 220, -1));
 
-        jLabel17.setIcon(new javax.swing.ImageIcon(getClass().getResource("/malinaoproject/1150612 (2).png"))); // NOI18N
+        jLabel17.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/1150612 (2).png"))); // NOI18N
+        getContentPane().add(jLabel17, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 480, -1, -1));
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 2303, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(494, 494, 494)
-                .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGroup(layout.createSequentialGroup()
-                .addGap(444, 444, 444)
-                .addComponent(jLabel17)
-                .addGap(18, 18, 18)
-                .addComponent(jTextField5, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGroup(layout.createSequentialGroup()
-                .addGap(494, 494, 494)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1048, javax.swing.GroupLayout.PREFERRED_SIZE))
+        jPanel2.setBackground(new java.awt.Color(204, 204, 204));
+
+        btnAdd.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        btnAdd.setText("Add");
+        btnAdd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddActionPerformed(evt);
+            }
+        });
+
+        btnUpdate.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        btnUpdate.setText("Update");
+        btnUpdate.setEnabled(false);
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateActionPerformed(evt);
+            }
+        });
+
+        btnDelete.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        btnDelete.setText("Delete");
+        btnDelete.setEnabled(false);
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
+
+        btnSave.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        btnSave.setText("Save");
+        btnSave.setEnabled(false);
+        btnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveActionPerformed(evt);
+            }
+        });
+
+        btnClose.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        btnClose.setText("Close");
+        btnClose.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCloseActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(14, 14, 14)
+                .addComponent(btnSave, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(btnClose)
+                .addContainerGap(14, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(btnDelete, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnUpdate, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnAdd, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(49, 49, 49))
         );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(37, 37, 37)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(41, 41, 41)
-                .addComponent(jLabel15)
-                .addGap(12, 12, 12)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(6, 6, 6)
-                        .addComponent(jLabel17))
-                    .addComponent(jTextField5, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(12, 12, 12)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 325, javax.swing.GroupLayout.PREFERRED_SIZE))
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(21, 21, 21)
+                .addComponent(btnAdd, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 29, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnClose, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnSave, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(22, 22, 22))
         );
+
+        getContentPane().add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(1190, 140, 200, 260));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+    private void txtSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton4ActionPerformed
+    }//GEN-LAST:event_txtSearchActionPerformed
 
-    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+    private void txtCategoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCategoryActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton5ActionPerformed
+    }//GEN-LAST:event_txtCategoryActionPerformed
 
-    private void jTextField5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField5ActionPerformed
+    private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
+        // TODO add your handling code here:makeEnabled();
+        btnAdd.setEnabled(false);
+        btnSave.setEnabled(true);
+        makeEnabled();
+        check = "Add";
+        btnClose.setText("Cancel");
+    }//GEN-LAST:event_btnAddActionPerformed
+
+    private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField5ActionPerformed
+        String cat = txtCategory.getText();
+        categoryid = Category(cat);
+        String existingCategory = existingCategory(categoryid);
 
-    private void jTextField6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField6ActionPerformed
+        try {
+            Connection cn = DB_connect.getConnection();
+            PreparedStatement pst;
+
+            // --- Simple DOB validation ---
+            // --- Insert or Update ---
+            if (!cat.isEmpty()) {
+                if (check.equalsIgnoreCase("Add")) {
+                    if (cat.equalsIgnoreCase(existingCategory)) {
+                        JOptionPane.showMessageDialog(null, "This cateogry is already recorded.");
+                        return;
+                    }
+                    pst = cn.prepareStatement(
+                            "INSERT INTO category (category_name) VALUES (?)"
+                    );
+
+                    pst.setString(1, txtCategory.getText());
+                    pst.executeUpdate();
+                    JOptionPane.showMessageDialog(null, "Added successfully");
+
+                } else if (check.equalsIgnoreCase("Update")) {
+                    pst = cn.prepareStatement(
+                            "UPDATE category SET category_name = ? WHERE category_id = ?"
+                    );
+
+                    pst.setString(1, txtCategory.getText());
+
+                    pst.setInt(2, categoryid);
+
+                    pst.executeUpdate();
+                    JOptionPane.showMessageDialog(null, "Updated successfully");
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "Input a Category.");
+            }
+
+            setDefault();
+            populateTable();
+
+        } catch (SQLException err) {
+            JOptionPane.showMessageDialog(null, err.getMessage());
+        }
+    }//GEN-LAST:event_btnSaveActionPerformed
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField6ActionPerformed
+        check = "Update";
+        btnUpdate.setEnabled(false);
+        btnDelete.setEnabled(false);
+        btnSave.setEnabled(true);
+        makeEnabled();
+    }//GEN-LAST:event_btnUpdateActionPerformed
 
-    private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
-        book.setVisible(true); // show it
-    }//GEN-LAST:event_txtBooksMouseClicked
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        // TODO add your handling code here: 
+        if (JOptionPane.showConfirmDialog(null,
+                "Are you sure you want to delete this category?",
+                "Confirm Delete?",
+                JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 
-    private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
-        dashboard.setVisible(true);
-    }//GEN-LAST:event_txtDashboardMouseClicked
+            try (Connection cn = DB_connect.getConnection(); PreparedStatement pst = cn.prepareStatement("DELETE FROM category WHERE category_id = ?")) {
+
+                pst.setInt(1, categoryid);
+                pst.executeUpdate();
+
+                JOptionPane.showMessageDialog(null, "Category deleted");
+                populateTable();
+
+            } catch (SQLException err) {
+                JOptionPane.showMessageDialog(null, err.getMessage());
+            }
+
+        } else {
+            setDefault();
+            populateTable();
+        }
+    }//GEN-LAST:event_btnDeleteActionPerformed
+
+    private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
+        // TODO add your handling code here:
+        if (btnClose.getText().equalsIgnoreCase("Close")) {
+            Books book = new Books();
+            book.setVisible(true);
+            this.dispose();
+        } else {
+            setDefault();
+        }
+
+    }//GEN-LAST:event_btnCloseActionPerformed
+
+    private void txtSearchKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchKeyReleased
+        // TODO add your handling code here:String CategoryName = txtSearch.getText();
+
+        String categoryName = txtSearch.getText().trim();
+
+        try {
+
+            Connection cn = DB_connect.getConnection();
+
+            String sql = "SELECT category_id, category_name "
+                    + "FROM category "
+                    + "WHERE category_name LIKE ?";
+
+            PreparedStatement pst = cn.prepareStatement(sql);
+            pst.setString(1, "%" + categoryName + "%");
+
+            ResultSet res = pst.executeQuery();
+
+            DefaultTableModel tblModel = (DefaultTableModel) tblCategory.getModel();
+            tblModel.setRowCount(0);
+
+            while (res.next()) {
+
+                tblModel.addRow(new Object[]{
+                    res.getInt("category_id"),
+                    res.getString("category_name")
+                });
+
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
+        }
+    }//GEN-LAST:event_txtSearchKeyReleased
+
+    private void tblCategoryMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblCategoryMouseClicked
+        // TODO add your handling code here:
+
+        DefaultTableModel tblModel = (DefaultTableModel) tblCategory.getModel();
+        int selectedRow = tblCategory.getSelectedRow();
+        categoryid = Integer.parseInt(tblModel.getValueAt(selectedRow, 0).toString());
+        txtCategory.setText(tblModel.getValueAt(selectedRow, 1).toString());
+        btnAdd.setEnabled(false);
+        btnUpdate.setEnabled(true);
+        btnDelete.setEnabled(true);
+        makeEnabled();
+        btnClose.setText("Cancel");
+
+    }//GEN-LAST:event_tblCategoryMouseClicked
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
         Members member = new Members();
         member.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
         Transactions transaction = new Transactions();
         transaction.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
 
-     
-  
+    private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
+        Reports report = new Reports();
+        report.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtReportsMouseClicked
 
-    
-    
+    private void txtLogout1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtLogout1MouseClicked
+        // TODO add your handling code here:
+        // TODO add your handling code here:
+        LoginForm login = new LoginForm();
+        login.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtLogout1MouseClicked
+
+    private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
+        Dashboard dashboard = new Dashboard();
+        dashboard.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtDashboardMouseClicked
+
+    private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
+        Books book = new Books(); // create instance
+        book.setVisible(true); // show it
+        this.dispose();
+    }//GEN-LAST:event_txtBooksMouseClicked
+
     /**
      * @param args the command line arguments
      */
@@ -319,11 +670,11 @@ public class AddCategory extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nauja.utils.jcalendar.renderers.DefaultCalendarRenderer defaultCalendarRenderer1;
-    private nauja.utils.jcalendar.renderers.DefaultCalendarRenderer defaultCalendarRenderer2;
-    private nauja.utils.jcalendar.renderers.DefaultCalendarRenderer defaultCalendarRenderer3;
-    private javax.swing.JButton jButton4;
-    private javax.swing.JButton jButton5;
+    private javax.swing.JButton btnAdd;
+    private javax.swing.JButton btnClose;
+    private javax.swing.JButton btnDelete;
+    private javax.swing.JButton btnSave;
+    private javax.swing.JButton btnUpdate;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
@@ -331,14 +682,17 @@ public class AddCategory extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JTextField jTextField5;
-    private javax.swing.JTextField jTextField6;
+    private javax.swing.JTable tblCategory;
     private javax.swing.JLabel txtBooks;
+    private javax.swing.JTextField txtCategory;
     private javax.swing.JLabel txtDashboard;
+    private javax.swing.JLabel txtLogout1;
     private javax.swing.JLabel txtMembers;
+    private javax.swing.JLabel txtReports;
+    private javax.swing.JTextField txtSearch;
     private javax.swing.JLabel txtTransactions;
     // End of variables declaration//GEN-END:variables
 }

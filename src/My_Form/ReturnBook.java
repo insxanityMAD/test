@@ -2,23 +2,30 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package malinaoproject;
+package My_Form;
+
+import My_Classes.DB_connect;
+import java.sql.*;
+import java.sql.Connection;
+import javax.swing.JOptionPane;
 
 /**
  *
  * @author Administrator
  */
 public class ReturnBook extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ReturnBook.class.getName());
 
     /**
      * Creates new form NewJFrame
      */
+    private boolean isLoading = false;
+
     public ReturnBook() {
-       setUndecorated(true); // REQUIRED for opacity
+        setUndecorated(true); // REQUIRED for opacity
         initComponents();
-           setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
 //        
 //        jTable1.getTableHeader().setPreferredSize(
 //        new java.awt.Dimension(jTable1.getTableHeader().getWidth(), 50)
@@ -29,7 +36,120 @@ public class ReturnBook extends javax.swing.JFrame {
 //           
 //           jTable1.setFont(jTable1.getFont().deriveFont(16f));
 //      
-        
+        loadBorrowersToCombo();
+
+    }
+
+    public void loadBorrowersToCombo() {
+        try {
+            isLoading = true; // ← suppress action events
+
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT DISTINCT CONCAT(b.first_name,' ',b.last_name) AS name "
+                    + "FROM transaction t "
+                    + "JOIN borrower b ON t.borrower_id = b.borrower_id "
+                    + "WHERE t.status = 'Borrowed'";
+
+            PreparedStatement pst = con.prepareStatement(sql);
+            ResultSet rs = pst.executeQuery();
+
+            cmbBorrowerName.removeAllItems();
+            while (rs.next()) {
+                cmbBorrowerName.addItem(rs.getString("name"));
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        } finally {
+            isLoading = false; // ← always re-enable, even if exception occurs
+        }
+    }
+
+    public void loadBooksToCombo(String borrowerName) {
+        try {
+            isLoading = true; // suppress cascade
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT DISTINCT bo.title "
+                    + "FROM transaction t "
+                    + "JOIN borrower b ON t.borrower_id = b.borrower_id "
+                    + "JOIN book bo ON t.book_id = bo.book_id "
+                    + "WHERE CONCAT(b.first_name,' ',b.last_name)=? "
+                    + "AND t.status='Borrowed'";
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setString(1, borrowerName);
+            ResultSet rs = pst.executeQuery();
+            cmbBook.removeAllItems();
+            while (rs.next()) {
+                cmbBook.addItem(rs.getString("title"));
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        } finally {
+            isLoading = false; // always re-enable
+        }
+    }
+
+    public void loadCopiesToCombo(String borrowerName, String bookTitle) {
+        try {
+            isLoading = true; // suppress cascade
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT bc.acquisition_number "
+                    + "FROM transaction t "
+                    + "JOIN borrower b ON t.borrower_id = b.borrower_id "
+                    + "JOIN book bo ON t.book_id = bo.book_id "
+                    + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                    + "WHERE CONCAT(b.first_name,' ',b.last_name)=? "
+                    + "AND bo.title=? AND t.status='Borrowed'";
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setString(1, borrowerName);
+            pst.setString(2, bookTitle);
+            ResultSet rs = pst.executeQuery();
+            cmbAcquisitionNumber.removeAllItems();
+            while (rs.next()) {
+                cmbAcquisitionNumber.addItem(rs.getString("acquisition_number"));
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        } finally {
+            isLoading = false; // always re-enable
+        }
+    }
+
+    public void loadDates(String acquisition) {
+        try {
+            Connection con = DB_connect.getConnection();
+
+            String sql = "SELECT rental_date, due_date "
+                    + "FROM transaction t "
+                    + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                    + "WHERE bc.acquisition_number=? AND t.status='Borrowed'";
+
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setString(1, acquisition);
+
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+                rentalDate.setDate(rs.getDate("rental_date"));
+                dueDate.setDate(rs.getDate("due_date"));
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }
+
+    private void resetUIState() {
+
+        cmbBook.setEnabled(false);
+        cmbAcquisitionNumber.setEnabled(false);
+        btnReturnBook.setEnabled(false);
+
+        cmbBook.removeAllItems();
+        cmbAcquisitionNumber.removeAllItems();
+
+        rentalDate.setDate(null);
+        dueDate.setDate(null);
     }
 
     /**
@@ -41,62 +161,40 @@ public class ReturnBook extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        defaultCalendarRenderer1 = new nauja.utils.jcalendar.renderers.DefaultCalendarRenderer();
-        defaultCalendarRenderer2 = new nauja.utils.jcalendar.renderers.DefaultCalendarRenderer();
-        defaultCalendarRenderer3 = new nauja.utils.jcalendar.renderers.DefaultCalendarRenderer();
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
-        txtDashboard = new javax.swing.JLabel();
-        txtBooks = new javax.swing.JLabel();
         txtMembers = new javax.swing.JLabel();
         txtTransactions = new javax.swing.JLabel();
-        jLabel14 = new javax.swing.JLabel();
-        jLabel8 = new javax.swing.JLabel();
-        jTextField8 = new javax.swing.JTextField();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        txtReports = new javax.swing.JLabel();
+        txtLogout1 = new javax.swing.JLabel();
+        txtDashboard = new javax.swing.JLabel();
+        txtBooks = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
         jLabel10 = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
-        jComboBox1 = new javax.swing.JComboBox<>();
+        cmbBorrowerName = new javax.swing.JComboBox<>();
         jLabel9 = new javax.swing.JLabel();
         jLabel15 = new javax.swing.JLabel();
         jLabel16 = new javax.swing.JLabel();
         jLabel19 = new javax.swing.JLabel();
-        jComboBox7 = new javax.swing.JComboBox<>();
-        jDateChooser3 = new com.toedter.calendar.JDateChooser();
-        jDateChooser4 = new com.toedter.calendar.JDateChooser();
-        jComboBox8 = new javax.swing.JComboBox<>();
-        jButton10 = new javax.swing.JButton();
+        cmbBook = new javax.swing.JComboBox<>();
+        cmbAcquisitionNumber = new javax.swing.JComboBox<>();
+        btnReturnBook = new javax.swing.JButton();
+        dueDate = new com.toedter.calendar.JDateChooser();
+        rentalDate = new com.toedter.calendar.JDateChooser();
+        jButton1 = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jPanel3.setBackground(new java.awt.Color(204, 204, 255));
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 36)); // NOI18N
         jLabel1.setText("Library Inventory System");
 
-        jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/malinaoproject/Adobe_Express_-_file-removebg-preview.png"))); // NOI18N
-
-        txtDashboard.setBackground(new java.awt.Color(255, 255, 255));
-        txtDashboard.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtDashboard.setText("Dashboard");
-        txtDashboard.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtDashboardMouseClicked(evt);
-            }
-        });
-
-        txtBooks.setBackground(new java.awt.Color(204, 204, 204));
-        txtBooks.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtBooks.setText("Books");
-        txtBooks.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtBooksMouseClicked(evt);
-            }
-        });
+        jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/Adobe_Express_-_file-removebg-preview.png"))); // NOI18N
 
         txtMembers.setBackground(new java.awt.Color(204, 204, 204));
         txtMembers.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
@@ -116,6 +214,42 @@ public class ReturnBook extends javax.swing.JFrame {
             }
         });
 
+        txtReports.setBackground(new java.awt.Color(204, 204, 204));
+        txtReports.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtReports.setText("Reports");
+        txtReports.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtReportsMouseClicked(evt);
+            }
+        });
+
+        txtLogout1.setBackground(new java.awt.Color(204, 204, 204));
+        txtLogout1.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtLogout1.setText("Logout");
+        txtLogout1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtLogout1MouseClicked(evt);
+            }
+        });
+
+        txtDashboard.setBackground(new java.awt.Color(255, 255, 255));
+        txtDashboard.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtDashboard.setText("Dashboard");
+        txtDashboard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtDashboardMouseClicked(evt);
+            }
+        });
+
+        txtBooks.setBackground(new java.awt.Color(204, 204, 204));
+        txtBooks.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtBooks.setText("Books");
+        txtBooks.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtBooksMouseClicked(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -125,15 +259,19 @@ public class ReturnBook extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(250, 250, 250)
+                .addGap(120, 120, 120)
                 .addComponent(txtDashboard)
-                .addGap(56, 56, 56)
+                .addGap(30, 30, 30)
                 .addComponent(txtBooks)
-                .addGap(67, 67, 67)
+                .addGap(30, 30, 30)
                 .addComponent(txtMembers)
-                .addGap(52, 52, 52)
+                .addGap(30, 30, 30)
                 .addComponent(txtTransactions)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(30, 30, 30)
+                .addComponent(txtReports)
+                .addGap(30, 30, 30)
+                .addComponent(txtLogout1)
+                .addContainerGap(797, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -141,57 +279,22 @@ public class ReturnBook extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(28, 28, 28)
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txtMembers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txtTransactions)
+                                .addComponent(txtReports)
+                                .addComponent(txtLogout1))
+                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(16, 16, 16)
-                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGap(46, 46, 46)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(txtDashboard)
-                            .addComponent(txtBooks)
-                            .addComponent(txtMembers)
-                            .addComponent(txtTransactions))))
+                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(17, Short.MAX_VALUE))
         );
 
-        jLabel14.setIcon(new javax.swing.ImageIcon(getClass().getResource("/malinaoproject/1150612 (2).png"))); // NOI18N
-
-        jLabel8.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel8.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel8.setText("SEARCH: ");
-
-        jTextField8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextField8ActionPerformed(evt);
-            }
-        });
-
-        jTable1.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null}
-            },
-            new String [] {
-                "Loan_ID", "Borrower Name", "Book", "Acquisition Number", "Rental Date", "Due Date", "Status"
-            }
-        ));
-        jScrollPane1.setViewportView(jTable1);
+        getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 2289, -1));
 
         jPanel1.setBackground(new java.awt.Color(204, 204, 204));
 
@@ -203,17 +306,17 @@ public class ReturnBook extends javax.swing.JFrame {
         jLabel12.setForeground(new java.awt.Color(51, 51, 51));
         jLabel12.setText("Book");
 
-        jComboBox1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
+        cmbBorrowerName.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        cmbBorrowerName.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbBorrowerName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jComboBox1ActionPerformed(evt);
+                cmbBorrowerNameActionPerformed(evt);
             }
         });
 
         jLabel9.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel9.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel9.setText("Loan Book");
+        jLabel9.setText("Return Book");
 
         jLabel15.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel15.setForeground(new java.awt.Color(51, 51, 51));
@@ -227,29 +330,43 @@ public class ReturnBook extends javax.swing.JFrame {
         jLabel19.setForeground(new java.awt.Color(51, 51, 51));
         jLabel19.setText("Rental Date:");
 
-        jComboBox7.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jComboBox7.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        jComboBox7.addActionListener(new java.awt.event.ActionListener() {
+        cmbBook.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        cmbBook.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbBook.setEnabled(false);
+        cmbBook.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jComboBox7ActionPerformed(evt);
+                cmbBookActionPerformed(evt);
             }
         });
 
-        jDateChooser3.setDateFormatString("YYYY-MM-dd\n");
-
-        jComboBox8.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jComboBox8.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        jComboBox8.addActionListener(new java.awt.event.ActionListener() {
+        cmbAcquisitionNumber.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        cmbAcquisitionNumber.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbAcquisitionNumber.setEnabled(false);
+        cmbAcquisitionNumber.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jComboBox8ActionPerformed(evt);
+                cmbAcquisitionNumberActionPerformed(evt);
             }
         });
 
-        jButton10.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jButton10.setText("Return Book");
-        jButton10.addActionListener(new java.awt.event.ActionListener() {
+        btnReturnBook.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        btnReturnBook.setText("Return Book");
+        btnReturnBook.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton10ActionPerformed(evt);
+                btnReturnBookActionPerformed(evt);
+            }
+        });
+
+        dueDate.setDateFormatString("yyyy-MM-dd");
+        dueDate.setEnabled(false);
+
+        rentalDate.setDateFormatString("yyyy-MM-dd");
+        rentalDate.setEnabled(false);
+
+        jButton1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jButton1.setText("Back");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
             }
         });
 
@@ -258,60 +375,71 @@ public class ReturnBook extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(31, 31, 31)
+                .addComponent(jButton1)
+                .addGap(417, 417, 417)
+                .addComponent(jLabel9)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(200, 200, 200)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(270, 270, 270)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel10)
-                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addComponent(jButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 162, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGroup(jPanel1Layout.createSequentialGroup()
-                                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                        .addComponent(jLabel15)
-                                        .addComponent(jLabel12)
-                                        .addComponent(jComboBox1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(jComboBox7, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(jComboBox8, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGap(248, 248, 248)
-                                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                        .addComponent(jLabel19)
-                                        .addComponent(jLabel16)
-                                        .addComponent(jDateChooser4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(jDateChooser3, javax.swing.GroupLayout.DEFAULT_SIZE, 301, Short.MAX_VALUE))))))
+                        .addComponent(jLabel10)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(590, 590, 590)
-                        .addComponent(jLabel9)))
-                .addContainerGap(304, Short.MAX_VALUE))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel15)
+                            .addComponent(jLabel12)
+                            .addComponent(cmbBook, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(cmbAcquisitionNumber, 0, 301, Short.MAX_VALUE)
+                            .addComponent(cmbBorrowerName, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 155, Short.MAX_VALUE)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel19)
+                            .addComponent(jLabel16)
+                            .addComponent(dueDate, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(rentalDate, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(203, 203, 203))))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btnReturnBook)
+                .addGap(38, 38, 38))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(20, 20, 20)
-                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(46, 46, 46)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel15)
-                    .addComponent(jLabel19))
-                .addGap(5, 5, 5)
+                .addGap(29, 29, 29)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jComboBox1)
-                    .addComponent(jDateChooser3, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel16)
-                    .addComponent(jLabel12))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(51, 51, 51)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jComboBox7)
-                    .addComponent(jDateChooser4, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel15)
+                        .addGap(5, 5, 5)
+                        .addComponent(cmbBorrowerName, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel12)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cmbBook, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel19)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(rentalDate, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel16)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(dueDate, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(19, 19, 19)
                 .addComponent(jLabel10)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jComboBox8, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 109, Short.MAX_VALUE)
-                .addComponent(jButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(41, 41, 41))
+                .addComponent(cmbAcquisitionNumber, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 68, Short.MAX_VALUE)
+                .addComponent(btnReturnBook, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(36, 36, 36))
         );
+
+        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(204, 170, -1, -1));
 
         jPanel4.setBackground(new java.awt.Color(204, 204, 204));
 
@@ -326,90 +454,217 @@ public class ReturnBook extends javax.swing.JFrame {
             .addGap(0, 185, Short.MAX_VALUE)
         );
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(177, 177, 177)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel14, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel8)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jTextField8, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 1424, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(86, 86, 86)
-                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(483, 483, 483))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(29, 29, 29)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 46, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel14)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jTextField8, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel8)))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(54, 54, 54))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(163, 163, 163))))
-        );
+        getContentPane().add(jPanel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(1642, 860, -1, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jTextField8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField8ActionPerformed
+    private void cmbBorrowerNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbBorrowerNameActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField8ActionPerformed
+        if (isLoading) {
+            return;
+        }
+        if (cmbBorrowerName.getSelectedItem() != null) {
+            String name = cmbBorrowerName.getSelectedItem().toString();
 
-    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
+            // reset lower levels first
+            cmbBook.removeAllItems();
+            cmbBook.setEnabled(false);
+            cmbAcquisitionNumber.removeAllItems();
+            cmbAcquisitionNumber.setEnabled(false);
+            btnReturnBook.setEnabled(false);
+            rentalDate.setDate(null);
+            dueDate.setDate(null);
+
+            loadBooksToCombo(name);
+            cmbBook.setEnabled(true); // ✅ enable AFTER loading
+        }
+    }//GEN-LAST:event_cmbBorrowerNameActionPerformed
+
+    private void cmbBookActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbBookActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jComboBox1ActionPerformed
 
-    private void jComboBox7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox7ActionPerformed
+        if (isLoading) {
+            return;
+        }
+        if (cmbBook.getSelectedItem() == null) {
+            return;
+        }
+
+        String borrower = cmbBorrowerName.getSelectedItem().toString();
+        String book = cmbBook.getSelectedItem().toString();
+
+        // reset lower levels first
+        cmbAcquisitionNumber.removeAllItems();
+        cmbAcquisitionNumber.setEnabled(false);
+        btnReturnBook.setEnabled(false);
+        rentalDate.setDate(null);
+        dueDate.setDate(null);
+
+        loadCopiesToCombo(borrower, book);
+        cmbAcquisitionNumber.setEnabled(true); // ✅ enable AFTER loading
+    }//GEN-LAST:event_cmbBookActionPerformed
+
+    private void cmbAcquisitionNumberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbAcquisitionNumberActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jComboBox7ActionPerformed
+        if (isLoading) {
+            return;
+        }
+        if (cmbAcquisitionNumber.getSelectedItem() == null) {
+            return;
+        }
 
-    private void jComboBox8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox8ActionPerformed
+        loadDates(cmbAcquisitionNumber.getSelectedItem().toString());
+        btnReturnBook.setEnabled(true); // ✅ only enabled after acquisition chosen
+    }//GEN-LAST:event_cmbAcquisitionNumberActionPerformed
+
+    private void btnReturnBookActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReturnBookActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jComboBox8ActionPerformed
+        try {
+            // ✅ VALIDATION
+            if (cmbBorrowerName.getSelectedItem() == null
+                    || cmbBook.getSelectedItem() == null
+                    || cmbAcquisitionNumber.getSelectedItem() == null) {
 
-    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
+                JOptionPane.showMessageDialog(this, "Please complete all selections!");
+                return;
+            }
+
+            String borrower = cmbBorrowerName.getSelectedItem().toString();
+            String book = cmbBook.getSelectedItem().toString();
+            String acquisition = cmbAcquisitionNumber.getSelectedItem().toString();
+
+            Connection con = DB_connect.getConnection();
+            con.setAutoCommit(false);
+
+            try {
+                // ✅ GET TRANSACTION ID + DUE DATE + BORROWER_ID
+                String getSql = "SELECT t.transaction_id, t.due_date, t.borrower_id "
+                        + "FROM transaction t "
+                        + "JOIN borrower b ON t.borrower_id = b.borrower_id "
+                        + "JOIN book bo ON t.book_id = bo.book_id "
+                        + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                        + "WHERE CONCAT(b.first_name,' ',b.last_name)=? "
+                        + "AND bo.title=? "
+                        + "AND bc.acquisition_number=? "
+                        + "AND t.status='Borrowed'";
+
+                PreparedStatement pstGet = con.prepareStatement(getSql);
+                pstGet.setString(1, borrower);
+                pstGet.setString(2, book);
+                pstGet.setString(3, acquisition);
+
+                ResultSet rs = pstGet.executeQuery();
+
+                if (!rs.next()) {
+                    JOptionPane.showMessageDialog(this, "Transaction not found!");
+                    con.rollback();
+                    return;
+                }
+
+                int transactionId = rs.getInt("transaction_id");
+                int borrowerId = rs.getInt("borrower_id");
+                Date due = rs.getDate("due_date");
+                Date today = new Date(System.currentTimeMillis());
+
+                // ✅ UPDATE TRANSACTION STATUS
+                String updateTransaction = "UPDATE transaction SET status='Returned', returned_date=? WHERE transaction_id=?";
+                PreparedStatement pstUpdate = con.prepareStatement(updateTransaction);
+                pstUpdate.setDate(1, today);
+                pstUpdate.setInt(2, transactionId);
+                pstUpdate.executeUpdate();
+
+                // ✅ UPDATE BOOK COPY STATUS
+                String updateCopy = "UPDATE book_copy SET status='Available' WHERE acquisition_number=?";
+                PreparedStatement pstCopy = con.prepareStatement(updateCopy);
+                pstCopy.setString(1, acquisition);
+                pstCopy.executeUpdate();
+
+                // ✅ CALCULATE AND SAVE FINES IF OVERDUE (INLINE)
+                long diff = today.getTime() - due.getTime();
+                long daysLate = diff / (1000 * 60 * 60 * 24);
+
+                if (daysLate > 0) {
+                    double fineAmount = daysLate * 10.0; // 10 pesos per day
+
+                    String insertFine = "INSERT INTO fine (transaction_id, borrower_id, amount, days_overdue, fine_date, status) "
+                            + "VALUES (?, ?, ?, ?, ?, 'Unpaid')";
+                    PreparedStatement pstFine = con.prepareStatement(insertFine);
+                    pstFine.setInt(1, transactionId);
+                    pstFine.setInt(2, borrowerId);
+                    pstFine.setDouble(3, fineAmount);
+                    pstFine.setLong(4, daysLate);
+                    pstFine.setDate(5, today);
+                    pstFine.executeUpdate();
+
+                    con.commit();
+
+                    JOptionPane.showMessageDialog(this,
+                            "Book returned successfully!\n\nOVERDUE FINE APPLIED:\nDays late: " + daysLate
+                            + "\nFine amount: " + fineAmount + " pesos");
+                } else {
+                    con.commit();
+                    JOptionPane.showMessageDialog(this, "Book returned successfully!");
+                }
+
+                // ✅ REFRESH COMBOS
+                resetUIState();
+                loadBorrowersToCombo();
+
+            } catch (Exception e) {
+                con.rollback();
+                throw e;
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e);
+        }
+    }//GEN-LAST:event_btnReturnBookActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton10ActionPerformed
-
-    private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
-        dashboard.setVisible(true);
-    }//GEN-LAST:event_txtDashboardMouseClicked
-
-    private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
-        book.setVisible(true); // show it
-    }//GEN-LAST:event_txtBooksMouseClicked
+        Transactions trans = new Transactions();
+        trans.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
         Members member = new Members();
         member.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
         Transactions transaction = new Transactions();
         transaction.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
+
+    private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
+        Reports report = new Reports();
+        report.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtReportsMouseClicked
+
+    private void txtLogout1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtLogout1MouseClicked
+        // TODO add your handling code here:
+        // TODO add your handling code here:
+        LoginForm login = new LoginForm();
+        login.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtLogout1MouseClicked
+
+    private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
+        Dashboard dashboard = new Dashboard();
+        dashboard.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtDashboardMouseClicked
+
+    private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
+        Books book = new Books(); // create instance
+        book.setVisible(true); // show it
+        this.dispose();
+    }//GEN-LAST:event_txtBooksMouseClicked
 
     /**
      * @param args the command line arguments
@@ -437,34 +692,29 @@ public class ReturnBook extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nauja.utils.jcalendar.renderers.DefaultCalendarRenderer defaultCalendarRenderer1;
-    private nauja.utils.jcalendar.renderers.DefaultCalendarRenderer defaultCalendarRenderer2;
-    private nauja.utils.jcalendar.renderers.DefaultCalendarRenderer defaultCalendarRenderer3;
-    private javax.swing.JButton jButton10;
-    private javax.swing.JComboBox<String> jComboBox1;
-    private javax.swing.JComboBox<String> jComboBox7;
-    private javax.swing.JComboBox<String> jComboBox8;
-    private com.toedter.calendar.JDateChooser jDateChooser3;
-    private com.toedter.calendar.JDateChooser jDateChooser4;
+    private javax.swing.JButton btnReturnBook;
+    private javax.swing.JComboBox<String> cmbAcquisitionNumber;
+    private javax.swing.JComboBox<String> cmbBook;
+    private javax.swing.JComboBox<String> cmbBorrowerName;
+    private com.toedter.calendar.JDateChooser dueDate;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel12;
-    private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JTextField jTextField8;
+    private com.toedter.calendar.JDateChooser rentalDate;
     private javax.swing.JLabel txtBooks;
     private javax.swing.JLabel txtDashboard;
+    private javax.swing.JLabel txtLogout1;
     private javax.swing.JLabel txtMembers;
+    private javax.swing.JLabel txtReports;
     private javax.swing.JLabel txtTransactions;
     // End of variables declaration//GEN-END:variables
 }
