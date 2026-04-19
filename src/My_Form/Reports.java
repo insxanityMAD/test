@@ -23,6 +23,7 @@ public class Reports extends javax.swing.JFrame {
      * Creates new form NewJFrame
      */
     private int selectedFineId = -1;
+
     public Reports() {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
@@ -62,36 +63,44 @@ public class Reports extends javax.swing.JFrame {
         );
 
         tblDashboard.setFont(tblDashboard.getFont().deriveFont(16f));
-             loadDashboardStats();
+        loadDashboardStats();
         loadFinesTable(null, ""); // load all fines on startup
 
     }
 
-   public void loadDashboardStats() {
+    public void loadDashboardStats() {
         try {
             Connection con = DB_connect.getConnection();
- 
+
             // Total Books
             PreparedStatement pstTotal = con.prepareStatement("SELECT COUNT(*) AS total FROM book_copy");
             ResultSet rsTotal = pstTotal.executeQuery();
-            if (rsTotal.next()) lblTotalBooks.setText(String.valueOf(rsTotal.getInt("total")));
- 
+            if (rsTotal.next()) {
+                lblTotalBooks.setText(String.valueOf(rsTotal.getInt("total")));
+            }
+
             // Books Available
             PreparedStatement pstAvailable = con.prepareStatement("SELECT COUNT(*) AS available FROM book_copy WHERE status='Available'");
             ResultSet rsAvailable = pstAvailable.executeQuery();
-            if (rsAvailable.next()) lblBooksAvailable.setText(String.valueOf(rsAvailable.getInt("available")));
- 
+            if (rsAvailable.next()) {
+                lblBooksAvailable.setText(String.valueOf(rsAvailable.getInt("available")));
+            }
+
             // Borrowed Books
             PreparedStatement pstBorrowed = con.prepareStatement("SELECT COUNT(*) AS borrowed FROM `transaction` WHERE status='Borrowed'");
             ResultSet rsBorrowed = pstBorrowed.executeQuery();
-            if (rsBorrowed.next()) lblBorrowedBooks.setText(String.valueOf(rsBorrowed.getInt("borrowed")));
- 
+            if (rsBorrowed.next()) {
+                lblBorrowedBooks.setText(String.valueOf(rsBorrowed.getInt("borrowed")));
+            }
+
             // Overdue Books
             PreparedStatement pstOverdue = con.prepareStatement(
                     "SELECT COUNT(*) AS overdue FROM `transaction` WHERE status='Borrowed' AND due_date < CURDATE()");
             ResultSet rsOverdue = pstOverdue.executeQuery();
-            if (rsOverdue.next()) lblOverdueBooks.setText(String.valueOf(rsOverdue.getInt("overdue")));
- 
+            if (rsOverdue.next()) {
+                lblOverdueBooks.setText(String.valueOf(rsOverdue.getInt("overdue")));
+            }
+
             // Unpaid Fines total amount
             PreparedStatement pstUnpaid = con.prepareStatement(
                     "SELECT SUM(amount) AS total_unpaid FROM fine WHERE status = 'Unpaid'");
@@ -100,24 +109,24 @@ public class Reports extends javax.swing.JFrame {
                 double total = rsUnpaid.getDouble("total_unpaid");
                 lblUnpaidFines.setText(String.format("₱%.0f", total));
             }
- 
+
             con.close();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
         }
     }
- 
+
     // ─── LOAD FINES TABLE (dynamic: filter by status + search keyword) ─────────
     public void loadFinesTable(String statusFilter, String keyword) {
         try {
             Connection con = DB_connect.getConnection();
- 
+
             DefaultTableModel model = (DefaultTableModel) tblDashboard.getModel();
             model.setRowCount(0);
             model.setColumnIdentifiers(new Object[]{
                 "Fine ID", "Borrower", "Book Title", "Acc. #", "Days", "Amount", "Status"
             });
- 
+
             // Build SQL dynamically based on filter and keyword
             StringBuilder sql = new StringBuilder(
                     "SELECT f.fine_id, "
@@ -134,23 +143,23 @@ public class Reports extends javax.swing.JFrame {
                     + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
                     + "WHERE 1=1 "
             );
- 
+
             // Add status filter if not "All"
             if (statusFilter != null && !statusFilter.equals("All")) {
                 sql.append("AND f.status = ? ");
             }
- 
+
             // Add keyword search if not empty
             if (keyword != null && !keyword.trim().isEmpty()
                     && !keyword.equals("Search borrower or book...")) {
                 sql.append("AND (CONCAT(b.first_name, ' ', b.last_name) LIKE ? ");
                 sql.append("OR bo.title LIKE ?) ");
             }
- 
+
             sql.append("ORDER BY f.fine_date DESC");
- 
+
             PreparedStatement pst = con.prepareStatement(sql.toString());
- 
+
             // Bind parameters in order
             int paramIndex = 1;
             if (statusFilter != null && !statusFilter.equals("All")) {
@@ -162,7 +171,7 @@ public class Reports extends javax.swing.JFrame {
                 pst.setString(paramIndex++, search);
                 pst.setString(paramIndex++, search);
             }
- 
+
             ResultSet rs = pst.executeQuery();
             while (rs.next()) {
                 model.addRow(new Object[]{
@@ -175,19 +184,19 @@ public class Reports extends javax.swing.JFrame {
                     rs.getString("status")
                 });
             }
- 
+
             // Update table styling
             tblDashboard.getTableHeader().setFont(
                     tblDashboard.getTableHeader().getFont().deriveFont(18f));
             tblDashboard.setFont(tblDashboard.getFont().deriveFont(16f));
             tblDashboard.setRowHeight(30);
- 
+
             con.close();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
         }
     }
- 
+
     // ─── HELPER: get current filter + keyword and reload table ─────────────────
     private void reloadTable() {
         String status = (String) cmbCategory.getSelectedItem();
@@ -635,61 +644,67 @@ public class Reports extends javax.swing.JFrame {
 
     private void btnExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportActionPerformed
         // TODO add your handling code here:
-         javax.swing.JFileChooser fileChooser = new javax.swing.JFileChooser();
+        javax.swing.JFileChooser fileChooser = new javax.swing.JFileChooser();
         fileChooser.setDialogTitle("Save Excel File");
         fileChooser.setSelectedFile(new java.io.File("FinesReport.xlsx"));
         fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Excel Files", "xlsx"));
- 
+
         int userSelection = fileChooser.showSaveDialog(this);
-        if (userSelection != javax.swing.JFileChooser.APPROVE_OPTION) return;
- 
+        if (userSelection != javax.swing.JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
         java.io.File fileToSave = fileChooser.getSelectedFile();
         if (!fileToSave.getName().endsWith(".xlsx")) {
             fileToSave = new java.io.File(fileToSave.getAbsolutePath() + ".xlsx");
         }
- 
+
         try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
             org.apache.poi.xssf.usermodel.XSSFSheet sheet = workbook.createSheet("Fines Report");
             javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tblDashboard.getModel();
- 
+
             org.apache.poi.xssf.usermodel.XSSFCellStyle headerStyle = workbook.createCellStyle();
             org.apache.poi.xssf.usermodel.XSSFFont headerFont = workbook.createFont();
             headerFont.setBold(true);
             headerFont.setFontHeightInPoints((short) 12);
             headerStyle.setFont(headerFont);
             headerStyle.setFillForegroundColor(new org.apache.poi.xssf.usermodel.XSSFColor(
-                new byte[]{(byte) 204, (byte) 204, (byte) 255}, null));
+                    new byte[]{(byte) 204, (byte) 204, (byte) 255}, null));
             headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
- 
+
             org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
             for (int col = 0; col < model.getColumnCount(); col++) {
                 org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(col);
                 cell.setCellValue(model.getColumnName(col));
                 cell.setCellStyle(headerStyle);
             }
- 
+
             for (int row = 0; row < model.getRowCount(); row++) {
                 org.apache.poi.ss.usermodel.Row dataRow = sheet.createRow(row + 1);
                 for (int col = 0; col < model.getColumnCount(); col++) {
                     org.apache.poi.ss.usermodel.Cell cell = dataRow.createCell(col);
                     Object value = model.getValueAt(row, col);
-                    if (value != null) cell.setCellValue(value.toString());
+                    if (value != null) {
+                        cell.setCellValue(value.toString());
+                    }
                 }
             }
- 
-            for (int col = 0; col < model.getColumnCount(); col++) sheet.autoSizeColumn(col);
- 
+
+            for (int col = 0; col < model.getColumnCount(); col++) {
+                sheet.autoSizeColumn(col);
+            }
+
             try (java.io.FileOutputStream fos = new java.io.FileOutputStream(fileToSave)) {
                 workbook.write(fos);
             }
- 
+
             JOptionPane.showMessageDialog(this,
-                "Exported successfully to:\n" + fileToSave.getAbsolutePath(),
-                "Export Successful", JOptionPane.INFORMATION_MESSAGE);
- 
+                    "Exported successfully to:\n" + fileToSave.getAbsolutePath(),
+                    "Export Successful", JOptionPane.INFORMATION_MESSAGE);
+
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Export failed: " + ex.getMessage(),
-                "Export Error", JOptionPane.ERROR_MESSAGE);
+                    "Export Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnExportActionPerformed
 
@@ -712,30 +727,39 @@ public class Reports extends javax.swing.JFrame {
 
     private void btnRefresh1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefresh1ActionPerformed
         // TODO add your handling code here:
-           loadDashboardStats();
-        reloadTable();
+        loadDashboardStats();
+
+        // Reset ONLY search field
+        txtSearch.setText("Search borrower or book...");
+        txtSearch.setForeground(java.awt.Color.GRAY);
+
+        // Keep current filter (IMPORTANT)
+        String status = (String) cmbCategory.getSelectedItem();
+
+        // Reload table using current status but empty search
+        loadFinesTable(status, "");
     }//GEN-LAST:event_btnRefresh1ActionPerformed
 
     private void tblDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblDashboardMouseClicked
         // TODO add your handling code here:
-         int row = tblDashboard.getSelectedRow();
+        int row = tblDashboard.getSelectedRow();
 
-    if (row != -1) {
-        selectedFineId = Integer.parseInt(tblDashboard.getValueAt(row, 0).toString());
+        if (row != -1) {
+            selectedFineId = Integer.parseInt(tblDashboard.getValueAt(row, 0).toString());
 
-        String borrower = tblDashboard.getValueAt(row, 1).toString();
-        String book = tblDashboard.getValueAt(row, 2).toString();
-        String status = tblDashboard.getValueAt(row, 6).toString();
+            String borrower = tblDashboard.getValueAt(row, 1).toString();
+            String book = tblDashboard.getValueAt(row, 2).toString();
+            String status = tblDashboard.getValueAt(row, 6).toString();
 
-        // Optional: show info
-        System.out.println("Selected Fine ID: " + selectedFineId);
+            // Optional: show info
+            System.out.println("Selected Fine ID: " + selectedFineId);
 
-        if (status.equalsIgnoreCase("Paid")) {
-            JOptionPane.showMessageDialog(this, "This fine is already paid.");
-            selectedFineId = -1; // reset
+            if (status.equalsIgnoreCase("Paid")) {
+                JOptionPane.showMessageDialog(this, "This fine is already paid.");
+                selectedFineId = -1; // reset
+            }
+            btnPay.setEnabled(true);
         }
-        btnPay.setEnabled(true);
-    }
     }//GEN-LAST:event_tblDashboardMouseClicked
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
@@ -778,44 +802,44 @@ public class Reports extends javax.swing.JFrame {
 
     private void btnPayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPayActionPerformed
         // TODO add your handling code here:
-         if (selectedFineId == -1) {
-        JOptionPane.showMessageDialog(this, "Please select a fine to pay.");
-        return;
-    }
-
-    int confirm = JOptionPane.showConfirmDialog(
-            this,
-            "Mark this fine as PAID?",
-            "Confirm Payment",
-            JOptionPane.YES_NO_OPTION
-    );
-
-    if (confirm == JOptionPane.YES_OPTION) {
-        try {
-            Connection con = DB_connect.getConnection();
-
-            String sql = "UPDATE fine SET status='Paid', payment_date=NOW() WHERE fine_id=?";
-            PreparedStatement pst = con.prepareStatement(sql);
-            pst.setInt(1, selectedFineId);
-
-            int updated = pst.executeUpdate();
-
-            if (updated > 0) {
-                JOptionPane.showMessageDialog(this, "Payment successful!");
-
-                // Refresh table + stats
-                loadDashboardStats();
-                reloadTable();
-
-                selectedFineId = -1; // reset
-            }
-            btnPay.setEnabled(false);
-            con.close();
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e);
+        if (selectedFineId == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a fine to pay.");
+            return;
         }
-    }
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Mark this fine as PAID?",
+                "Confirm Payment",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                Connection con = DB_connect.getConnection();
+
+                String sql = "UPDATE fine SET status='Paid', payment_date=NOW() WHERE fine_id=?";
+                PreparedStatement pst = con.prepareStatement(sql);
+                pst.setInt(1, selectedFineId);
+
+                int updated = pst.executeUpdate();
+
+                if (updated > 0) {
+                    JOptionPane.showMessageDialog(this, "Payment successful!");
+
+                    // Refresh table + stats
+                    loadDashboardStats();
+                    reloadTable();
+
+                    selectedFineId = -1; // reset
+                }
+                btnPay.setEnabled(false);
+                con.close();
+
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, e);
+            }
+        }
     }//GEN-LAST:event_btnPayActionPerformed
 
     /**
