@@ -595,22 +595,70 @@ public class MemberReports extends javax.swing.JFrame {
     }//GEN-LAST:event_cmbCategoryActionPerformed
 
     private void btnOverdueAccountsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOverdueAccountsActionPerformed
-        // TODO add your handling code here:
-       String sql = "SELECT DISTINCT b.borrower_id, "
+       String sql = "SELECT b.borrower_id, "
             + "CONCAT(b.first_name, ' ', b.last_name) as member_name, "
             + "b.borrower_type, "
             + "b.phone_number, "
             + "COUNT(t.transaction_id) as books_overdue, "
             + "MIN(t.due_date) as first_due_date, "
-            + "DATEDIFF(CURRENT_DATE, MIN(t.due_date)) as days_overdue, "
-            + "SUM(DATEDIFF(CURRENT_DATE, t.due_date) * 10) as total_fine " // ← flat ₱10/day from day 1
+            + "GROUP_CONCAT(t.due_date) as all_due_dates "
             + "FROM borrower b "
             + "JOIN `transaction` t ON b.borrower_id = t.borrower_id "
             + "WHERE t.due_date < CURRENT_DATE "
             + "AND t.status = 'Borrowed' "
             + "GROUP BY b.borrower_id, b.first_name, b.last_name, b.borrower_type, b.phone_number";
 
-        populateTable(sql, false, false, true);
+    try {
+        java.sql.Connection con = DB_connect.getConnection();
+        java.sql.PreparedStatement ps = con.prepareStatement(sql);
+        java.sql.ResultSet rs = ps.executeQuery();
+
+        String[] columns = {"ID", "Member Name", "Type", "Contact", "Books Overdue", "First Due Date", "Days Overdue (Weekdays)", "Total Fine"};
+        javax.swing.table.DefaultTableModel model = new javax.swing.table.DefaultTableModel(new Object[][]{}, columns) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        tblModel.setModel(model);
+
+        java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
+
+        while (rs.next()) {
+            java.sql.Date firstDue = rs.getDate("first_due_date");
+
+            // ✅ Calculate weekday-only days and fine across all due dates
+            String allDueDates = rs.getString("all_due_dates");
+            double totalFine = 0;
+            long maxDaysOverdue = 0;
+
+            if (allDueDates != null) {
+                for (String dateStr : allDueDates.split(",")) {
+                    try {
+                        java.sql.Date due = java.sql.Date.valueOf(dateStr.trim());
+                        long days = My_Classes.FineCalculator.countWeekdaysLate(due, today);
+                        totalFine += My_Classes.FineCalculator.calculateFine(due, today);
+                        if (days > maxDaysOverdue) maxDaysOverdue = days;
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            model.addRow(new Object[]{
+                rs.getInt("borrower_id"),
+                rs.getString("member_name"),
+                rs.getString("borrower_type"),
+                rs.getString("phone_number"),
+                rs.getInt("books_overdue"),
+                firstDue != null ? firstDue.toString() : "N/A",
+                maxDaysOverdue,
+                String.format("₱%.2f", totalFine)
+            });
+        }
+
+        ps.close();
+        con.close();
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+    }
     }//GEN-LAST:event_btnOverdueAccountsActionPerformed
 
     private void btnTopBorrowersActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTopBorrowersActionPerformed

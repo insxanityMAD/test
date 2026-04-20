@@ -381,7 +381,120 @@ public class Dashboard extends javax.swing.JFrame {
         // Reload default table
         loadTableData("Books");
     }
+   private void showOverdueDetails() {
+    try {
+        Connection con = DB_connect.getConnection();
 
+        String sql = "SELECT t.transaction_id, "
+                + "CONCAT(b.first_name, ' ', b.last_name) AS full_name, "
+                + "bo.title, bc.acquisition_number, t.rental_date, t.due_date "
+                + "FROM `transaction` t "
+                + "JOIN borrower b ON t.borrower_id = b.borrower_id "
+                + "JOIN book bo ON t.book_id = bo.book_id "
+                + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                + "WHERE t.status = 'Borrowed' AND t.due_date < CURDATE() "
+                + "ORDER BY t.due_date ASC";
+
+        PreparedStatement pst = con.prepareStatement(sql);
+        ResultSet rs = pst.executeQuery();
+
+        DefaultTableModel model = new DefaultTableModel(
+            new String[]{"ID", "Borrower", "Book Title", "Acq. No.",
+                         "Rental Date", "Due Date", "Days Overdue"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
+
+        while (rs.next()) {
+            java.sql.Date rent = rs.getDate("rental_date");
+            java.sql.Date due = rs.getDate("due_date");
+
+            // ✅ Use weekday-only calculation
+            long daysOverdue = My_Classes.FineCalculator.countWeekdaysLate(due, today);
+
+            model.addRow(new Object[]{
+                rs.getInt("transaction_id"),
+                rs.getString("full_name"),
+                rs.getString("title"),
+                rs.getString("acquisition_number"),
+                rent != null ? sdf.format(rent) : "",
+                due != null ? sdf.format(due) : "",
+                daysOverdue + " day(s)"
+            });
+        }
+
+        if (model.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this,
+                "No overdue books found.",
+                "Overdue Books",
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        javax.swing.JTable overdueTable = new javax.swing.JTable(model);
+        overdueTable.setFont(new java.awt.Font("Tahoma", java.awt.Font.PLAIN, 14));
+        overdueTable.setRowHeight(28);
+        overdueTable.getTableHeader().setFont(
+            new java.awt.Font("Tahoma", java.awt.Font.BOLD, 14));
+        overdueTable.getTableHeader().setBackground(new java.awt.Color(204, 0, 0));
+        overdueTable.getTableHeader().setForeground(java.awt.Color.WHITE);
+
+        // ✅ Row color based on CORRECT weekday count
+        overdueTable.setDefaultRenderer(Object.class,
+            new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(
+                    javax.swing.JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+
+                super.getTableCellRendererComponent(
+                    table, value, isSelected, hasFocus, row, column);
+
+                if (!isSelected) {
+                    String daysStr = table.getValueAt(row, 6).toString();
+                    int days = Integer.parseInt(daysStr.replace(" day(s)", "").trim());
+
+                    if (days > 30) {
+                        setBackground(new java.awt.Color(255, 100, 100));
+                    } else if (days > 7) {
+                        setBackground(new java.awt.Color(255, 180, 180));
+                    } else {
+                        setBackground(new java.awt.Color(255, 230, 230));
+                    }
+                } else {
+                    setBackground(new java.awt.Color(204, 153, 255));
+                }
+
+                return this;
+            }
+        });
+
+        javax.swing.JScrollPane scrollPane = new javax.swing.JScrollPane(overdueTable);
+        scrollPane.setPreferredSize(new java.awt.Dimension(900, 400));
+
+        javax.swing.JLabel titleLabel = new javax.swing.JLabel(
+            "⚠ Overdue Books — " + model.getRowCount() + " record(s)");
+        titleLabel.setFont(new java.awt.Font("Tahoma", java.awt.Font.BOLD, 16));
+        titleLabel.setForeground(new java.awt.Color(180, 0, 0));
+        titleLabel.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 10, 0));
+
+        javax.swing.JPanel panel = new javax.swing.JPanel(new java.awt.BorderLayout(0, 5));
+        panel.add(titleLabel, java.awt.BorderLayout.NORTH);
+        panel.add(scrollPane, java.awt.BorderLayout.CENTER);
+
+        JOptionPane.showMessageDialog(this, panel,
+            "Overdue Books", JOptionPane.WARNING_MESSAGE);
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, e);
+    }
+}
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -672,6 +785,11 @@ public class Dashboard extends javax.swing.JFrame {
         lblOverdueBooks.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblOverdueBooks.setText("-");
         lblOverdueBooks.setOpaque(true);
+        lblOverdueBooks.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblOverdueBooksMouseClicked(evt);
+            }
+        });
         jPanel1.add(lblOverdueBooks, new org.netbeans.lib.awtextra.AbsoluteConstraints(870, 200, 225, 151));
 
         jLabel16.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/1150612 (2).png"))); // NOI18N
@@ -785,6 +903,11 @@ public class Dashboard extends javax.swing.JFrame {
         login.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtLogout1MouseClicked
+
+    private void lblOverdueBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblOverdueBooksMouseClicked
+        // TODO add your handling code here:
+        showOverdueDetails();
+    }//GEN-LAST:event_lblOverdueBooksMouseClicked
 
     /**
      * @param args the command line arguments

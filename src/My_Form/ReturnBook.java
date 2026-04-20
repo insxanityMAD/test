@@ -521,104 +521,99 @@ public class ReturnBook extends javax.swing.JFrame {
     private void btnReturnBookActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReturnBookActionPerformed
         // TODO add your handling code here:
         try {
-            // ✅ VALIDATION
-            if (cmbBorrowerName.getSelectedItem() == null
-                    || cmbBook.getSelectedItem() == null
-                    || cmbAcquisitionNumber.getSelectedItem() == null) {
+        if (cmbBorrowerName.getSelectedItem() == null
+                || cmbBook.getSelectedItem() == null
+                || cmbAcquisitionNumber.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "Please complete all selections!");
+            return;
+        }
 
-                JOptionPane.showMessageDialog(this, "Please complete all selections!");
+        String borrower = cmbBorrowerName.getSelectedItem().toString();
+        String book = cmbBook.getSelectedItem().toString();
+        String acquisition = cmbAcquisitionNumber.getSelectedItem().toString();
+
+        Connection con = DB_connect.getConnection();
+        con.setAutoCommit(false);
+
+        try {
+            String getSql = "SELECT t.transaction_id, t.due_date, t.borrower_id "
+                    + "FROM transaction t "
+                    + "JOIN borrower b ON t.borrower_id = b.borrower_id "
+                    + "JOIN book bo ON t.book_id = bo.book_id "
+                    + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                    + "WHERE CONCAT(b.first_name,' ',b.last_name)=? "
+                    + "AND bo.title=? "
+                    + "AND bc.acquisition_number=? "
+                    + "AND t.status='Borrowed'";
+
+            PreparedStatement pstGet = con.prepareStatement(getSql);
+            pstGet.setString(1, borrower);
+            pstGet.setString(2, book);
+            pstGet.setString(3, acquisition);
+
+            ResultSet rs = pstGet.executeQuery();
+
+            if (!rs.next()) {
+                JOptionPane.showMessageDialog(this, "Transaction not found!");
+                con.rollback();
                 return;
             }
 
-            String borrower = cmbBorrowerName.getSelectedItem().toString();
-            String book = cmbBook.getSelectedItem().toString();
-            String acquisition = cmbAcquisitionNumber.getSelectedItem().toString();
+            int transactionId = rs.getInt("transaction_id");
+            int borrowerId = rs.getInt("borrower_id");
+            java.sql.Date due = rs.getDate("due_date");
+            java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
 
-            Connection con = DB_connect.getConnection();
-            con.setAutoCommit(false);
+            // ✅ UPDATE TRANSACTION STATUS
+            String updateTransaction = "UPDATE transaction SET status='Returned', returned_date=? WHERE transaction_id=?";
+            PreparedStatement pstUpdate = con.prepareStatement(updateTransaction);
+            pstUpdate.setDate(1, today);
+            pstUpdate.setInt(2, transactionId);
+            pstUpdate.executeUpdate();
 
-            try {
-                // ✅ GET TRANSACTION ID + DUE DATE + BORROWER_ID
-                String getSql = "SELECT t.transaction_id, t.due_date, t.borrower_id "
-                        + "FROM transaction t "
-                        + "JOIN borrower b ON t.borrower_id = b.borrower_id "
-                        + "JOIN book bo ON t.book_id = bo.book_id "
-                        + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
-                        + "WHERE CONCAT(b.first_name,' ',b.last_name)=? "
-                        + "AND bo.title=? "
-                        + "AND bc.acquisition_number=? "
-                        + "AND t.status='Borrowed'";
+            // ✅ UPDATE BOOK COPY STATUS
+            String updateCopy = "UPDATE book_copy SET status='Available' WHERE acquisition_number=?";
+            PreparedStatement pstCopy = con.prepareStatement(updateCopy);
+            pstCopy.setString(1, acquisition);
+            pstCopy.executeUpdate();
 
-                PreparedStatement pstGet = con.prepareStatement(getSql);
-                pstGet.setString(1, borrower);
-                pstGet.setString(2, book);
-                pstGet.setString(3, acquisition);
+            // ✅ WEEKDAY-ONLY FINE CALCULATION
+            long daysLate = My_Classes.FineCalculator.countWeekdaysLate(due, today);
+            double fineAmount = My_Classes.FineCalculator.calculateFine(due, today);
 
-                ResultSet rs = pstGet.executeQuery();
+            if (daysLate > 0) {
+                String insertFine = "INSERT INTO fine (transaction_id, borrower_id, amount, days_overdue, fine_date, status) "
+                        + "VALUES (?, ?, ?, ?, ?, 'Unpaid')";
+                PreparedStatement pstFine = con.prepareStatement(insertFine);
+                pstFine.setInt(1, transactionId);
+                pstFine.setInt(2, borrowerId);
+                pstFine.setDouble(3, fineAmount);
+                pstFine.setLong(4, daysLate);
+                pstFine.setDate(5, today);
+                pstFine.executeUpdate();
 
-                if (!rs.next()) {
-                    JOptionPane.showMessageDialog(this, "Transaction not found!");
-                    con.rollback();
-                    return;
-                }
+                con.commit();
 
-                int transactionId = rs.getInt("transaction_id");
-                int borrowerId = rs.getInt("borrower_id");
-                Date due = rs.getDate("due_date");
-                Date today = new Date(System.currentTimeMillis());
-
-                // ✅ UPDATE TRANSACTION STATUS
-                String updateTransaction = "UPDATE transaction SET status='Returned', returned_date=? WHERE transaction_id=?";
-                PreparedStatement pstUpdate = con.prepareStatement(updateTransaction);
-                pstUpdate.setDate(1, today);
-                pstUpdate.setInt(2, transactionId);
-                pstUpdate.executeUpdate();
-
-                // ✅ UPDATE BOOK COPY STATUS
-                String updateCopy = "UPDATE book_copy SET status='Available' WHERE acquisition_number=?";
-                PreparedStatement pstCopy = con.prepareStatement(updateCopy);
-                pstCopy.setString(1, acquisition);
-                pstCopy.executeUpdate();
-
-                // ✅ CALCULATE AND SAVE FINES IF OVERDUE (INLINE)
-                long diff = today.getTime() - due.getTime();
-                long daysLate = diff / (1000 * 60 * 60 * 24);
-
-                if (daysLate > 0) {
-                    double fineAmount = daysLate * 10.0; // 10 pesos per day
-
-                    String insertFine = "INSERT INTO fine (transaction_id, borrower_id, amount, days_overdue, fine_date, status) "
-                            + "VALUES (?, ?, ?, ?, ?, 'Unpaid')";
-                    PreparedStatement pstFine = con.prepareStatement(insertFine);
-                    pstFine.setInt(1, transactionId);
-                    pstFine.setInt(2, borrowerId);
-                    pstFine.setDouble(3, fineAmount);
-                    pstFine.setLong(4, daysLate);
-                    pstFine.setDate(5, today);
-                    pstFine.executeUpdate();
-
-                    con.commit();
-
-                    JOptionPane.showMessageDialog(this,
-                            "Book returned successfully!\n\nOVERDUE FINE APPLIED:\nDays late: " + daysLate
-                            + "\nFine amount: " + fineAmount + " pesos");
-                } else {
-                    con.commit();
-                    JOptionPane.showMessageDialog(this, "Book returned successfully!");
-                }
-
-                // ✅ REFRESH COMBOS
-                resetUIState();
-                loadBorrowersToCombo();
-
-            } catch (Exception e) {
-                con.rollback();
-                throw e;
+                JOptionPane.showMessageDialog(this,
+                        "Book returned successfully!\n\nOVERDUE FINE APPLIED:"
+                        + "\nDays late (weekdays only): " + daysLate
+                        + "\nFine amount: ₱" + fineAmount);
+            } else {
+                con.commit();
+                JOptionPane.showMessageDialog(this, "Book returned successfully!");
             }
 
+            resetUIState();
+            loadBorrowersToCombo();
+
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e);
+            con.rollback();
+            throw e;
         }
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, e);
+    }
     }//GEN-LAST:event_btnReturnBookActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed

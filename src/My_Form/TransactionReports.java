@@ -42,8 +42,6 @@ public class TransactionReports extends javax.swing.JFrame {
         // 2. Increase the row height so the large text isn't cut off
         tblModel.setRowHeight(35);
 
-     
-
         // Load Current Loans by default on startup
         loadCurrentLoans();
 // 
@@ -62,7 +60,7 @@ public class TransactionReports extends javax.swing.JFrame {
         currentView = "current_loans";
         jLabel10.setText("Current Loans");
 
-        String[] columns = {"Trans ID", "Borrower", "Book Title", "Acc. #", "Rental Date", "Due Date", "Days Left", "Status"};
+        String[] columns = {"Trans ID", "Borrower", "Book Title", "Acc. #", "Rental Date", "Due Date", "Days Left (Weekdays)", "Status"};
         DefaultTableModel model = getEmptyModel(columns);
         tblModel.setModel(model);
 
@@ -74,7 +72,6 @@ public class TransactionReports extends javax.swing.JFrame {
             bc.acquisition_number,
             t.rental_date,
             t.due_date,
-            DATEDIFF(t.due_date, CURDATE()) AS days_left,
             t.status
         FROM transaction t
         JOIN borrower m ON t.borrower_id = m.borrower_id
@@ -86,8 +83,41 @@ public class TransactionReports extends javax.swing.JFrame {
 
         try (Connection conn = DB_connect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
+            java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
+
             while (rs.next()) {
-                int daysLeft = rs.getInt("days_left");
+                java.sql.Date due = rs.getDate("due_date");
+
+                long daysLeft;
+
+                if (due != null) {
+                    // If overdue → negative days
+                    if (due.before(today)) {
+                        long overdueDays = My_Classes.FineCalculator.countWeekdaysLate(due, today);
+                        daysLeft = -overdueDays;
+                    } else {
+                        // Count weekdays remaining (reverse logic)
+                        java.time.LocalDate start = today.toLocalDate();
+                        java.time.LocalDate end = due.toLocalDate();
+
+                        long count = 0;
+
+                        while (!start.isAfter(end)) {
+                            java.time.DayOfWeek day = start.getDayOfWeek();
+
+                            if (day != java.time.DayOfWeek.SATURDAY && day != java.time.DayOfWeek.SUNDAY) {
+                                count++;
+                            }
+
+                            start = start.plusDays(1);
+                        }
+
+                        daysLeft = count;
+                    }
+                } else {
+                    daysLeft = 0;
+                }
+
                 String status = daysLeft < 0 ? "OVERDUE" : rs.getString("status");
 
                 model.addRow(new Object[]{
@@ -96,7 +126,7 @@ public class TransactionReports extends javax.swing.JFrame {
                     rs.getString("title"),
                     rs.getString("acquisition_number"),
                     rs.getDate("rental_date"),
-                    rs.getDate("due_date"),
+                    due,
                     daysLeft,
                     status
                 });
@@ -223,7 +253,7 @@ ORDER BY t.returned_date DESC
         currentView = "overdue";
         jLabel10.setText("Overdue List");
 
-        String[] columns = {"Trans ID", "Borrower", "Book Title", "Acc. #", "Rental Date", "Due Date", "Days Overdue", "Fine"};
+        String[] columns = {"Trans ID", "Borrower", "Book Title", "Acc. #", "Rental Date", "Due Date", "Days Overdue (Weekdays)", "Fine"};
         DefaultTableModel model = getEmptyModel(columns);
         tblModel.setModel(model);
 
@@ -234,29 +264,35 @@ ORDER BY t.returned_date DESC
             b.title,
             bc.acquisition_number,
             t.rental_date,
-            t.due_date,
-            ABS(DATEDIFF(CURDATE(), t.due_date)) AS days_overdue,
-            ABS(DATEDIFF(CURDATE(), t.due_date)) * 5.00 AS fine
+            t.due_date
         FROM transaction t
         JOIN borrower m ON t.borrower_id = m.borrower_id
         JOIN book b ON t.book_id = b.book_id
         JOIN book_copy bc ON t.copy_id = bc.copy_id
         WHERE t.status = 'Borrowed' AND t.due_date < CURDATE()
-        ORDER BY days_overdue DESC
+        ORDER BY t.due_date ASC
         """;
 
         try (Connection conn = DB_connect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
+            java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
+
             while (rs.next()) {
+                java.sql.Date due = rs.getDate("due_date");
+
+                // ✅ Weekday-only calculation
+                long daysOverdue = My_Classes.FineCalculator.countWeekdaysLate(due, today);
+                double fine = My_Classes.FineCalculator.calculateFine(due, today);
+
                 model.addRow(new Object[]{
                     rs.getInt("transaction_id"),
                     rs.getString("borrower"),
                     rs.getString("title"),
                     rs.getString("acquisition_number"),
                     rs.getDate("rental_date"),
-                    rs.getDate("due_date"),
-                    rs.getInt("days_overdue"),
-                    String.format("₱%.2f", rs.getDouble("fine"))
+                    due,
+                    daysOverdue,
+                    String.format("₱%.2f", fine)
                 });
             }
 
@@ -269,8 +305,6 @@ ORDER BY t.returned_date DESC
     // ─────────────────────────────────────────────
     //  DATE FILTER (applies to current view)
     // ─────────────────────────────────────────────
-  
-
     private void reloadCurrentView() {
         switch (currentView) {
             case "current_loans" ->

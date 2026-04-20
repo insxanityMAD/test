@@ -81,7 +81,6 @@ public class BookReports extends javax.swing.JFrame {
     }
 
     public void loadTableData(String sql, Object... params) {
-
         try {
             Connection con = DB_connect.getConnection();
             PreparedStatement pst = con.prepareStatement(sql);
@@ -91,25 +90,34 @@ public class BookReports extends javax.swing.JFrame {
             }
 
             ResultSet rs = pst.executeQuery();
-            DefaultTableModel model = (DefaultTableModel) tblModel.getModel();
-            model.setRowCount(0);
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
 
-            while (rs.next()) {
-                model.addRow(new Object[]{
-                    rs.getInt("book_id"),
-                    rs.getString("title"),
-                    rs.getString("author"),
-                    rs.getString("category_name"),
-                    rs.getInt("total_copies"),
-                    rs.getInt("available_copies"),
-                    rs.getInt("borrowed_count"),
-                    rs.getString("status")
-                });
+            // ✅ DYNAMIC COLUMNS
+            String[] columnNames = new String[columnCount];
+            for (int i = 0; i < columnCount; i++) {
+                columnNames[i] = metaData.getColumnLabel(i + 1);
             }
+
+            DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+            tblModel.setModel(model);
+
+            // Load data rows
+            while (rs.next()) {
+                Object[] rowData = new Object[columnCount];
+                for (int i = 0; i < columnCount; i++) {
+                    rowData[i] = rs.getObject(i + 1);
+                }
+                model.addRow(rowData);
+            }
+
+            rs.close();
+            pst.close();
+            con.close();
 
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error loading data: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
     }
 
@@ -402,168 +410,114 @@ public class BookReports extends javax.swing.JFrame {
 
         // Set filename based on current view
         String defaultFileName;
-        String sheetName;
-        String reportTitle;
-        String category = cmbCategory.getSelectedItem() != null ? cmbCategory.getSelectedItem().toString() : "All";
+    String sheetName;
+    String reportTitle;
+    String category = cmbCategory.getSelectedItem() != null
+            ? cmbCategory.getSelectedItem().toString()
+            : "All";
 
-        switch (currentView) {
-            case "popular":
-                defaultFileName = "BookReport_MostPopular.xlsx";
-                sheetName = "Most Popular";
-                reportTitle = "Most Popular Books - " + category;
-                break;
-            case "never":
-                defaultFileName = "BookReport_NeverBorrowed.xlsx";
-                sheetName = "Never Borrowed";
-                reportTitle = "Never Borrowed Books - " + category;
-                break;
-            case "recent":
-                defaultFileName = "BookReport_RecentlyAdded.xlsx";
-                sheetName = "Recently Added";
-                reportTitle = "Recently Added Books - " + category;
-                break;
-            default:
-                defaultFileName = "BookReport_Inventory.xlsx";
-                sheetName = "Inventory Summary";
-                reportTitle = "Inventory Summary - " + category;
-                break;
+    // ================= VIEW CONFIG =================
+    switch (currentView) {
+        case "popular":
+            defaultFileName = "BookReport_MostPopular.xlsx";
+            sheetName = "Most Popular";
+            reportTitle = "Most Popular Books - " + category;
+            break;
+
+        case "never":
+            defaultFileName = "BookReport_NeverBorrowed.xlsx";
+            sheetName = "Never Borrowed";
+            reportTitle = "Never Borrowed Books - " + category;
+            break;
+
+        case "recent":
+            defaultFileName = "BookReport_RecentlyAdded.xlsx";
+            sheetName = "Recently Added";
+            reportTitle = "Recently Added Books - " + category;
+            break;
+
+        default:
+            defaultFileName = "BookReport_Inventory.xlsx";
+            sheetName = "Inventory Summary";
+            reportTitle = "Inventory Summary - " + category;
+            break;
+    }
+
+    // ================= FILE CHOOSER =================
+    javax.swing.JFileChooser fileChooser = new javax.swing.JFileChooser();
+    fileChooser.setDialogTitle("Save Excel File");
+    fileChooser.setSelectedFile(new java.io.File(defaultFileName));
+    fileChooser.setFileFilter(
+            new javax.swing.filechooser.FileNameExtensionFilter("Excel Files", "xlsx")
+    );
+
+    int userSelection = fileChooser.showSaveDialog(this);
+    if (userSelection != javax.swing.JFileChooser.APPROVE_OPTION) {
+        return;
+    }
+
+    java.io.File fileToSave = fileChooser.getSelectedFile();
+    if (!fileToSave.getName().endsWith(".xlsx")) {
+        fileToSave = new java.io.File(fileToSave.getAbsolutePath() + ".xlsx");
+    }
+
+    try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+
+        // ================= SHEET =================
+        org.apache.poi.xssf.usermodel.XSSFSheet sheet =
+                workbook.createSheet(sheetName);
+
+        javax.swing.table.TableModel model = tblModel.getModel();
+
+        // ================= TITLE =================
+        org.apache.poi.ss.usermodel.Row titleRow = sheet.createRow(0);
+        titleRow.createCell(0).setCellValue(reportTitle);
+
+        sheet.addMergedRegion(
+                new org.apache.poi.ss.util.CellRangeAddress(
+                        0, 0, 0, model.getColumnCount() - 1
+                )
+        );
+
+        // ================= HEADER =================
+        org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(1);
+
+        for (int col = 0; col < model.getColumnCount(); col++) {
+            headerRow.createCell(col).setCellValue(model.getColumnName(col));
         }
 
-        javax.swing.JFileChooser fileChooser = new javax.swing.JFileChooser();
-        fileChooser.setDialogTitle("Save Excel File");
-        fileChooser.setSelectedFile(new java.io.File(defaultFileName));
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Excel Files", "xlsx"));
+        // ================= DATA =================
+        int excelRow = 2;
 
-        int userSelection = fileChooser.showSaveDialog(this);
-        if (userSelection != javax.swing.JFileChooser.APPROVE_OPTION) {
-            return;
-        }
+        for (int row = 0; row < model.getRowCount(); row++) {
 
-        java.io.File fileToSave = fileChooser.getSelectedFile();
-        if (!fileToSave.getName().endsWith(".xlsx")) {
-            fileToSave = new java.io.File(fileToSave.getAbsolutePath() + ".xlsx");
-        }
+            org.apache.poi.ss.usermodel.Row dataRow = sheet.createRow(excelRow++);
 
-        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
-
-            org.apache.poi.xssf.usermodel.XSSFSheet sheet = workbook.createSheet(sheetName);
-            javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tblModel.getModel();
-
-            // ── Title style ──────────────────────────────────────────
-            org.apache.poi.xssf.usermodel.XSSFCellStyle titleStyle = workbook.createCellStyle();
-            org.apache.poi.xssf.usermodel.XSSFFont titleFont = workbook.createFont();
-            titleFont.setBold(true);
-            titleFont.setFontHeightInPoints((short) 16);
-            titleStyle.setFont(titleFont);
-            titleStyle.setFillForegroundColor(new org.apache.poi.xssf.usermodel.XSSFColor(
-                    new byte[]{(byte) 204, (byte) 204, (byte) 255}, null));
-            titleStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
-
-            // Write title row (row 0)
-            org.apache.poi.ss.usermodel.Row titleRow = sheet.createRow(0);
-            titleRow.setHeightInPoints(30);
-            org.apache.poi.ss.usermodel.Cell titleCell = titleRow.createCell(0);
-            titleCell.setCellValue(reportTitle);
-            titleCell.setCellStyle(titleStyle);
-            // Merge title across all columns
-            sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0, 0, 0, model.getColumnCount() - 1));
-
-            // ── Header style ─────────────────────────────────────────
-            org.apache.poi.xssf.usermodel.XSSFCellStyle headerStyle = workbook.createCellStyle();
-            org.apache.poi.xssf.usermodel.XSSFFont headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerFont.setFontHeightInPoints((short) 12);
-            headerStyle.setFont(headerFont);
-            headerStyle.setFillForegroundColor(new org.apache.poi.xssf.usermodel.XSSFColor(
-                    new byte[]{(byte) 100, (byte) 100, (byte) 200}, null));
-            headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
-            headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            headerStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            headerStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            headerStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            // White bold font for header
-            org.apache.poi.xssf.usermodel.XSSFFont headerFontWhite = workbook.createFont();
-            headerFontWhite.setBold(true);
-            headerFontWhite.setFontHeightInPoints((short) 12);
-            headerFontWhite.setColor(org.apache.poi.ss.usermodel.IndexedColors.WHITE.getIndex());
-            headerStyle.setFont(headerFontWhite);
-
-            // Write header row (row 1)
-            org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(1);
             for (int col = 0; col < model.getColumnCount(); col++) {
-                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(col);
-                cell.setCellValue(model.getColumnName(col));
-                cell.setCellStyle(headerStyle);
+                Object value = model.getValueAt(row, col);
+                dataRow.createCell(col).setCellValue(value == null ? "" : value.toString());
             }
-
-            // ── Data styles (alternating rows) ───────────────────────
-            org.apache.poi.xssf.usermodel.XSSFCellStyle dataStyleLight = workbook.createCellStyle();
-            dataStyleLight.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            dataStyleLight.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            dataStyleLight.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            dataStyleLight.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-
-            org.apache.poi.xssf.usermodel.XSSFCellStyle dataStyleDark = workbook.createCellStyle();
-            dataStyleDark.setFillForegroundColor(new org.apache.poi.xssf.usermodel.XSSFColor(
-                    new byte[]{(byte) 235, (byte) 235, (byte) 255}, null));
-            dataStyleDark.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
-            dataStyleDark.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            dataStyleDark.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            dataStyleDark.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            dataStyleDark.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-
-            // Write data rows — skip empty rows
-            int excelRow = 2;
-            for (int row = 0; row < model.getRowCount(); row++) {
-
-                // Skip row if all cells are null
-                boolean isEmpty = true;
-                for (int col = 0; col < model.getColumnCount(); col++) {
-                    if (model.getValueAt(row, col) != null) {
-                        isEmpty = false;
-                        break;
-                    }
-                }
-                if (isEmpty) {
-                    continue;
-                }
-
-                org.apache.poi.ss.usermodel.Row dataRow = sheet.createRow(excelRow);
-                org.apache.poi.xssf.usermodel.XSSFCellStyle rowStyle = (excelRow % 2 == 0) ? dataStyleLight : dataStyleDark;
-
-                for (int col = 0; col < model.getColumnCount(); col++) {
-                    org.apache.poi.ss.usermodel.Cell cell = dataRow.createCell(col);
-                    Object value = model.getValueAt(row, col);
-                    if (value != null) {
-                        cell.setCellValue(value.toString());
-                    }
-                    cell.setCellStyle(rowStyle);
-                }
-                excelRow++;
-            }
-
-            // Auto-size columns
-            for (int col = 0; col < model.getColumnCount(); col++) {
-                sheet.autoSizeColumn(col);
-            }
-
-            // Save file
-            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(fileToSave)) {
-                workbook.write(fos);
-            }
-
-            JOptionPane.showMessageDialog(this,
-                    "Exported successfully to:\n" + fileToSave.getAbsolutePath(),
-                    "Export Successful",
-                    JOptionPane.INFORMATION_MESSAGE);
-
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Export failed: " + ex.getMessage(),
-                    "Export Error",
-                    JOptionPane.ERROR_MESSAGE);
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
+
+        // ================= AUTO SIZE =================
+        for (int col = 0; col < model.getColumnCount(); col++) {
+            sheet.autoSizeColumn(col);
+        }
+
+        // ================= SAVE FILE =================
+        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(fileToSave)) {
+            workbook.write(fos);
+        }
+
+        javax.swing.JOptionPane.showMessageDialog(this,
+                "Export successful:\n" + fileToSave.getAbsolutePath());
+
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        javax.swing.JOptionPane.showMessageDialog(this,
+                "Export failed: " + ex.getMessage());
+    }
+
 
     }//GEN-LAST:event_btnExportActionPerformed
 
@@ -620,30 +574,35 @@ public class BookReports extends javax.swing.JFrame {
 
     private void btnMostPopularActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMostPopularActionPerformed
         currentView = "popular";
+
         Object selected = cmbCategory.getSelectedItem();
         String category = selected != null ? selected.toString() : "All";
 
         String sql
                 = "SELECT b.book_id, b.title, b.author, c.category_name, "
-                + "COUNT(DISTINCT cp.copy_id) AS total_copies, "
-                + "COUNT(DISTINCT cp.copy_id) - "
-                + "COUNT(DISTINCT CASE WHEN t.returned_date IS NULL THEN cp.copy_id END) AS available_copies, "
-                + "COUNT(DISTINCT CASE WHEN t.returned_date IS NULL THEN cp.copy_id END) AS borrowed_count, "
+                + "COUNT(t.transaction_id) AS borrowed_count, "
                 + "'Popular' AS status "
                 + "FROM book b "
                 + "LEFT JOIN category c ON b.category_id = c.category_id "
                 + "LEFT JOIN book_copy cp ON b.book_id = cp.book_id "
-                + "LEFT JOIN transaction t ON cp.copy_id = t.copy_id ";
+                + "LEFT JOIN transaction t "
+                + "ON cp.copy_id = t.copy_id "
+                + "AND t.status IN ('Borrowed', 'Returned') ";
 
+        // CATEGORY FILTER
         if (!category.equals("All")) {
-            sql += "WHERE c.category_name = ? GROUP BY b.book_id "
-                    + "HAVING COUNT(DISTINCT cp.copy_id) > 0 "
-                    + "ORDER BY borrowed_count DESC";
+            sql += "WHERE c.category_name = ? ";
+        }
+
+        sql += "GROUP BY b.book_id, b.title, b.author, c.category_name "
+                + "HAVING COUNT(t.transaction_id) > 0 "
+                + "ORDER BY borrowed_count DESC "
+                + "LIMIT 100";
+
+        // EXECUTE QUERY
+        if (!category.equals("All")) {
             loadTableData(sql, category);
         } else {
-            sql += "GROUP BY b.book_id "
-                    + "HAVING COUNT(DISTINCT cp.copy_id) > 0 "
-                    + "ORDER BY borrowed_count DESC";
             loadTableData(sql);
         }
     }//GEN-LAST:event_btnMostPopularActionPerformed
@@ -654,23 +613,35 @@ public class BookReports extends javax.swing.JFrame {
         Object selected = cmbCategory.getSelectedItem();
         String category = selected != null ? selected.toString() : "All";
 
-        String sql
-                = "SELECT b.book_id, b.title, b.author, c.category_name, "
+        String sql = "SELECT b.book_id, b.title, b.author, c.category_name, "
                 + "COUNT(DISTINCT cp.copy_id) AS total_copies, "
-                + "COUNT(DISTINCT cp.copy_id) AS available_copies, "
-                + "0 AS borrowed_count, "
+                + "COUNT(DISTINCT CASE WHEN t_active.copy_id IS NULL THEN cp.copy_id END) AS available_copies, "
+                + "COUNT(DISTINCT t_all.copy_id) AS borrowed_count, "
+                + "COUNT(DISTINCT t_all.copy_id) AS total_borrowed, "
                 + "'New' AS status "
                 + "FROM book b "
                 + "LEFT JOIN category c ON b.category_id = c.category_id "
-                + "LEFT JOIN book_copy cp ON b.book_id = cp.book_id ";
+                + "LEFT JOIN book_copy cp ON b.book_id = cp.book_id "
+                + "LEFT JOIN ( "
+                + "   SELECT DISTINCT copy_id "
+                + "   FROM transaction "
+                + "   WHERE returned_date IS NULL "
+                + ") t_active ON cp.copy_id = t_active.copy_id "
+                + "LEFT JOIN ( "
+                + "   SELECT DISTINCT copy_id "
+                + "   FROM transaction "
+                + ") t_all ON cp.copy_id = t_all.copy_id ";
 
         if (!category.equals("All")) {
-            sql += "WHERE c.category_name = ? GROUP BY b.book_id "
-                    + "ORDER BY b.created_at DESC";
+            sql += "WHERE c.category_name = ? ";
+        }
+
+        sql += "GROUP BY b.book_id, b.title, b.author, c.category_name "
+                + "ORDER BY b.created_at DESC";
+
+        if (!category.equals("All")) {
             loadTableData(sql, category);
         } else {
-            sql += "GROUP BY b.book_id "
-                    + "ORDER BY b.created_at DESC";
             loadTableData(sql);
         }
 
@@ -683,6 +654,7 @@ public class BookReports extends javax.swing.JFrame {
     private void btnInventorySummaryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInventorySummaryActionPerformed
         // TODO add your handling code here:
         currentView = "inventory";
+
         Object selected = cmbCategory.getSelectedItem();
         if (selected == null) {
             return;
@@ -691,26 +663,44 @@ public class BookReports extends javax.swing.JFrame {
         String category = selected.toString();
 
         String sql
-                = "SELECT b.book_id, b.title, b.author, c.category_name, "
-                + "COUNT(DISTINCT cp.copy_id) AS total_copies, "
-                // ✅ available_copies FIRST (matches loadTableData column order)
-                + "COUNT(DISTINCT cp.copy_id) - "
-                + "COUNT(DISTINCT CASE WHEN t.returned_date IS NULL THEN cp.copy_id END) AS available_copies, "
-                // ✅ borrowed_count SECOND
-                + "COUNT(DISTINCT CASE WHEN t.returned_date IS NULL THEN cp.copy_id END) AS borrowed_count, "
-                + "CASE WHEN COUNT(DISTINCT cp.copy_id) = "
-                + "COUNT(DISTINCT CASE WHEN t.returned_date IS NULL THEN cp.copy_id END) "
-                + "THEN 'Out of Stock' ELSE 'Available' END AS status "
+                = "SELECT "
+                + "b.book_id AS ID, "
+                + "b.title AS Title, "
+                + "b.author AS Author, "
+                + "c.category_name AS Category, "
+                + // Total copies
+                "COUNT(DISTINCT cp.copy_id) AS 'Total Copies', "
+                + // Available copies
+                "COUNT(DISTINCT CASE "
+                + "   WHEN t_active.copy_id IS NULL THEN cp.copy_id "
+                + "END) AS 'Available Copies', "
+                + // Borrowed copies
+                "COUNT(DISTINCT t_active.copy_id) AS 'Borrowed Copies', "
+                + // ✅ STATUS COLUMN
+                "CASE "
+                + "   WHEN COUNT(DISTINCT cp.copy_id) = COUNT(DISTINCT t_active.copy_id) THEN 'Out of Stock' "
+                + "   WHEN COUNT(DISTINCT t_active.copy_id) = 0 THEN 'All Available' "
+                + "   ELSE 'Partially Borrowed' "
+                + "END AS Status "
                 + "FROM book b "
                 + "LEFT JOIN category c ON b.category_id = c.category_id "
                 + "LEFT JOIN book_copy cp ON b.book_id = cp.book_id "
-                + "LEFT JOIN transaction t ON cp.copy_id = t.copy_id ";
+                + // ONLY ACTIVE BORROWS
+                "LEFT JOIN ( "
+                + "   SELECT DISTINCT copy_id "
+                + "   FROM transaction "
+                + "   WHERE status = 'Borrowed' AND returned_date IS NULL "
+                + ") t_active ON cp.copy_id = t_active.copy_id ";
 
         if (!category.equals("All")) {
-            sql += "WHERE c.category_name = ? GROUP BY b.book_id";
+            sql += "WHERE c.category_name = ? ";
+        }
+
+        sql += "GROUP BY b.book_id, b.title, b.author, c.category_name";
+
+        if (!category.equals("All")) {
             loadTableData(sql, category);
         } else {
-            sql += "GROUP BY b.book_id";
             loadTableData(sql);
         }
 
