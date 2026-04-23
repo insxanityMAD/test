@@ -132,6 +132,7 @@ public class AddBook extends javax.swing.JFrame {
         txtSourceOfFunds.setText("");
         txtShelfLoc.setText("");
         txtRemarks.setText("");
+        txtSearch.setText("");
         txtTitle.setEnabled(false);
         cmbCategory.setEnabled(false);
         txtAuthor.setEnabled(false);
@@ -196,44 +197,68 @@ public class AddBook extends javax.swing.JFrame {
 
         return id;
     }
-    
-    private int getBook(String bookTitle){
-        int  id = 0;
-        
-        try{
+
+    private int getBook(String bookTitle) {
+        int id = 0;
+
+        try {
             Connection con = DB_connect.getConnection();
             String sql = "SELECT book_id FROM book WHERE title = ?";
             PreparedStatement pst = con.prepareStatement(sql);
-            
+
             pst.setString(1, bookTitle);
             ResultSet rs = pst.executeQuery();
-            while(rs.next()){
+            while (rs.next()) {
                 id = rs.getInt("book_id");
             }
-            
-        }catch(Exception err){
+
+        } catch (Exception err) {
             JOptionPane.showMessageDialog(null, err);
         }
         return id;
     }
-      private String existingBook(int bookid){
-        String existingTitle = "";
-        
-        try{
+
+    private boolean isISBNExists(String isbn) {
+        boolean exists = false;
+
+        try {
             Connection con = DB_connect.getConnection();
-            String sql = "SELECT title FROM book WHERE book_id = ?";
+            String sql = "SELECT 1 FROM book WHERE isbn = ?";
             PreparedStatement pst = con.prepareStatement(sql);
-            
-            pst.setInt(1, bookid);
+            pst.setString(1, isbn);
+
             ResultSet rs = pst.executeQuery();
-            while(rs.next()){
-                existingTitle = rs.getString("title");
+            if (rs.next()) {
+                exists = true;
             }
-            
-        }catch(Exception err){
-            JOptionPane.showMessageDialog(null, err);
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return existingTitle;
+
+        return exists;
+    }
+
+    private boolean isBookExists(String title, String isbn) {
+        boolean exists = false;
+
+        try {
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT 1 FROM book WHERE title = ? AND isbn = ?";
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setString(1, title);
+            pst.setString(2, isbn);
+
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                exists = true;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return exists;
     }
 
     private String safeValue(DefaultTableModel model, int row, int col) {
@@ -392,15 +417,15 @@ public class AddBook extends javax.swing.JFrame {
                     .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(12, 12, 12)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                 .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(txtMembers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(txtTransactions)
                                 .addComponent(txtReports)
-                                .addComponent(txtLogout1)))))
+                                .addComponent(txtLogout1))
+                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap(16, Short.MAX_VALUE))
         );
 
@@ -854,14 +879,30 @@ public class AddBook extends javax.swing.JFrame {
                         "INSERT INTO book (title, author, category_id, publisher, publication_year, isbn, shelf_location, remarks, class, pages, source_of_fund , cost_price ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 );
                 String bookTitle = txtTitle.getText();
+                String bookISBN = txtIsbn.getText();
                 bookid = getBook(bookTitle);
-                String existingTitle = existingBook(bookid);
                 
-                if(bookTitle.equalsIgnoreCase(existingTitle)){
+                if (isBookExists(bookTitle, bookISBN)) {
                     JOptionPane.showMessageDialog(null, "This book is already recorded.");
                     return;
                 }
                 
+                
+                if (isISBNExists(bookISBN)) {
+                    JOptionPane.showMessageDialog(null, "This ISBN is already recorded.");
+                    return;
+                }
+
+               
+                if (txtPages.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Pages is required");
+                    return;
+                }
+                if (txtCostPrice.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Cost price is required");
+                    return;
+                }
+
                 String categoryName = cmbCategory.getSelectedItem().toString();
                 int categoryId = getCategoryIdByName(categoryName);
                 String priceText = txtCostPrice.getText().replace(",", "").trim();

@@ -30,13 +30,13 @@ public class Dashboard extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(() -> {
             this.requestFocusInWindow(); // removes focus from txtSearch
         });
-        txtSearch.setText("Search title by author or title...");
+        txtSearch.setText("Search");
         txtSearch.setForeground(java.awt.Color.GRAY);
         txtSearch.addFocusListener(new java.awt.event.FocusAdapter() {
 
             @Override
             public void focusGained(java.awt.event.FocusEvent evt) {
-                if (txtSearch.getText().equals("Search title by author or title...")) {
+                if (txtSearch.getText().equals("Search")) {
                     txtSearch.setText("");
                     txtSearch.setForeground(java.awt.Color.BLACK);
                 }
@@ -45,7 +45,7 @@ public class Dashboard extends javax.swing.JFrame {
             @Override
             public void focusLost(java.awt.event.FocusEvent evt) {
                 if (txtSearch.getText().trim().isEmpty()) {
-                    txtSearch.setText("Search title by author or title...");
+                    txtSearch.setText("Search");
                     txtSearch.setForeground(java.awt.Color.GRAY);
                 }
             }
@@ -372,7 +372,7 @@ public class Dashboard extends javax.swing.JFrame {
 
     public void resetDashboard() {
         // Reset search box
-        txtSearch.setText("Search title by author or title...");
+        txtSearch.setText("Search");
         txtSearch.setForeground(java.awt.Color.GRAY);
 
         // Reset category dropdown
@@ -693,7 +693,7 @@ public class Dashboard extends javax.swing.JFrame {
         jPanel1.add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(890, 160, -1, -1));
 
         jLabel17.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
-        jLabel17.setText("Category");
+        jLabel17.setText("Catalog");
         jPanel1.add(jLabel17, new org.netbeans.lib.awtextra.AbsoluteConstraints(740, 410, -1, -1));
 
         txtSearch.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
@@ -763,7 +763,7 @@ public class Dashboard extends javax.swing.JFrame {
         jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 530, 1360, 343));
 
         jLabel18.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
-        jLabel18.setText("Book Catalog");
+        jLabel18.setText("Search Catalog");
         jPanel1.add(jLabel18, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 410, -1, -1));
 
         lblBorrowedBooks.setBackground(new java.awt.Color(255, 102, 51));
@@ -828,7 +828,7 @@ public class Dashboard extends javax.swing.JFrame {
         String currentCategory = cmbCategory.getSelectedItem().toString();
 
         // Clear search box
-        txtSearch.setText("Search title by author or title...");
+        txtSearch.setText("Search");
         txtSearch.setForeground(java.awt.Color.GRAY);
 
         // Reload only the current category
@@ -858,7 +858,7 @@ public class Dashboard extends javax.swing.JFrame {
         String keyword = txtSearch.getText().trim();
         String category = cmbCategory.getSelectedItem().toString();
 
-        if (keyword.isEmpty() || keyword.equals("Search title by author or title...")) {
+        if (keyword.isEmpty() || keyword.equals("Search")) {
             loadTableData(category);
         } else {
             searchTableData(keyword, category);

@@ -60,7 +60,7 @@ public class TransactionReports extends javax.swing.JFrame {
         currentView = "current_loans";
         jLabel10.setText("Current Loans");
 
-        String[] columns = {"Trans ID", "Borrower", "Book Title", "Acc. #", "Rental Date", "Due Date", "Days Left (Weekdays)", "Status"};
+        String[] columns = {"Trans ID", "Borrower", "Book Title", "Acc. #", "Rental Date", "Due Date", "Days Left", "Status"};
         DefaultTableModel model = getEmptyModel(columns);
         tblModel.setModel(model);
 
@@ -91,27 +91,22 @@ public class TransactionReports extends javax.swing.JFrame {
                 long daysLeft;
 
                 if (due != null) {
-                    // If overdue → negative days
+
                     if (due.before(today)) {
                         long overdueDays = My_Classes.FineCalculator.countWeekdaysLate(due, today);
                         daysLeft = -overdueDays;
                     } else {
-                        // Count weekdays remaining (reverse logic)
-                        java.time.LocalDate start = today.toLocalDate();
+                       
+                       java.time.LocalDate start = today.toLocalDate();
                         java.time.LocalDate end = due.toLocalDate();
-
                         long count = 0;
-
                         while (!start.isAfter(end)) {
                             java.time.DayOfWeek day = start.getDayOfWeek();
-
-                            if (day != java.time.DayOfWeek.SATURDAY && day != java.time.DayOfWeek.SUNDAY) {
+                            if (day != java.time.DayOfWeek.SUNDAY) {
                                 count++;
                             }
-
                             start = start.plusDays(1);
                         }
-
                         daysLeft = count;
                     }
                 } else {
@@ -253,7 +248,7 @@ ORDER BY t.returned_date DESC
         currentView = "overdue";
         jLabel10.setText("Overdue List");
 
-        String[] columns = {"Trans ID", "Borrower", "Book Title", "Acc. #", "Rental Date", "Due Date", "Days Overdue (Weekdays)", "Fine"};
+        String[] columns = {"Trans ID", "Borrower", "Book Title", "Acc. #", "Rental Date", "Due Date", "Days Overdue", "Fine"};
         DefaultTableModel model = getEmptyModel(columns);
         tblModel.setModel(model);
 
@@ -552,7 +547,7 @@ ORDER BY t.returned_date DESC
     }// </editor-fold>//GEN-END:initComponents
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
-        TransactionReports member = new TransactionReports();
+        Members member = new Members();
         member.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked

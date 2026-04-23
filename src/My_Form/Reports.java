@@ -729,14 +729,18 @@ public class Reports extends javax.swing.JFrame {
         // TODO add your handling code here:
         loadDashboardStats();
 
-        // Reset ONLY search field
+        // Reset search field
         txtSearch.setText("Search borrower or book...");
         txtSearch.setForeground(java.awt.Color.GRAY);
 
-        // Keep current filter (IMPORTANT)
+        // 🔥 RESET selection + button
+        selectedFineId = -1;
+        btnPay.setEnabled(false);
+        tblDashboard.clearSelection();
+
+        // Keep current filter
         String status = (String) cmbCategory.getSelectedItem();
 
-        // Reload table using current status but empty search
         loadFinesTable(status, "");
     }//GEN-LAST:event_btnRefresh1ActionPerformed
 
@@ -746,19 +750,16 @@ public class Reports extends javax.swing.JFrame {
 
         if (row != -1) {
             selectedFineId = Integer.parseInt(tblDashboard.getValueAt(row, 0).toString());
-
-            String borrower = tblDashboard.getValueAt(row, 1).toString();
-            String book = tblDashboard.getValueAt(row, 2).toString();
             String status = tblDashboard.getValueAt(row, 6).toString();
-
-            // Optional: show info
-            System.out.println("Selected Fine ID: " + selectedFineId);
 
             if (status.equalsIgnoreCase("Paid")) {
                 JOptionPane.showMessageDialog(this, "This fine is already paid.");
-                selectedFineId = -1; // reset
+
+                selectedFineId = -1;
+                btnPay.setEnabled(false); // ✅ disable
+            } else {
+                btnPay.setEnabled(true); // ✅ only enable if unpaid
             }
-            btnPay.setEnabled(true);
         }
     }//GEN-LAST:event_tblDashboardMouseClicked
 

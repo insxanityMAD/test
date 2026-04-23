@@ -196,6 +196,52 @@ public class AddMembers extends javax.swing.JFrame {
         return status;
     }
 
+    private boolean borrowerIdExist(String idNumber) {
+
+        boolean exist = false;
+
+        try {
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT 1 FROM borrower WHERE id_number = ?";
+            PreparedStatement pst = con.prepareStatement(sql);
+
+            pst.setString(1, idNumber);
+
+            ResultSet res = pst.executeQuery();
+
+            while (res.next()) {
+                exist = true;
+            }
+
+        } catch (Exception err) {
+            JOptionPane.showMessageDialog(null, err);
+        }
+
+        return exist;
+    }
+
+    private boolean borrowerIdTypeExists(String idType) {
+        boolean exisit = false;
+
+        try {
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT 1 FROM borrower WHERE id_type = ?";
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setString(1, idType);
+
+            ResultSet res = pst.executeQuery();
+
+            while (res.next()) {
+                exisit = true;
+            }
+
+        } catch (Exception err) {
+            JOptionPane.showMessageDialog(null, err);
+        }
+
+        return exisit;
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -804,7 +850,7 @@ public class AddMembers extends javax.swing.JFrame {
 
         java.sql.Date sqlDate = new java.sql.Date(date.getTime());
         java.sql.Date sqlDateDob = new java.sql.Date(dob.getTime());
-        
+
         String borrowerType = cmbBorrowerType.getSelectedItem().toString();
 
         int limit = 0;
@@ -817,30 +863,58 @@ public class AddMembers extends javax.swing.JFrame {
         }
 
         java.time.LocalDate picked = date.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+        java.time.LocalDate dobpicked = dob.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
         java.time.LocalDate today = java.time.LocalDate.now();
 
-        if (picked.isAfter(today)) {
-            JOptionPane.showMessageDialog(null, "Please chose a date that is not in the future.");
-        }
-
         String email = txtEmail.getText().trim();
-
-        if (borrowerExist(email) && check.equalsIgnoreCase("add")) {
-            JOptionPane.showMessageDialog(null, "This borrower is already recorded.");
-            return;
-        }
-
+        String idNumber = txtIdNumber.getText().trim();
+        String idType = cmbIdType.getSelectedItem().toString();
         try {
             Connection con = DB_connect.getConnection();
 
             if (check.equalsIgnoreCase("add")) {
+                if (picked.isAfter(today)) {
+                    JOptionPane.showMessageDialog(null, "Please chose a date that is not in the future.");
+                    return;
+                }
+                
+                if (!dobpicked.isBefore(today)) {
+                    JOptionPane.showMessageDialog(null, "The member cannot  be born today.");
+                    return;
+                }
+                
+                if (borrowerExist(email) && check.equalsIgnoreCase("add")) {
+                    JOptionPane.showMessageDialog(null, "This email is arleady taken.");
+                    return;
+                }
 
+                if (borrowerIdExist(idNumber) && borrowerIdTypeExists(idType)) {
+                    JOptionPane.showMessageDialog(null, "The ID is already been used.");
+                    return;
+                }
+
+                if (txtFirstName.getText().isEmpty() || txtLastName.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Fill the textField");
+                    return;
+
+                }
+                
+                if(idNumber.isEmpty() || idType.equals("e.g")){
+                    JOptionPane.showMessageDialog(null, "Please fill the id number or the id type");
+                    return;
+                }
+                
+                if(txtEmail.getText().isEmpty()){
+                    JOptionPane.showMessageDialog(null, "Please fill the email");
+                    return;
+                }
+                    
                 String query = "INSERT INTO borrower(first_name, last_name, gender, id_number, id_type, email, phone_number, address, borrower_type, status, borrow_limit, date_of_birth, date_registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 PreparedStatement ps = con.prepareStatement(query);
 
                 ps.setString(1, txtFirstName.getText().trim());
                 ps.setString(2, txtLastName.getText().trim());
-                ps.setString(3, cmbGender.getSelectedItem().toString()); // ✅ gender
+                ps.setString(3, cmbGender.getSelectedItem().toString().trim()); // ✅ gender
                 ps.setString(4, txtIdNumber.getText().trim());
                 ps.setString(5, cmbIdType.getSelectedItem().toString());
                 ps.setString(6, txtEmail.getText().trim());

@@ -150,7 +150,32 @@ public class AddCopies extends javax.swing.JFrame {
         return status;
 
     }
-
+    
+    private boolean existingAcquisitionNumber(String acquisition_number){
+        boolean exist = false;
+        
+        try{
+            
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT 1 FROM book_copy WHERE acquisition_number = ?";
+            PreparedStatement pst = con.prepareStatement(sql);
+            
+            pst.setString(1, acquisition_number);
+            ResultSet res = pst.executeQuery();
+            
+             while(res.next()){
+                 exist = true;
+             }
+           
+            
+        }catch(Exception err){
+            JOptionPane.showMessageDialog(null, err);
+        }
+        
+        
+        return exist;
+    }
+        
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -675,7 +700,11 @@ public class AddCopies extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, "Copy Updated");
 
             } else {
-
+                
+                if(existingAcquisitionNumber(acquisition_number)){
+                    JOptionPane.showMessageDialog(null, "This copy is already reocrded.");
+                    return; 
+                }
                 String sql = "INSERT INTO book_copy(book_id, acquisition_number, status, date_received) VALUES(?,?,?,?)";
                 PreparedStatement pst = con.prepareStatement(sql);
 

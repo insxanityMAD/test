@@ -35,16 +35,23 @@ public class AddLoans extends javax.swing.JFrame {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
         setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
-//        
-//        jTable1.getTableHeader().setPreferredSize(
-//        new java.awt.Dimension(jTable1.getTableHeader().getWidth(), 50)
-//    );
-//           jTable1.getTableHeader().setFont(
-//        jTable1.getTableHeader().getFont().deriveFont(18f)
-//    );
-//           
-//           jTable1.setFont(jTable1.getFont().deriveFont(16f));
-//      
+
+        tblTransactions.getTableHeader().setPreferredSize(
+                new java.awt.Dimension(tblTransactions.getTableHeader().getWidth(), 50)
+        );
+        tblTransactions.getTableHeader().setFont(
+                tblTransactions.getTableHeader().getFont().deriveFont(18f)
+        );
+
+        tblTransactions.setFont(tblTransactions.getFont().deriveFont(16f));
+
+        cmbBook.removeAllItems();
+        cmbBook.addItem("-- Select Book --");
+        cmbAcquisitionNumber.removeAllItems();
+        cmbAcquisitionNumber.addItem("-- Select Acquisition Number --");
+        cmbBorrowerName.removeAllItems();
+        cmbBorrowerName.addItem("-- Select a Borrower --");
+
         populateTable();
         loadBorrowerName(cmbBorrowerName);
         cmbBorrowerName.addActionListener(e -> {
@@ -55,19 +62,58 @@ public class AddLoans extends javax.swing.JFrame {
         });
 
         loodBooks(cmbBook);
+        loadAcquisitionNumber(cmbAcquisitionNumber); // ← load AFTER books are populated
+
         cmbBook.addActionListener(e -> {
             if (!isLoading) {
                 loadAcquisitionNumber(cmbAcquisitionNumber);
             }
         });
-        loadAcquisitionNumber(cmbAcquisitionNumber);
-        rentalDate.addPropertyChangeListener("date", e -> {
-            java.util.Date selectedRental = rentalDate.getDate();
-            if (selectedRental != null) {
-                java.util.Calendar cal = java.util.Calendar.getInstance();
-                cal.setTime(selectedRental);
-                cal.add(java.util.Calendar.DAY_OF_MONTH, 7);
-                dueDate.setDate(cal.getTime());
+        rentalDate.addPropertyChangeListener(e -> {
+            if ("date".equals(e.getPropertyName())) {
+
+                java.util.Date selectedRental = rentalDate.getDate();
+
+                if (selectedRental != null) {
+                    java.util.Calendar cal = java.util.Calendar.getInstance();
+                    cal.setTime(selectedRental);
+
+                    int businessDaysAdded = 0;
+
+                    java.util.Set<String> holidays = new java.util.HashSet<>();
+
+                    // 🇵🇭 Philippine Holidays (2026)
+                    holidays.add("2026-01-01"); // New Year
+                    holidays.add("2026-02-25"); // EDSA
+                    holidays.add("2026-04-02"); // Good Friday
+                    holidays.add("2026-04-09"); // Araw ng Kagitingan
+                    holidays.add("2026-05-01"); // Labor Day
+                    holidays.add("2026-06-12"); // Independence Day
+                    holidays.add("2026-08-31"); // National Heroes Day
+                    holidays.add("2026-11-01"); // All Saints
+                    holidays.add("2026-11-30"); // Bonifacio Day
+                    holidays.add("2026-12-08"); // Immaculate Conception
+                    holidays.add("2026-12-25"); // Christmas
+                    holidays.add("2026-12-30"); // Rizal Day
+                    holidays.add("2026-12-31"); // New Year's Eve
+
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+
+                    while (businessDaysAdded < 7) {
+                        cal.add(java.util.Calendar.DAY_OF_MONTH, 1);
+
+                        int dayOfWeek = cal.get(java.util.Calendar.DAY_OF_WEEK);
+                        String currentDateStr = sdf.format(cal.getTime());
+
+                        // ✅ Skip Sunday + PH Holidays
+                        if (dayOfWeek != java.util.Calendar.SUNDAY
+                                && !holidays.contains(currentDateStr)) {
+                            businessDaysAdded++;
+                        }
+                    }
+
+                    dueDate.setDate(cal.getTime());
+                }
             }
         });
     }
@@ -79,7 +125,7 @@ public class AddLoans extends javax.swing.JFrame {
         cmbAcquisitionNumber.setEnabled(true);
         cmbBorrowerName.setEnabled(true);
         rentalDate.setEnabled(true);  // ← ADD
-        dueDate.setEnabled(true);     // ← ADD
+
     }
 
     private void setDefault() {
@@ -94,21 +140,25 @@ public class AddLoans extends javax.swing.JFrame {
         rentalDate.setDate(new java.util.Date());
         dueDate.setDate(new java.util.Date());
         btnClose.setText("Close");
+        btnSave.setEnabled(false);
 
         loodBooks(cmbBook);
+
+        // ✅ Manually reset acquisition combo to default placeholder
+        cmbAcquisitionNumber.removeAllItems();
+        cmbAcquisitionNumber.addItem("-- Select Acquisition Number --");
+        cmbAcquisitionNumber.setSelectedIndex(0);
+
+        loadBorrowerName(cmbBorrowerName);
+
         if (cmbBorrowerName.getItemCount() > 0) {
             cmbBorrowerName.setSelectedIndex(0);
         }
-
         if (cmbBook.getItemCount() > 0) {
             cmbBook.setSelectedIndex(0);
         }
 
-        if (cmbAcquisitionNumber.getItemCount() > 0) {
-            cmbAcquisitionNumber.setSelectedIndex(0);
-        }
-
-        tblTransactions.clearSelection(); // ← ADD
+        tblTransactions.clearSelection();
     }
 
     private int getBorrowerId(String name) {
@@ -199,7 +249,7 @@ public class AddLoans extends javax.swing.JFrame {
             ResultSet rs = pst.executeQuery();
 
             cmbBorrowerName.removeAllItems();
-
+            cmbBorrowerName.addItem("-- Select a Borrower");
             while (rs.next()) {
                 cmbBorrowerName.addItem(rs.getString("full_name"));
             }
@@ -208,7 +258,9 @@ public class AddLoans extends javax.swing.JFrame {
             if (cmbBorrowerName.getItemCount() > 0) {
                 cmbBorrowerName.setSelectedIndex(0);
                 String name = cmbBorrowerName.getSelectedItem().toString();
-                borrowerId = getBorrowerId(name);
+                if (!name.startsWith("--")) {
+                    borrowerId = getBorrowerId(name);
+                }
             }
 
         } catch (Exception error) {
@@ -231,7 +283,7 @@ public class AddLoans extends javax.swing.JFrame {
             ResultSet rs = pst.executeQuery();
 
             cmbBook.removeAllItems();
-
+            cmbBook.addItem("-- Select Book --"); // ← ADD THIS
             while (rs.next()) {
                 cmbBook.addItem(rs.getString("title"));
             }
@@ -244,6 +296,7 @@ public class AddLoans extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, error);
         } finally {
             isLoading = false;
+
         }
     }
 
@@ -271,21 +324,19 @@ public class AddLoans extends javax.swing.JFrame {
     // getter of bookid;
     private int getBookId(String bookTitle) {
         int id = 0;
-
         try {
             Connection con = DB_connect.getConnection();
             String sql = "SELECT book_id FROM book WHERE title = ?";
             PreparedStatement pst = con.prepareStatement(sql);
-
             pst.setString(1, bookTitle);
             ResultSet rs = pst.executeQuery();
 
-            while (rs.next()) {
+            if (rs.next()) {          // ← change "while" to "if"
                 id = rs.getInt("book_id");
             }
 
         } catch (Exception err) {
-
+            JOptionPane.showMessageDialog(null, err);
         }
         return id;
     }
@@ -315,7 +366,7 @@ public class AddLoans extends javax.swing.JFrame {
             ResultSet rs = pst.executeQuery();
 
             cmbAcquisitionNumber.removeAllItems();
-
+            cmbAcquisitionNumber.addItem("-- Select Acqusition Number --");
             while (rs.next()) {
                 cmbAcquisitionNumber.addItem(rs.getString("acquisition_number"));
             }
@@ -983,6 +1034,7 @@ public class AddLoans extends javax.swing.JFrame {
         // TODO add your handling code here:
         check = "add";
         loodBooks(cmbBook);
+        loadAcquisitionNumber(cmbAcquisitionNumber);
         makeEnabled();
 
         btnSave.setEnabled(true);
@@ -992,10 +1044,13 @@ public class AddLoans extends javax.swing.JFrame {
 
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
         // TODO add your handling code here:
+
         try {
-            // null checks
-            if (cmbBook.getSelectedItem() == null || cmbAcquisitionNumber.getSelectedItem() == null) {
-                JOptionPane.showMessageDialog(null, "Please select a book and acquisition number.");
+            String bookTitle = cmbBook.getSelectedItem().toString();
+            String acquisition = cmbAcquisitionNumber.getSelectedItem().toString();
+
+            if (bookTitle.equals("-- Select Book --") || acquisition.equals("-- Select Acqusition Number --")) {
+                JOptionPane.showMessageDialog(null, "Please select a valid book and acquisition number.");
                 return;
             }
 
@@ -1020,8 +1075,6 @@ public class AddLoans extends javax.swing.JFrame {
                 return;
             }
 
-            String bookTitle = cmbBook.getSelectedItem().toString();
-            String acquisition = cmbAcquisitionNumber.getSelectedItem().toString();
             int bookid = getBookId(bookTitle);
             int copyid = getCopyId(acquisition);
 
@@ -1032,6 +1085,11 @@ public class AddLoans extends javax.swing.JFrame {
 
             if (check.equalsIgnoreCase("add")) {
                 // ─── INSERT ───
+                // Add this before the INSERT block
+                if (borrowerId == 0) {
+                    JOptionPane.showMessageDialog(null, "Please select a valid borrower.");
+                    return;
+                }
                 int limit = getLimit(borrowerId);
                 int count = getCount(borrowerId);
 
@@ -1154,9 +1212,16 @@ public class AddLoans extends javax.swing.JFrame {
                 return;
             }
 
-            int transactionId = Integer.parseInt(safeValue(model, row, 0));
+            String loanIdStr = safeValue(model, row, 0);
+            if (loanIdStr.isEmpty()) {
+                return;
+            }
+            loanId = Integer.parseInt(loanIdStr);
             int copyId = getCopyId(safeValue(model, row, 3));
-
+            if (copyId == 0) {
+                JOptionPane.showMessageDialog(null, "Could not find the book copy. Operation aborted.");
+                return;
+            }
             Connection con = DB_connect.getConnection();
 
             // ✅ UPDATED: include cancelled_date
@@ -1168,7 +1233,7 @@ public class AddLoans extends javax.swing.JFrame {
     """;
 
             PreparedStatement pst = con.prepareStatement(sql);
-            pst.setInt(1, transactionId);
+            pst.setInt(1, loanId);
             pst.executeUpdate();
 
             // update book copy

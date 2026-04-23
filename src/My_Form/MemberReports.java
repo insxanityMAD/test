@@ -429,7 +429,7 @@ public class MemberReports extends javax.swing.JFrame {
                 btnOverdueAccountsActionPerformed(evt);
             }
         });
-        getContentPane().add(btnOverdueAccounts, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 240, 200, 44));
+        getContentPane().add(btnOverdueAccounts, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 240, 210, 44));
 
         btnTopBorrowers.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         btnTopBorrowers.setText("Top Borrowers");
@@ -460,7 +460,7 @@ public class MemberReports extends javax.swing.JFrame {
                 btnMemberDirectory1ActionPerformed(evt);
             }
         });
-        getContentPane().add(btnMemberDirectory1, new org.netbeans.lib.awtextra.AbsoluteConstraints(320, 240, 200, 44));
+        getContentPane().add(btnMemberDirectory1, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 240, 220, 44));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
