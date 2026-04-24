@@ -23,7 +23,7 @@ public class Dashboard extends javax.swing.JFrame {
      * Creates new form NewJFrame
      */
     public Dashboard() {
-        setUndecorated(true); // REQUIRED for opacity
+    setUndecorated(true); // REQUIRED for opacity 
         initComponents();
         setFocusableWindowState(true);
 

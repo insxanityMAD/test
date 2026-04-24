@@ -766,7 +766,7 @@ public class AddLoans extends javax.swing.JFrame {
 
         jLabel9.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel9.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel9.setText("Loan Book");
+        jLabel9.setText("Borrow Book");
 
         jLabel15.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel15.setForeground(new java.awt.Color(51, 51, 51));
@@ -1006,18 +1006,6 @@ public class AddLoans extends javax.swing.JFrame {
     private void txtSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_txtSearchActionPerformed
-
-    private void cmbBorrowerNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbBorrowerNameActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cmbBorrowerNameActionPerformed
-
-    private void cmbBookActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbBookActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cmbBookActionPerformed
-
-    private void cmbAcquisitionNumberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbAcquisitionNumberActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cmbAcquisitionNumberActionPerformed
 
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
         // TODO add your handling code here:
@@ -1418,6 +1406,18 @@ public class AddLoans extends javax.swing.JFrame {
         book.setVisible(true); // show it
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked
+
+    private void cmbAcquisitionNumberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbAcquisitionNumberActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cmbAcquisitionNumberActionPerformed
+
+    private void cmbBookActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbBookActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cmbBookActionPerformed
+
+    private void cmbBorrowerNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbBorrowerNameActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cmbBorrowerNameActionPerformed
 
     /**
      * @param args the command line arguments
