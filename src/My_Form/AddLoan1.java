@@ -85,23 +85,37 @@ public class AddLoan1 extends javax.swing.JFrame {
 
     // ✅ Only loads when librarian manually selects a real borrower
     cmbBorrowerName.addItemListener(new ItemListener() {
-        @Override
-        public void itemStateChanged(ItemEvent e) {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                if (isUpdating) return; // ✅ Skip if still loading borrowers
+    @Override
+    public void itemStateChanged(ItemEvent e) {
+        if (e.getStateChange() == ItemEvent.SELECTED) {
+            if (isUpdating) return;
 
-                Object selectedItem = cmbBorrowerName.getSelectedItem();
+            Object selectedItem = cmbBorrowerName.getSelectedItem();
 
-                if (selectedItem instanceof Borrower) {
-                    Borrower selected = (Borrower) selectedItem;
-                    loadTransactions(selected.getId());
-                    ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
-                } else {
-                    ((DefaultTableModel) tblTransaction.getModel()).setRowCount(0);
-                }
+            if (selectedItem instanceof Borrower) {
+                Borrower selected = (Borrower) selectedItem;
+                loadTransactions(selected.getId());
+                ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
+            } else {
+                // ✅ If nothing selected or search is empty, clear both tables
+                ((DefaultTableModel) tblTransaction.getModel()).setRowCount(0);
+                ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
             }
         }
-    });
+    }
+});
+    
+    JTextField editor = (JTextField) cmbBorrowerName.getEditor().getEditorComponent();
+editor.addKeyListener(new java.awt.event.KeyAdapter() {
+    @Override
+    public void keyReleased(java.awt.event.KeyEvent e) {
+        if (editor.getText().trim().isEmpty()) {
+            // ✅ Clear both tables when search is cleared
+            ((DefaultTableModel) tblTransaction.getModel()).setRowCount(0);
+            ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
+        }
+    }
+});
     }
 
     private void clearBorrowerDetails() {
@@ -916,7 +930,7 @@ public void getBookById(String acquisition) {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel10)
                     .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(261, Short.MAX_VALUE))
+                .addContainerGap(30, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1101,7 +1115,10 @@ public void getBookById(String acquisition) {
                     .addGroup(layout.createSequentialGroup()
                         .addGap(55, 55, 55)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButton5)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jButton5)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel9)
                                 .addGap(31, 31, 31)
@@ -1123,11 +1140,6 @@ public void getBookById(String acquisition) {
                         .addGap(311, 311, 311)
                         .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(268, 268, 268)
-                    .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(1871, Short.MAX_VALUE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1147,19 +1159,16 @@ public void getBookById(String acquisition) {
                     .addComponent(txtAcquisition, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                    .addContainerGap(549, Short.MAX_VALUE)
-                    .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(435, 435, 435)))
+                .addContainerGap(134, Short.MAX_VALUE))
         );
 
         pack();
