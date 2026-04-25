@@ -5,11 +5,16 @@
 package My_Form;
 
 import My_Classes.DB_connect;
+import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
@@ -26,6 +31,7 @@ public class AddLoan1 extends javax.swing.JFrame {
 
     private boolean isUpdating = false;
     private boolean isSelectingBorrower = false;
+   
 
     class Borrower {
 
@@ -61,9 +67,41 @@ public class AddLoan1 extends javax.swing.JFrame {
     public AddLoan1() {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
-        loadBorrowers();
+        
+        
         setupSearch();
+        loadTransactions();
+            
 
+// ✅ Load borrowers but no default selection
+        loadBorrowers();
+        
+      
+   
+
+    // ✅ Force clear BOTH tables on startup
+    ((DefaultTableModel) tblTransaction.getModel()).setRowCount(0);
+    ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
+
+    // ✅ Only loads when librarian manually selects a real borrower
+    cmbBorrowerName.addItemListener(new ItemListener() {
+        @Override
+        public void itemStateChanged(ItemEvent e) {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                if (isUpdating) return; // ✅ Skip if still loading borrowers
+
+                Object selectedItem = cmbBorrowerName.getSelectedItem();
+
+                if (selectedItem instanceof Borrower) {
+                    Borrower selected = (Borrower) selectedItem;
+                    loadTransactions(selected.getId());
+                    ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
+                } else {
+                    ((DefaultTableModel) tblTransaction.getModel()).setRowCount(0);
+                }
+            }
+        }
+    });
     }
 
     private void clearBorrowerDetails() {
@@ -94,37 +132,34 @@ public class AddLoan1 extends javax.swing.JFrame {
     }
 
     public void loadBorrowers() {
-        try {
-            Connection con = DB_connect.getConnection();
+       try {
+    Connection con = DB_connect.getConnection();
+    String sql = "SELECT borrower_id, first_name, last_name, Id_number FROM borrower ORDER BY first_name ASC";
+    PreparedStatement ps = con.prepareStatement(sql);
+    ResultSet rs = ps.executeQuery();
 
-            // Since your table uses first_name and last_name (not "name")
-            String sql = "SELECT borrower_id, first_name, last_name, Id_number FROM borrower ORDER BY first_name ASC";
+    isUpdating = true; // ✅ Prevent ItemListener from firing
+    cmbBorrowerName.removeAllItems();
 
-            PreparedStatement ps = con.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
+    while (rs.next()) {
+        cmbBorrowerName.addItem(new Borrower(
+            rs.getInt("borrower_id"),
+            rs.getString("first_name") + " " + rs.getString("last_name"),
+            rs.getString("Id_number")
+        ));
+    }
 
-            isUpdating = true;
+    cmbBorrowerName.setSelectedIndex(-1); // ✅ No default selection
+    isUpdating = false; // ✅ Re-enable ItemListener
 
-            cmbBorrowerName.removeAllItems();
+    rs.close();
+    ps.close();
+    con.close();
 
-            while (rs.next()) {
-                cmbBorrowerName.addItem(new Borrower(
-                        rs.getInt("borrower_id"),
-                        rs.getString("first_name") + " " + rs.getString("last_name"),
-                        rs.getString("Id_number")
-                ));
-            }
-
-            isUpdating = false;
-            rs.close();
-            ps.close();
-            con.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null,
-                    "Error loading borrowers: " + e.getMessage());
-        }
+} catch (Exception e) {
+    e.printStackTrace();
+    JOptionPane.showMessageDialog(null, "Error loading borrowers: " + e.getMessage());
+}
     }
 
     public void setupSearch() {
@@ -296,6 +331,253 @@ public class AddLoan1 extends javax.swing.JFrame {
                     "Error loading borrower details: " + e.getMessage());
         }
     }
+    
+    public void loadTransactions() {
+    try {
+        Connection conn = DB_connect.getConnection();
+
+        String sql = "SELECT br.first_name, br.last_name, bc.acquisition_number, b.title, " +
+                     "t.rental_date, t.due_date, t.status, " +
+                     "COALESCE(f.amount, 0) AS fine_amount, " +
+                     "COALESCE(f.status, 'N/A') AS fine_status " +
+                     "FROM transaction t " +
+                     "JOIN borrower br ON t.borrower_id = br.borrower_id " +
+                     "JOIN book b ON t.book_id = b.book_id " +
+                     "JOIN book_copy bc ON t.copy_id = bc.copy_id " +
+                     "LEFT JOIN fine f ON t.transaction_id = f.transaction_id " +
+                     "WHERE t.status = 'Borrowed' " +
+                     "ORDER BY t.rental_date DESC";
+
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ResultSet rs = ps.executeQuery();
+
+        DefaultTableModel model = (DefaultTableModel) tblTransaction.getModel();
+        model.setRowCount(0); // ✅ Clear before reloading
+
+        while (rs.next()) {
+            model.addRow(new Object[]{
+                rs.getString("first_name") + " " + rs.getString("last_name"), // Borrower Name
+                rs.getString("acquisition_number"),                            // Acquisition No.
+                rs.getString("title"),                                         // Book Title
+                rs.getString("rental_date"),                                   // Rental Date
+                rs.getString("due_date"),                                      // Due Date
+                rs.getString("status"),                                        // Status
+                rs.getString("fine_amount"),                                   // Fine Amount
+                rs.getString("fine_status")                                    // Fine Status
+            });
+        }
+
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(null, e);
+    }
+}
+    public void insertQueue() {
+        
+        Connection conn = DB_connect.getConnection();
+        
+       
+        
+        
+    }
+    
+    private int getBorrowerIdFromCombo() throws SQLException {
+        
+        
+        
+      if (cmbBorrowerName.getSelectedItem() == null || 
+        cmbBorrowerName.getSelectedItem().toString().trim().isEmpty()) {
+        throw new SQLException("No borrower selected!");
+    }
+
+      
+      
+      
+      
+    String fullName  = cmbBorrowerName.getSelectedItem().toString().trim();
+    String[] parts   = fullName.split(" ");
+    String firstName = parts[0];
+    String lastName  = parts[1];
+    
+    
+
+    Connection conn = DB_connect.getConnection();
+    String sql = "SELECT borrower_id FROM borrower WHERE first_name = ? AND last_name = ?";
+    PreparedStatement ps = conn.prepareStatement(sql);
+    ps.setString(1, firstName);
+    ps.setString(2, lastName);
+    ResultSet rs = ps.executeQuery();
+
+    if (rs.next()) {
+        return rs.getInt("borrower_id");
+    }
+    throw new SQLException("Borrower not found!");
+}
+
+public void getBookById(String acquisition) {
+    try {
+        // ✅ CHECK: Borrower selected before adding to queue
+        if (cmbBorrowerName.getSelectedItem() == null || 
+            cmbBorrowerName.getSelectedItem().toString().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Please select a borrower first before adding books to the queue.",
+                "No Borrower Selected", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Connection conn = DB_connect.getConnection();
+        String sql = "SELECT l.copy_id, l.book_id, l.acquisition_number, b.title, b.author, c.category_name, l.status " +
+                     "FROM book_copy l " +
+                     "JOIN book b ON l.book_id = b.book_id " +
+                     "JOIN category c ON b.category_id = c.category_id " +
+                     "WHERE l.acquisition_number = ?";
+
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, acquisition);
+        ResultSet res = ps.executeQuery();
+
+        DefaultTableModel model = (DefaultTableModel) tblModel.getModel();
+
+        if (!res.isBeforeFirst()) {
+            // No book found
+            JOptionPane.showMessageDialog(this,
+                "No book found with acquisition number: " + acquisition,
+                "Not Found", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        while (res.next()) {
+            String status = res.getString("status");
+
+            if (status.equalsIgnoreCase("Borrowed")) {
+                JOptionPane.showMessageDialog(this,
+                    "This book is already BORROWED and is not available for checkout.",
+                    "Book Unavailable", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // ✅ CHECK: Already in queue (duplicate acquisition number)
+            for (int i = 0; i < model.getRowCount(); i++) {
+                String existingAcq = model.getValueAt(i, 2).toString();
+                if (existingAcq.equalsIgnoreCase(res.getString("acquisition_number"))) {
+                    JOptionPane.showMessageDialog(this,
+                        "This book is already in the queue!",
+                        "Duplicate Book", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+            }
+
+            model.addRow(new Object[]{
+                res.getInt("copy_id"),               // col 0 - HIDDEN
+                res.getInt("book_id"),               // col 1 - HIDDEN
+                res.getString("acquisition_number"), // col 2
+                res.getString("title"),              // col 3
+                res.getString("author"),             // col 4
+                res.getString("category_name"),      // col 5
+                res.getString("status")              // col 6
+            });
+
+            // ✅ Clear the text field after adding
+            txtAcquisition.setText("");
+
+        }
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(null, e);
+    }
+        
+        
+    }
+    
+    
+    public void loadBorrowerTransactions(int borrowerID) {
+    try {
+        Connection con = DB_connect.getConnection();
+        String sql = "SELECT CONCAT(br.first_name, ' ', br.last_name) AS full_name, " +
+                     "bc.acquisition_number, b.title, t.rental_date, t.due_date, t.returned_date, " +
+                     "t.status AS transaction_status, " +
+                     "COALESCE(f.amount, 0) AS fine_amount, " +
+                     "COALESCE(f.status, 'No Fine') AS fine_status " +
+                     "FROM transaction t " +
+                     "JOIN borrower br ON t.borrower_id = br.borrower_id " +
+                     "JOIN book_copy bc ON t.copy_id = bc.copy_id " +
+                     "JOIN book b ON bc.book_id = b.book_id " +
+                     "LEFT JOIN fine f ON f.transaction_id = t.transaction_id " +
+                     "WHERE t.borrower_id = ? " +
+                     "AND t.status = 'Borrowed' " +  // ← only this line added
+                     "ORDER BY t.rental_date DESC";
+
+        PreparedStatement ps = con.prepareStatement(sql);
+        ps.setInt(1, borrowerID);
+        ResultSet res = ps.executeQuery();
+
+        DefaultTableModel model = (DefaultTableModel) tblTransaction.getModel();
+        model.setRowCount(0);
+
+        while (res.next()) {
+            model.addRow(new Object[]{
+                res.getString("full_name"),
+                res.getString("acquisition_number"),
+                res.getString("title"),
+                res.getString("rental_date"),
+                res.getString("due_date"),
+                res.getString("transaction_status"),
+                res.getString("fine_amount"),
+                res.getString("fine_status")
+            });
+        }
+
+    } catch (SQLException error) {
+        JOptionPane.showMessageDialog(null, error);
+    }
+}
+    
+    public void loadTransactions(int borrowerId) {
+    try {
+        Connection conn = DB_connect.getConnection();
+
+        String sql = "SELECT br.first_name, br.last_name, bc.acquisition_number, b.title, " +
+                     "t.rental_date, t.due_date, t.status, " +
+                     "COALESCE(f.amount, 0) AS fine_amount, " +
+                     "COALESCE(f.status, 'N/A') AS fine_status " +
+                     "FROM transaction t " +
+                     "JOIN borrower br ON t.borrower_id = br.borrower_id " +
+                     "JOIN book b ON t.book_id = b.book_id " +
+                     "JOIN book_copy bc ON t.copy_id = bc.copy_id " +
+                     "LEFT JOIN fine f ON t.transaction_id = f.transaction_id " +
+                     "WHERE t.status = 'Borrowed' AND t.borrower_id = ? " +
+                     "ORDER BY t.rental_date DESC";
+
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setInt(1, borrowerId);
+        ResultSet rs = ps.executeQuery();
+
+        DefaultTableModel model = (DefaultTableModel) tblTransaction.getModel();
+        model.setRowCount(0); // ✅ Clear before reloading
+
+        while (rs.next()) {
+            model.addRow(new Object[]{
+                rs.getString("first_name") + " " + rs.getString("last_name"),
+                rs.getString("acquisition_number"),
+                rs.getString("title"),
+                rs.getString("rental_date"),
+                rs.getString("due_date"),
+                rs.getString("status"),
+                rs.getString("fine_amount"),
+                rs.getString("fine_status")
+            });
+        }
+
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(null, e);
+    }
+}
+    
+    
+
+//        checkFineStatus(borrowerID); // ← auto checks fine after loading
+
+   
+   
+   
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -340,18 +622,19 @@ public class AddLoan1 extends javax.swing.JFrame {
         cmbBorrowerName = new javax.swing.JComboBox<>();
         jPanel5 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        tblModel = new javax.swing.JTable();
         jLabel24 = new javax.swing.JLabel();
-        jButton2 = new javax.swing.JButton();
+        btnFindBorrower = new javax.swing.JButton();
         jPanel6 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
-        jTable2 = new javax.swing.JTable();
+        tblTransaction = new javax.swing.JTable();
         jLabel25 = new javax.swing.JLabel();
         jLabel23 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        txtAcquisition = new javax.swing.JTextField();
         jButton3 = new javax.swing.JButton();
         jButton4 = new javax.swing.JButton();
         jButton5 = new javax.swing.JButton();
+        btnClear = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -572,13 +855,14 @@ public class AddLoan1 extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel19)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblEmail, javax.swing.GroupLayout.PREFERRED_SIZE, 273, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(lblEmail, javax.swing.GroupLayout.PREFERRED_SIZE, 327, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 54, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel21)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(lblIdNumber, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(lblIdNumber)
+                        .addGap(232, 232, 232))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel22)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -630,11 +914,9 @@ public class AddLoan1 extends javax.swing.JFrame {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addGap(22, 22, 22)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel10)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                    .addComponent(jLabel10)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(261, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -643,12 +925,11 @@ public class AddLoan1 extends javax.swing.JFrame {
                 .addComponent(jLabel10)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(19, Short.MAX_VALUE))
+                .addContainerGap(22, Short.MAX_VALUE))
         );
 
         jLabel9.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel9.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/icon/id-badge.png"))); // NOI18N
         jLabel9.setText("Select Borrower:");
 
         cmbBorrowerName.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
@@ -660,18 +941,15 @@ public class AddLoan1 extends javax.swing.JFrame {
 
         jPanel5.setBackground(new java.awt.Color(255, 255, 255));
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        tblModel.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+
             },
             new String [] {
                 "Acquisition Number", "Title", "Author", "Category ", "Availability"
             }
         ));
-        jScrollPane1.setViewportView(jTable1);
+        jScrollPane1.setViewportView(tblModel);
 
         jLabel24.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
         jLabel24.setForeground(new java.awt.Color(51, 51, 51));
@@ -698,38 +976,43 @@ public class AddLoan1 extends javax.swing.JFrame {
                 .addGap(114, 114, 114))
         );
 
-        jButton2.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jButton2.setText("Find Borrower");
-        jButton2.addMouseListener(new java.awt.event.MouseAdapter() {
+        btnFindBorrower.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        btnFindBorrower.setText("Find Borrower");
+        btnFindBorrower.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jButton2MouseClicked(evt);
+                btnFindBorrowerMouseClicked(evt);
             }
         });
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        btnFindBorrower.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                btnFindBorrowerActionPerformed(evt);
             }
         });
 
         jPanel6.setBackground(new java.awt.Color(255, 255, 255));
         jPanel6.setForeground(new java.awt.Color(0, 0, 0));
+        jPanel6.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jPanel6MouseClicked(evt);
+            }
+        });
 
-        jTable2.setModel(new javax.swing.table.DefaultTableModel(
+        tblTransaction.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "Acquisition Number", "Title"
+                "Borrower Name", "Acquisition No.", "Book Title", "Rental Date", "Due Date", "Status", "Fine Amount", "Fines Status"
             }
         ));
-        jScrollPane2.setViewportView(jTable2);
+        jScrollPane2.setViewportView(tblTransaction);
 
         jLabel25.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
         jLabel25.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel25.setText("SELECTED BOOK PREVIEW ");
+        jLabel25.setText("CURRENT BOOK(S) BORROWED");
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
@@ -739,8 +1022,8 @@ public class AddLoan1 extends javax.swing.JFrame {
                 .addGap(23, 23, 23)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel25)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 495, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(20, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 557, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(31, Short.MAX_VALUE))
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -757,7 +1040,7 @@ public class AddLoan1 extends javax.swing.JFrame {
         jLabel23.setText("Book Acquisition:");
 
         jButton3.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jButton3.setText("Clear");
+        jButton3.setText("CONFIRM");
         jButton3.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jButton3MouseClicked(evt);
@@ -795,37 +1078,56 @@ public class AddLoan1 extends javax.swing.JFrame {
             }
         });
 
+        btnClear.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        btnClear.setText("Clear");
+        btnClear.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                btnClearMouseClicked(evt);
+            }
+        });
+        btnClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnClearActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
-                .addGap(55, 55, 55)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButton5)
-                        .addGap(18, 18, 18)
-                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addGroup(layout.createSequentialGroup()
-                            .addComponent(jLabel9)
-                            .addGap(31, 31, 31)
-                            .addComponent(cmbBorrowerName, javax.swing.GroupLayout.PREFERRED_SIZE, 353, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(91, 91, 91)
-                            .addComponent(jButton2))
-                        .addGroup(layout.createSequentialGroup()
-                            .addComponent(jLabel23)
-                            .addGap(18, 18, 18)
-                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 324, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(42, 42, 42)
-                            .addComponent(jButton4))
-                        .addGroup(layout.createSequentialGroup()
-                            .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)
-                            .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addGap(55, 55, 55)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jButton5)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel9)
+                                .addGap(31, 31, 31)
+                                .addComponent(cmbBorrowerName, javax.swing.GroupLayout.PREFERRED_SIZE, 353, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(91, 91, 91)
+                                .addComponent(btnFindBorrower))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel23)
+                                .addGap(18, 18, 18)
+                                .addComponent(txtAcquisition, javax.swing.GroupLayout.PREFERRED_SIZE, 324, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(42, 42, 42)
+                                .addComponent(jButton4))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(77, 77, 77)
+                                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(311, 311, 311)
+                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addGap(268, 268, 268)
+                    .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(1871, Short.MAX_VALUE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -836,23 +1138,28 @@ public class AddLoan1 extends javax.swing.JFrame {
                     .addComponent(jLabel9, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(cmbBorrowerName, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(btnFindBorrower, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(30, 30, 30)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel23, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtAcquisition, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(162, 162, 162))
+                .addGap(18, 18, 18)
+                .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addContainerGap(549, Short.MAX_VALUE)
+                    .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(435, 435, 435)))
         );
 
         pack();
@@ -921,32 +1228,233 @@ public class AddLoan1 extends javax.swing.JFrame {
     }
     }//GEN-LAST:event_cmbBorrowerNameActionPerformed
 
-    private void jButton2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton2MouseClicked
-        AddMembers members = new AddMembers();
-        members.setVisible(true);
-        this.dispose();
-    }//GEN-LAST:event_jButton2MouseClicked
+    private void btnFindBorrowerMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnFindBorrowerMouseClicked
+  String selectedBorrower = cmbBorrowerName.getSelectedItem().toString();
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        AddMembers addmember = new AddMembers();
-        addmember.setVisible(true);
-        this.dispose();
-    }//GEN-LAST:event_jButton2ActionPerformed
+    try {
+        Connection con = DB_connect.getConnection();
+        String sql = "SELECT borrower_id FROM borrower " +
+                     "WHERE CONCAT(first_name, ' ', last_name) = ?";
+
+        PreparedStatement ps = con.prepareStatement(sql);
+        ps.setString(1, selectedBorrower);
+        ResultSet res = ps.executeQuery();
+
+        if (res.next()) {
+            int borrowerID = res.getInt("borrower_id");
+            loadBorrowerTransactions(borrowerID);
+        } else {
+            JOptionPane.showMessageDialog(null, "Borrower not found!");
+        }
+        
+    } catch (SQLException error) {
+        JOptionPane.showMessageDialog(null, error);
+    }
+    }//GEN-LAST:event_btnFindBorrowerMouseClicked
+
+    private void btnFindBorrowerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFindBorrowerActionPerformed
+        String selectedBorrower = cmbBorrowerName.getSelectedItem().toString();
+    
+    try {
+        Connection con = DB_connect.getConnection();
+        String sql = "SELECT borrower_id FROM borrower " +
+                     "WHERE CONCAT(first_name, ' ', last_name) = ?";
+        
+        PreparedStatement ps = con.prepareStatement(sql);
+        ps.setString(1, selectedBorrower);
+        ResultSet res = ps.executeQuery();
+        
+        if (res.next()) {
+            int borrowerID = res.getInt("borrower_id");
+            loadBorrowerTransactions(borrowerID); // ← this loads to tblTransaction
+        } else {
+            JOptionPane.showMessageDialog(null, "Borrower not found!");
+        }
+        
+    } catch (SQLException error) {
+        JOptionPane.showMessageDialog(null, error);
+    }
+        
+    }//GEN-LAST:event_btnFindBorrowerActionPerformed
 
     private void jButton3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton3MouseClicked
-        // TODO add your handling code here:
+       
     }//GEN-LAST:event_jButton3MouseClicked
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        // TODO add your handling code here:
+// ✅ 1. CHECK: Queue is not empty
+if (tblModel.getRowCount() == 0) {
+    JOptionPane.showMessageDialog(this, "No books in the queue!", "Empty Queue", JOptionPane.WARNING_MESSAGE);
+    return;
+}
+
+// ✅ 2. CHECK: Borrower is selected
+if (!(cmbBorrowerName.getSelectedItem() instanceof Borrower)) {
+    JOptionPane.showMessageDialog(this,
+        "Please select a borrower before proceeding.",
+        "No Borrower Selected", JOptionPane.WARNING_MESSAGE);
+    return;
+}
+
+// ✅ 3. CHECK: Duplicate in queue (same acquisition number or same title)
+DefaultTableModel queueModel = (DefaultTableModel) tblModel.getModel();
+for (int i = 0; i < queueModel.getRowCount(); i++) {
+    String acqI   = queueModel.getValueAt(i, 2).toString();
+    String titleI = queueModel.getValueAt(i, 3).toString();
+
+    for (int j = i + 1; j < queueModel.getRowCount(); j++) {
+        String acqJ   = queueModel.getValueAt(j, 2).toString();
+        String titleJ = queueModel.getValueAt(j, 3).toString();
+
+        if (acqI.equalsIgnoreCase(acqJ)) {
+            JOptionPane.showMessageDialog(this,
+                "❌ Duplicate found in queue!\n" +
+                "Acquisition Number: " + acqI + " appears more than once.\n\n" +
+                "Please remove the duplicate before proceeding.",
+                "Duplicate Book", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (titleI.equalsIgnoreCase(titleJ)) {
+            JOptionPane.showMessageDialog(this,
+                "❌ Duplicate found in queue!\n" +
+                "Book Title: \"" + titleI + "\" appears more than once.\n\n" +
+                "Please remove the duplicate before proceeding.",
+                "Duplicate Book", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+    }
+}
+
+try {
+    int borrowerId = getBorrowerIdFromCombo();
+    Connection conn = DB_connect.getConnection();
+
+    // ✅ 4. CHECK: Borrower status (Active/Inactive/Blocked)
+    String statusSQL = "SELECT status, borrower_type FROM borrower WHERE borrower_id = ?";
+    PreparedStatement psStatus = conn.prepareStatement(statusSQL);
+    psStatus.setInt(1, borrowerId);
+    ResultSet rsStatus = psStatus.executeQuery();
+
+    if (rsStatus.next()) {
+        String borrowerStatus = rsStatus.getString("status");
+        String borrowerType   = rsStatus.getString("borrower_type");
+
+        if (!borrowerStatus.equalsIgnoreCase("Active")) {
+            JOptionPane.showMessageDialog(this,
+                "❌ This borrower is " + borrowerStatus + " and cannot borrow books.",
+                "Borrower Blocked", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // ✅ 5. CHECK: Same title already borrowed in transaction table
+        for (int i = 0; i < queueModel.getRowCount(); i++) {
+            String queueTitle = queueModel.getValueAt(i, 3).toString();
+
+            String dupSQL = "SELECT t.transaction_id FROM transaction t " +
+                            "JOIN book b ON t.book_id = b.book_id " +
+                            "WHERE t.borrower_id = ? AND t.status = 'Borrowed' " +
+                            "AND LOWER(b.title) = LOWER(?)";
+            PreparedStatement psDup = conn.prepareStatement(dupSQL);
+            psDup.setInt(1, borrowerId);
+            psDup.setString(2, queueTitle);
+            ResultSet rsDup = psDup.executeQuery();
+
+            if (rsDup.next()) {
+                JOptionPane.showMessageDialog(this,
+                    "❌ Cannot proceed!\n" +
+                    "\"" + queueTitle + "\" is already currently borrowed by this borrower.\n\n" +
+                    "A borrower can only borrow one copy of the same title at a time.",
+                    "Duplicate Title", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        }
+
+        // ✅ 6. CHECK: Borrow limit based on borrower_type
+        int borrowLimit;
+        switch (borrowerType.toLowerCase()) {
+            case "teacher": borrowLimit = 5; break;
+            case "guest":   borrowLimit = 3; break;
+            case "student":
+            default:        borrowLimit = 4; break;
+        }
+
+        String countSQL = "SELECT COUNT(*) FROM transaction WHERE borrower_id = ? AND status = 'Borrowed'";
+        PreparedStatement psCount = conn.prepareStatement(countSQL);
+        psCount.setInt(1, borrowerId);
+        ResultSet rsCount = psCount.executeQuery();
+        rsCount.next();
+        int currentlyBorrowed = rsCount.getInt(1);
+        int queueCount        = queueModel.getRowCount();
+        int totalAfterBorrow  = currentlyBorrowed + queueCount;
+
+        if (totalAfterBorrow > borrowLimit) {
+            JOptionPane.showMessageDialog(this,
+                "❌ Borrow limit exceeded!\n" +
+                "Borrower Type      : " + borrowerType + "\n" +
+                "Borrow Limit       : " + borrowLimit + "\n" +
+                "Currently Borrowed : " + currentlyBorrowed + "\n" +
+                "Trying to Borrow   : " + queueCount + "\n\n" +
+                "Please reduce the number of books in the queue.",
+                "Limit Exceeded", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+    }
+
+    // ✅ 7. BATCH INSERT
+    conn.setAutoCommit(false);
+
+    String insertSQL = "INSERT INTO transaction (borrower_id, book_id, copy_id, rental_date, due_date, status) " +
+                       "VALUES (?, ?, ?, ?, ?, 'Borrowed')";
+    String updateSQL = "UPDATE book_copy SET status = 'Borrowed' WHERE copy_id = ?";
+
+    PreparedStatement psInsert = conn.prepareStatement(insertSQL);
+    PreparedStatement psUpdate = conn.prepareStatement(updateSQL);
+
+    // ✅ Save count BEFORE clearing
+    int totalBorrowed = queueModel.getRowCount();
+
+    for (int i = 0; i < queueModel.getRowCount(); i++) {
+        int copyId = (int) queueModel.getValueAt(i, 0);
+        int bookId = (int) queueModel.getValueAt(i, 1);
+
+        psInsert.setInt(1, borrowerId);
+        psInsert.setInt(2, bookId);
+        psInsert.setInt(3, copyId);
+        psInsert.setDate(4, Date.valueOf(LocalDate.now()));
+        psInsert.setDate(5, Date.valueOf(LocalDate.now().plusDays(7)));
+        psInsert.addBatch();
+
+        psUpdate.setInt(1, copyId);
+        psUpdate.addBatch();
+    }
+
+    psInsert.executeBatch();
+    psUpdate.executeBatch();
+    conn.commit();
+
+    // ✅ Use saved count, not queueModel.getRowCount() which is 0 after clear
+    queueModel.setRowCount(0);
+    loadTransactions(borrowerId);
+
+    JOptionPane.showMessageDialog(this,
+        "✅ " + totalBorrowed + " book(s) successfully borrowed!",
+        "Success", JOptionPane.INFORMATION_MESSAGE);
+
+} catch (SQLException e) {
+    JOptionPane.showMessageDialog(this, "❌ Error: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+}
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton4MouseClicked
-        // TODO add your handling code here:
+       
+        String acquisition = txtAcquisition.getText().trim();
+        
+        getBookById(acquisition);
     }//GEN-LAST:event_jButton4MouseClicked
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        // TODO add your handling code here:
+                    // TODO add your handling code here:
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton5MouseClicked
@@ -954,8 +1462,50 @@ public class AddLoan1 extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton5MouseClicked
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        // TODO add your handling code here:
+int selectedRow = tblModel.getSelectedRow();
+    
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this,
+            "Please select a book to remove.",
+            "No Selection", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+    
+    String title = tblModel.getValueAt(selectedRow, 3).toString(); // col 3 = title
+    
+    int confirm = JOptionPane.showConfirmDialog(this,
+        "Remove \"" + title + "\" from the queue?",
+        "Confirm Remove", JOptionPane.YES_NO_OPTION);
+    
+    if (confirm == JOptionPane.YES_OPTION) {
+        ((DefaultTableModel) tblModel.getModel()).removeRow(selectedRow);
+    }
     }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void btnClearMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnClearMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnClearMouseClicked
+
+    private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
+       if (tblModel.getRowCount() == 0) {
+        JOptionPane.showMessageDialog(this,
+            "Queue is already empty!",
+            "Empty Queue", JOptionPane.INFORMATION_MESSAGE);
+        return;
+    }
+    
+    int confirm = JOptionPane.showConfirmDialog(this,
+        "Are you sure you want to clear all books in the queue?",
+        "Confirm Clear", JOptionPane.YES_NO_OPTION);
+    
+    if (confirm == JOptionPane.YES_OPTION) {
+        ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
+    }
+    }//GEN-LAST:event_btnClearActionPerformed
+
+    private void jPanel6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanel6MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jPanel6MouseClicked
 
     /**
      * @param args the command line arguments
@@ -983,8 +1533,9 @@ public class AddLoan1 extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnClear;
+    private javax.swing.JButton btnFindBorrower;
     private javax.swing.JComboBox<Borrower> cmbBorrowerName;
-    private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
@@ -1011,9 +1562,6 @@ public class AddLoan1 extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel6;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JTable jTable2;
-    private javax.swing.JTextField jTextField1;
     private javax.swing.JLabel lblBorrowerId;
     private javax.swing.JLabel lblContactNumber;
     private javax.swing.JLabel lblDob;
@@ -1023,6 +1571,9 @@ public class AddLoan1 extends javax.swing.JFrame {
     private javax.swing.JLabel lblIdType;
     private javax.swing.JLabel lblMemberType;
     private javax.swing.JLabel lblStatus;
+    private javax.swing.JTable tblModel;
+    private javax.swing.JTable tblTransaction;
+    private javax.swing.JTextField txtAcquisition;
     private javax.swing.JLabel txtBooks;
     private javax.swing.JLabel txtDashboard;
     private javax.swing.JLabel txtLogout1;
