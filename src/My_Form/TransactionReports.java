@@ -97,17 +97,8 @@ public class TransactionReports extends javax.swing.JFrame {
                         daysLeft = -overdueDays;
                     } else {
                        
-                       java.time.LocalDate start = today.toLocalDate();
-                        java.time.LocalDate end = due.toLocalDate();
-                        long count = 0;
-                        while (!start.isAfter(end)) {
-                            java.time.DayOfWeek day = start.getDayOfWeek();
-                            if (day != java.time.DayOfWeek.SUNDAY) {
-                                count++;
-                            }
-                            start = start.plusDays(1);
-                        }
-                        daysLeft = count;
+                        long countingDays = My_Classes.FineCalculator.countDaysBeforeDueDate(due, today);
+                        daysLeft = countingDays;
                     }
                 } else {
                     daysLeft = 0;
