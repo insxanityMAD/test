@@ -6,6 +6,7 @@ package My_Classes;
 
 import My_Form.AddLoan1;
 import My_Form.LoginForm;
+import My_Form.ReturnBookForm;
 
 
 /**
@@ -18,7 +19,7 @@ public class MalinaoProject {
     
     public static void main(String[] args) {
      
-     AddLoan1 loan = new AddLoan1();
+   ReturnBookForm loan = new ReturnBookForm();
  
      loan.setVisible(true);
     }
