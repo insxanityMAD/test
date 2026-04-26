@@ -55,6 +55,25 @@ public class FineCalculator {
 
         return count;
     }
+    
+    public static long countDaysBeforeDueDate(java.sql.Date due, java.sql.Date today){
+        LocalDate start = today.toLocalDate().plusDays(1);
+        LocalDate end = due.toLocalDate();
+        
+        long count = 0;
+            
+        while(start.isBefore(end) || start.equals(end)){
+            
+            
+            
+            if(start.getDayOfWeek() != DayOfWeek.SUNDAY  && !HOLIDAYS.contains(start) ){
+                 count++;
+            }
+            
+              start = start.plusDays(1);
+        }
+          return count;
+    }
 
     public static double calculateFine(java.sql.Date due, java.sql.Date today) {
         long days = countWeekdaysLate(due, today);
