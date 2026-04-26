@@ -8,6 +8,10 @@ import My_Classes.DB_connect;
 import java.sql.*;
 import java.sql.Connection;
 import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import java.sql.ResultSet;
+import java.sql.PreparedStatement;
+
 
 /**
  *
@@ -25,8 +29,21 @@ public class ReturnBookForm extends javax.swing.JFrame {
     public ReturnBookForm() {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
+       // Lock borrower info label sizes
+    txtID.setPreferredSize(txtID.getPreferredSize());
+    txtName.setPreferredSize(txtName.getPreferredSize());
+    txtEmail.setPreferredSize(txtEmail.getPreferredSize());
+    txtContactNumber.setPreferredSize(txtContactNumber.getPreferredSize());
+
+    // ✅ Lock summary label sizes
+    lblBorrowed.setPreferredSize(lblBorrowed.getPreferredSize());
+    lblOverdue.setPreferredSize(lblOverdue.getPreferredSize());
+    lblFine.setPreferredSize(lblFine.getPreferredSize());
+    lblStatus.setPreferredSize(lblStatus.getPreferredSize());
+        
         setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
-//        
+//      
+        initTable();
 //        jTable1.getTableHeader().setPreferredSize(
 //        new java.awt.Dimension(jTable1.getTableHeader().getWidth(), 50)
 //    );
@@ -38,6 +55,74 @@ public class ReturnBookForm extends javax.swing.JFrame {
 
 
     }
+    
+    private void initTable() {
+        
+         DefaultTableModel model = new DefaultTableModel(
+            new String[]{
+                "Acquisition No.", "Book Title", "Rental Date",
+                "Due Date", "Status", "Fine Amount (₱)"
+            }, 0
+        ) {
+            // Make all cells non-editable
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        tblModel.setModel(model);
+    tblModel.setModel(model);
+        
+        
+        
+    }
+    private void loadBorrowerSummary(int borrowerID) {
+    String query = """
+        SELECT
+            COUNT(t.transaction_id)                                         AS total_borrowed,
+            SUM(CASE WHEN CURDATE() > t.due_date 
+                AND t.status = 'Borrowed' THEN 1 ELSE 0 END)               AS total_overdue,
+            COALESCE(SUM(f.amount), 0)                                      AS total_fines,
+            b.status                                                         AS borrower_status
+        FROM borrower b
+        LEFT JOIN transaction t  ON t.borrower_id = b.borrower_id
+                                 AND t.status = 'Borrowed'
+        LEFT JOIN fine f         ON f.borrower_id = b.borrower_id
+                                 AND f.status = 'Unpaid'
+        WHERE b.borrower_id = ?
+        GROUP BY b.status
+    """;
+
+    try (Connection conn = DB_connect.getConnection();
+         PreparedStatement ps = conn.prepareStatement(query)) {
+
+        ps.setInt(1, borrowerID);
+        ResultSet rs = ps.executeQuery();
+
+        if (rs.next()) {
+            lblBorrowed.setText(String.valueOf(rs.getInt("total_borrowed")));
+            lblOverdue.setText(String.valueOf(rs.getInt("total_overdue")));
+            lblFine.setText("₱" + String.format("%.2f", rs.getDouble("total_fines")));
+            lblStatus.setText(rs.getString("borrower_status"));
+
+            // Optional: color the status label based on value
+            switch (rs.getString("borrower_status")) {
+                case "Active"   -> lblStatus.setForeground(new java.awt.Color(0, 150, 0));   // green
+                case "Inactive" -> lblStatus.setForeground(new java.awt.Color(150, 150, 0)); // yellow
+                case "Blocked"  -> lblStatus.setForeground(new java.awt.Color(200, 0, 0));   // red
+                default         -> lblStatus.setForeground(java.awt.Color.BLACK);
+            }
+        }
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this,
+            "Error loading borrower summary: " + e.getMessage(),
+            "Error", JOptionPane.ERROR_MESSAGE);
+        e.printStackTrace();
+    }
+}
+    
+    
 
     
 
@@ -64,23 +149,27 @@ public class ReturnBookForm extends javax.swing.JFrame {
         jPanel4 = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
-        jLabel4 = new javax.swing.JLabel();
+        txtID = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
-        jLabel10 = new javax.swing.JLabel();
-        jLabel11 = new javax.swing.JLabel();
-        jLabel12 = new javax.swing.JLabel();
+        txtEmail = new javax.swing.JLabel();
+        txtName = new javax.swing.JLabel();
+        txtContactNumber = new javax.swing.JLabel();
+        txtID1 = new javax.swing.JLabel();
+        txtName1 = new javax.swing.JLabel();
+        txtEmail1 = new javax.swing.JLabel();
+        txtContactNumber1 = new javax.swing.JLabel();
         jPanel5 = new javax.swing.JPanel();
         jLabel13 = new javax.swing.JLabel();
-        jLabel14 = new javax.swing.JLabel();
+        lblFine = new javax.swing.JLabel();
         jPanel6 = new javax.swing.JPanel();
         jLabel15 = new javax.swing.JLabel();
-        jLabel16 = new javax.swing.JLabel();
+        lblBorrowed = new javax.swing.JLabel();
         jPanel7 = new javax.swing.JPanel();
         jLabel17 = new javax.swing.JLabel();
-        jLabel18 = new javax.swing.JLabel();
+        lblStatus = new javax.swing.JLabel();
         jPanel8 = new javax.swing.JPanel();
         jLabel19 = new javax.swing.JLabel();
-        jLabel20 = new javax.swing.JLabel();
+        lblOverdue = new javax.swing.JLabel();
         jPanel9 = new javax.swing.JPanel();
         jLabel21 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -220,25 +309,41 @@ public class ReturnBookForm extends javax.swing.JFrame {
         jPanel2.setBackground(new java.awt.Color(153, 153, 153));
         jPanel2.setForeground(new java.awt.Color(255, 255, 255));
 
-        jLabel4.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel4.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel4.setText("Borrower ID: ");
+        txtID.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        txtID.setForeground(new java.awt.Color(0, 0, 0));
+        txtID.setText("-");
 
         jLabel9.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel9.setForeground(new java.awt.Color(0, 0, 0));
         jLabel9.setText("BORROWER INFORMATION");
 
-        jLabel10.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel10.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel10.setText("Email: ");
+        txtEmail.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        txtEmail.setForeground(new java.awt.Color(0, 0, 0));
+        txtEmail.setText("-");
 
-        jLabel11.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel11.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel11.setText("Full Name: ");
+        txtName.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        txtName.setForeground(new java.awt.Color(0, 0, 0));
+        txtName.setText("-");
 
-        jLabel12.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel12.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel12.setText("Contact Number: ");
+        txtContactNumber.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        txtContactNumber.setForeground(new java.awt.Color(0, 0, 0));
+        txtContactNumber.setText("-");
+
+        txtID1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        txtID1.setForeground(new java.awt.Color(0, 0, 0));
+        txtID1.setText("Borrower ID: ");
+
+        txtName1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        txtName1.setForeground(new java.awt.Color(0, 0, 0));
+        txtName1.setText("Full Name: ");
+
+        txtEmail1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        txtEmail1.setForeground(new java.awt.Color(0, 0, 0));
+        txtEmail1.setText("Email: ");
+
+        txtContactNumber1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        txtContactNumber1.setForeground(new java.awt.Color(0, 0, 0));
+        txtContactNumber1.setText("Contact Number: ");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -246,13 +351,24 @@ public class ReturnBookForm extends javax.swing.JFrame {
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addGap(18, 18, 18)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel9)
-                    .addComponent(jLabel10)
-                    .addComponent(jLabel12)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel11))
-                .addContainerGap(182, Short.MAX_VALUE))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel9)
+                        .addGap(182, 182, 182))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtEmail1)
+                            .addComponent(txtContactNumber1)
+                            .addComponent(txtID1)
+                            .addComponent(txtName1))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtEmail)
+                            .addComponent(txtContactNumber)
+                            .addComponent(txtID)
+                            .addComponent(txtName))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap(71, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -260,14 +376,24 @@ public class ReturnBookForm extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel9)
                 .addGap(18, 18, 18)
-                .addComponent(jLabel4)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel11)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel10)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(30, Short.MAX_VALUE))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                        .addComponent(txtID)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtName)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtEmail)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtContactNumber, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(txtID1)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtName1)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtEmail1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtContactNumber1, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(30, 30, 30))
         );
 
         jPanel5.setBackground(new java.awt.Color(153, 153, 153));
@@ -277,31 +403,31 @@ public class ReturnBookForm extends javax.swing.JFrame {
         jLabel13.setForeground(new java.awt.Color(0, 0, 0));
         jLabel13.setText("TOTAL FINES");
 
-        jLabel14.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel14.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel14.setText("BOOKS BORROWED");
+        lblFine.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        lblFine.setForeground(new java.awt.Color(0, 0, 0));
+        lblFine.setText("-");
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap(83, Short.MAX_VALUE)
+                .addComponent(jLabel13)
+                .addGap(81, 81, 81))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
-                .addContainerGap(55, Short.MAX_VALUE)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel14)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
-                        .addComponent(jLabel13)
-                        .addGap(33, 33, 33)))
-                .addGap(48, 48, 48))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(lblFine)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel13)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel14)
-                .addContainerGap(36, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(lblFine, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(38, Short.MAX_VALUE))
         );
 
         jPanel6.setBackground(new java.awt.Color(153, 153, 153));
@@ -311,9 +437,9 @@ public class ReturnBookForm extends javax.swing.JFrame {
         jLabel15.setForeground(new java.awt.Color(0, 0, 0));
         jLabel15.setText("BOOKS BORROWED");
 
-        jLabel16.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel16.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel16.setText("BOOKS BORROWED");
+        lblBorrowed.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        lblBorrowed.setForeground(new java.awt.Color(0, 0, 0));
+        lblBorrowed.setText("-");
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
@@ -321,18 +447,20 @@ public class ReturnBookForm extends javax.swing.JFrame {
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
                 .addContainerGap(55, Short.MAX_VALUE)
-                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel16)
-                    .addComponent(jLabel15))
+                .addComponent(jLabel15)
                 .addGap(48, 48, 48))
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addGap(135, 135, 135)
+                .addComponent(lblBorrowed)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel15)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel16)
+                .addGap(18, 18, 18)
+                .addComponent(lblBorrowed)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -341,24 +469,24 @@ public class ReturnBookForm extends javax.swing.JFrame {
 
         jLabel17.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel17.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel17.setText("TOTAL FINES");
+        jLabel17.setText("Status");
 
-        jLabel18.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel18.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel18.setText("BOOKS BORROWED");
+        lblStatus.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        lblStatus.setForeground(new java.awt.Color(0, 0, 0));
+        lblStatus.setText("-");
 
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(55, Short.MAX_VALUE)
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel18)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                        .addComponent(jLabel17)
-                        .addGap(33, 33, 33)))
-                .addGap(48, 48, 48))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(lblStatus)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addGap(72, 72, 72)
+                .addComponent(jLabel17)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -366,8 +494,8 @@ public class ReturnBookForm extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel17)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel18)
-                .addContainerGap(36, Short.MAX_VALUE))
+                .addComponent(lblStatus)
+                .addGap(36, 36, 36))
         );
 
         jPanel8.setBackground(new java.awt.Color(153, 153, 153));
@@ -375,22 +503,24 @@ public class ReturnBookForm extends javax.swing.JFrame {
 
         jLabel19.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel19.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel19.setText("BOOKS BORROWED");
+        jLabel19.setText("OVERDUE BOOKS");
 
-        jLabel20.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel20.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel20.setText("BOOKS BORROWED");
+        lblOverdue.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        lblOverdue.setForeground(new java.awt.Color(0, 0, 0));
+        lblOverdue.setText("-");
 
         javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
         jPanel8.setLayout(jPanel8Layout);
         jPanel8Layout.setHorizontalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addGap(26, 26, 26)
+                .addComponent(jLabel19)
+                .addContainerGap(28, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel20)
-                    .addComponent(jLabel19))
-                .addGap(48, 48, 48))
+                .addComponent(lblOverdue)
+                .addGap(101, 101, 101))
         );
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -398,7 +528,7 @@ public class ReturnBookForm extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel19)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel20)
+                .addComponent(lblOverdue)
                 .addContainerGap(42, Short.MAX_VALUE))
         );
 
@@ -410,13 +540,13 @@ public class ReturnBookForm extends javax.swing.JFrame {
 
         tblModel.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
             },
             new String [] {
-                "Acquisition No.", "Book Title", "Borrowed Date", "Due Date", "Fine"
+                "Acquisition No.", "Book Title", "Borrowed Date", "Due Date", "Status", "Fine"
             }
         ));
         jScrollPane1.setViewportView(tblModel);
@@ -439,6 +569,11 @@ public class ReturnBookForm extends javax.swing.JFrame {
         btnAdd.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnAddActionPerformed(evt);
+            }
+        });
+        btnAdd.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                btnAddKeyPressed(evt);
             }
         });
 
@@ -520,22 +655,20 @@ public class ReturnBookForm extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel21)
                 .addGap(18, 18, 18)
-                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel9Layout.createSequentialGroup()
-                        .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel23, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtAcquisition, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnAdd, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(81, 81, 81))
-                    .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel24)
-                        .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btnRemoveSelected, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel23, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtAcquisition, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnAdd, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(39, 39, 39)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnRemoveSelected, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel24))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 263, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(btnConfirm, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(10, Short.MAX_VALUE))
+                .addContainerGap(17, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -546,19 +679,19 @@ public class ReturnBookForm extends javax.swing.JFrame {
                 .addGap(31, 31, 31)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel3)
-                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGroup(jPanel4Layout.createSequentialGroup()
                             .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGap(18, 18, 18)
-                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGap(18, 18, 18)
                             .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                 .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -578,7 +711,7 @@ public class ReturnBookForm extends javax.swing.JFrame {
                             .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGap(18, 18, 18)
                 .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(25, Short.MAX_VALUE))
+                .addContainerGap(24, Short.MAX_VALUE))
         );
 
         getContentPane().add(jPanel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 160, 1110, 780));
@@ -629,7 +762,107 @@ public class ReturnBookForm extends javax.swing.JFrame {
     }//GEN-LAST:event_btnAddMouseClicked
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
-        // TODO add your handling code here:
+ String acquisitionNumber = txtAcquisition.getText().trim();
+
+    if (acquisitionNumber.isEmpty()) {
+        JOptionPane.showMessageDialog(this,
+            "Please enter an acquisition number.",
+            "Warning", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    // Prevent duplicate acquisition numbers in the queue
+    DefaultTableModel model = (DefaultTableModel) tblModel.getModel();
+    for (int i = 0; i < model.getRowCount(); i++) {
+        if (model.getValueAt(i, 0).toString().equals(acquisitionNumber)) {
+            JOptionPane.showMessageDialog(this,
+                "This book is already in the queue.",
+                "Duplicate", JOptionPane.WARNING_MESSAGE);
+            txtAcquisition.setText("");
+            return;
+        }
+    }
+
+    String query = """
+        SELECT
+            bc.acquisition_number                               AS acq_no,
+            b.title                                             AS book_title,
+            t.rental_date                                       AS rental_date,
+            t.due_date                                          AS due_date,
+            t.status                                            AS status,
+            GREATEST(DATEDIFF(CURDATE(), t.due_date), 0) * 10  AS fine_amount,
+            t.transaction_id                                    AS transaction_id,
+            br.borrower_id                                      AS borrower_id,
+            CONCAT(br.first_name, ' ', br.last_name)           AS full_name,
+            br.email                                            AS email,
+            br.phone_number                                     AS phone_number
+        FROM book_copy bc
+        JOIN book b        ON bc.book_id    = b.book_id
+        JOIN transaction t ON t.copy_id     = bc.copy_id
+        JOIN borrower br   ON t.borrower_id = br.borrower_id
+        WHERE bc.acquisition_number = ?
+          AND t.status = 'Borrowed'
+        ORDER BY t.rental_date DESC
+        LIMIT 1
+    """;
+
+    try (Connection conn = DB_connect.getConnection();
+         PreparedStatement ps = conn.prepareStatement(query)) {
+
+        ps.setString(1, acquisitionNumber);
+        ResultSet rs = ps.executeQuery();
+
+        if (rs.next()) {
+            int fetchedBorrowerID = rs.getInt("borrower_id");
+            String fetchedFullName = rs.getString("full_name");
+
+            if (model.getRowCount() > 0) {
+                int currentBorrowerID = Integer.parseInt(txtID.getText().trim());
+
+                if (fetchedBorrowerID != currentBorrowerID) {
+                    JOptionPane.showMessageDialog(this,
+                        "This book belongs to a different borrower (" + fetchedFullName + ").\n"
+                        + "Please confirm the current queue first before processing a new borrower.",
+                        "Borrower Mismatch", JOptionPane.WARNING_MESSAGE);
+                    txtAcquisition.setText("");
+                    return;
+                }
+            } else {
+                // First book scanned — populate borrower info labels
+                txtID.setText(String.valueOf(fetchedBorrowerID));
+                txtName.setText(fetchedFullName);
+                txtEmail.setText(rs.getString("email"));
+                txtContactNumber.setText(rs.getString("phone_number"));
+                loadBorrowerSummary(fetchedBorrowerID); // ✅ load summary on first scan
+            }
+
+            // Add book to the queue table
+            model.addRow(new Object[]{
+                rs.getString("acq_no"),
+                rs.getString("book_title"),
+                rs.getDate("rental_date"),
+                rs.getDate("due_date"),
+                rs.getString("status"),
+                rs.getDouble("fine_amount")
+            });
+
+            txtAcquisition.setText("");
+            txtAcquisition.requestFocus();
+
+        } else {
+            JOptionPane.showMessageDialog(this,
+                "No active borrowed record found for: " + acquisitionNumber,
+                "Not Found", JOptionPane.INFORMATION_MESSAGE);
+            txtAcquisition.setText("");
+            txtAcquisition.requestFocus();
+        }
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this,
+            "Database error: " + e.getMessage(),
+            "Error", JOptionPane.ERROR_MESSAGE);
+        e.printStackTrace();
+    }
     }//GEN-LAST:event_btnAddActionPerformed
 
     private void btnRemoveSelectedMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnRemoveSelectedMouseClicked
@@ -645,7 +878,149 @@ public class ReturnBookForm extends javax.swing.JFrame {
     }//GEN-LAST:event_btnConfirmMouseClicked
 
     private void btnConfirmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConfirmActionPerformed
-  
+ DefaultTableModel model = (DefaultTableModel) tblModel.getModel();
+
+        if (model.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this,
+                "No books in the queue to process.",
+                "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Process return for all " + model.getRowCount() + " book(s) in the queue?",
+            "Confirm Return", JOptionPane.YES_NO_OPTION);
+
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        String updateTransaction = """
+            UPDATE transaction
+            SET status = 'Returned', returned_date = CURDATE()
+            WHERE transaction_id = ?
+        """;
+
+        String updateBookCopy = """
+            UPDATE book_copy
+            SET status = 'Available'
+            WHERE acquisition_number = ?
+        """;
+
+        String insertFine = """
+            INSERT INTO fine (transaction_id, borrower_id, amount, days_overdue, fine_date, status)
+            SELECT ?, borrower_id, ?, GREATEST(DATEDIFF(CURDATE(), due_date), 0), CURDATE(), 'Unpaid'
+            FROM transaction
+            WHERE transaction_id = ?
+        """;
+
+        String getTransactionDetails = """
+            SELECT t.transaction_id,
+                   GREATEST(DATEDIFF(CURDATE(), t.due_date), 0) AS days_overdue
+            FROM transaction t
+            JOIN book_copy bc ON t.copy_id = bc.copy_id
+            WHERE bc.acquisition_number = ?
+              AND t.status = 'Borrowed'
+            LIMIT 1
+        """;
+        
+        
+        int successCount = 0;
+        int fineCount = 0;
+
+        try (Connection conn = DB_connect.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    String acqNo = model.getValueAt(i, 0).toString();
+                    double fineAmount = Double.parseDouble(model.getValueAt(i, 5).toString());
+
+                    // Fetch fresh transaction details from DB
+                    int transactionId = -1;
+                    int daysOverdue = 0;
+
+                    try (PreparedStatement psGet = conn.prepareStatement(getTransactionDetails)) {
+                        psGet.setString(1, acqNo);
+                        ResultSet rs = psGet.executeQuery();
+                        if (rs.next()) {
+                            transactionId = rs.getInt("transaction_id");
+                            daysOverdue = rs.getInt("days_overdue");
+                        }
+                    }
+
+                    if (transactionId == -1) continue;
+
+                    // 1. Update transaction to Returned
+                    try (PreparedStatement psT = conn.prepareStatement(updateTransaction)) {
+                        psT.setInt(1, transactionId);
+                        psT.executeUpdate();
+                    }
+
+                    // 2. Update book_copy to Available
+                    try (PreparedStatement psB = conn.prepareStatement(updateBookCopy)) {
+                        psB.setString(1, acqNo);
+                        psB.executeUpdate();
+                    }
+
+                    // 3. Insert fine only if overdue
+                    if (daysOverdue > 0) {
+                        try (PreparedStatement psF = conn.prepareStatement(insertFine)) {
+                            psF.setInt(1, transactionId);
+                            psF.setDouble(2, fineAmount);
+                            psF.setInt(3, transactionId);
+                            psF.executeUpdate();
+                        }
+                        fineCount++;
+                    }
+
+                    successCount++;
+                }
+
+                conn.commit();
+
+                // Build summary message
+                String summary = successCount + " book(s) successfully returned.";
+                if (fineCount > 0) {
+                    summary += "\n" + fineCount + " book(s) have overdue fines. Please collect payment.";
+                }
+
+                JOptionPane.showMessageDialog(this,
+                    summary, "Return Processed", JOptionPane.INFORMATION_MESSAGE);
+
+                // Clear the queue table
+                model.setRowCount(0);
+
+                // Clear borrower info labels
+                txtID.setText("-");
+                txtName.setText("-");
+                txtEmail.setText("-");
+                txtContactNumber.setText("-");
+
+                // Reset input
+                txtAcquisition.setText("");
+                txtAcquisition.requestFocus();
+                
+                
+                
+                // ✅ Clear summary labels
+                lblBorrowed.setText("-");
+                lblOverdue.setText("-");
+                lblFine.setText("-");
+                lblStatus.setText("-");
+                lblStatus.setForeground(java.awt.Color.BLACK); // reset color
+            } catch (Exception e) {
+                conn.rollback();
+                JOptionPane.showMessageDialog(this,
+                    "Error processing return. All changes rolled back.\n" + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Database connection error: " + e.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_btnConfirmActionPerformed
 
     private void btnClearMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnClearMouseClicked
@@ -655,6 +1030,10 @@ public class ReturnBookForm extends javax.swing.JFrame {
     private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnClearActionPerformed
+
+    private void btnAddKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_btnAddKeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnAddKeyPressed
 
     /**
      * @param args the command line arguments
@@ -687,23 +1066,15 @@ public class ReturnBookForm extends javax.swing.JFrame {
     private javax.swing.JButton btnConfirm;
     private javax.swing.JButton btnRemoveSelected;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel10;
-    private javax.swing.JLabel jLabel11;
-    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
-    private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
-    private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
-    private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel19;
-    private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel22;
     private javax.swing.JLabel jLabel23;
     private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel9;
@@ -716,12 +1087,24 @@ public class ReturnBookForm extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblBorrowed;
+    private javax.swing.JLabel lblFine;
+    private javax.swing.JLabel lblOverdue;
+    private javax.swing.JLabel lblStatus;
     private javax.swing.JTable tblModel;
     private javax.swing.JTextField txtAcquisition;
     private javax.swing.JLabel txtBooks;
+    private javax.swing.JLabel txtContactNumber;
+    private javax.swing.JLabel txtContactNumber1;
     private javax.swing.JLabel txtDashboard;
+    private javax.swing.JLabel txtEmail;
+    private javax.swing.JLabel txtEmail1;
+    private javax.swing.JLabel txtID;
+    private javax.swing.JLabel txtID1;
     private javax.swing.JLabel txtLogout1;
     private javax.swing.JLabel txtMembers;
+    private javax.swing.JLabel txtName;
+    private javax.swing.JLabel txtName1;
     private javax.swing.JLabel txtReports;
     private javax.swing.JLabel txtTransactions;
     // End of variables declaration//GEN-END:variables

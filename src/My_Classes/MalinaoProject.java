@@ -6,7 +6,8 @@ package My_Classes;
 
 import My_Form.AddLoan1;
 import My_Form.LoginForm;
-import My_Form.ReturnBookForm;
+import My_Form.Transactions;
+
 
 
 /**
@@ -19,9 +20,9 @@ public class MalinaoProject {
     
     public static void main(String[] args) {
      
-   ReturnBookForm loan = new ReturnBookForm();
- 
-     loan.setVisible(true);
+   Transactions tr = new Transactions();
+   tr.setVisible(true);
+    
     }
     
 }
