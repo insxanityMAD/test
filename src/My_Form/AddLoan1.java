@@ -76,6 +76,22 @@ public class AddLoan1 extends javax.swing.JFrame {
 // ✅ Load borrowers but no default selection
         loadBorrowers();
         
+        DefaultTableModel model = new DefaultTableModel(
+    new Object[]{"copy_id", "book_id", "Acquisition No.", "Title", "Author", "Category", "Status"}, 0
+);
+tblModel.setModel(model);
+
+// Hide copy_id and book_id
+SwingUtilities.invokeLater(() -> {
+    tblModel.getColumnModel().getColumn(0).setMinWidth(0);
+    tblModel.getColumnModel().getColumn(0).setMaxWidth(0);
+    tblModel.getColumnModel().getColumn(0).setWidth(0);
+
+    tblModel.getColumnModel().getColumn(1).setMinWidth(0);
+    tblModel.getColumnModel().getColumn(1).setMaxWidth(0);
+    tblModel.getColumnModel().getColumn(1).setWidth(0);
+});
+        
       
    
 
@@ -193,6 +209,8 @@ editor.addKeyListener(new java.awt.event.KeyAdapter() {
                         txt.setText("");
                         txt.setForeground(java.awt.Color.BLACK);
                         isUpdating = false;
+                        
+                        
                     });
                 }
             }
@@ -479,8 +497,12 @@ public void getBookById(String acquisition) {
                     return;
                 }
             }
-
+            
+         
             model.addRow(new Object[]{
+                
+                
+                
                 res.getInt("copy_id"),               // col 0 - HIDDEN
                 res.getInt("book_id"),               // col 1 - HIDDEN
                 res.getString("acquisition_number"), // col 2
@@ -489,6 +511,8 @@ public void getBookById(String acquisition) {
                 res.getString("category_name"),      // col 5
                 res.getString("status")              // col 6
             });
+            
+            
 
             // ✅ Clear the text field after adding
             txtAcquisition.setText("");
@@ -963,6 +987,11 @@ public void getBookById(String acquisition) {
                 "Acquisition Number", "Title", "Author", "Category ", "Availability"
             }
         ));
+        tblModel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblModelMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(tblModel);
 
         jLabel24.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
@@ -1515,6 +1544,10 @@ int selectedRow = tblModel.getSelectedRow();
     private void jPanel6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanel6MouseClicked
         // TODO add your handling code here:
     }//GEN-LAST:event_jPanel6MouseClicked
+
+    private void tblModelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblModelMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_tblModelMouseClicked
 
     /**
      * @param args the command line arguments
