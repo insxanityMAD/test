@@ -8,6 +8,7 @@ import My_Classes.DB_connect;
 import java.sql.*;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -124,70 +125,166 @@ public class Reports extends javax.swing.JFrame {
             DefaultTableModel model = (DefaultTableModel) tblDashboard.getModel();
             model.setRowCount(0);
             model.setColumnIdentifiers(new Object[]{
-                "Fine ID", "Borrower", "Book Title", "Acc. #", "Days", "Amount", "Status"
+                "ID", "Borrower", "Book Title", "Acc. #", "Due Date", "Days Overdue", "Amount", "Status"
             });
 
-            // Build SQL dynamically based on filter and keyword
-            StringBuilder sql = new StringBuilder(
-                    "SELECT f.fine_id, "
-                    + "CONCAT(b.first_name, ' ', b.last_name) AS borrower, "
-                    + "bo.title, "
-                    + "bc.acquisition_number, "
-                    + "f.days_overdue, "
-                    + "f.amount, "
-                    + "f.status "
-                    + "FROM fine f "
-                    + "JOIN borrower b ON f.borrower_id = b.borrower_id "
-                    + "JOIN `transaction` t ON f.transaction_id = t.transaction_id "
-                    + "JOIN book bo ON t.book_id = bo.book_id "
-                    + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
-                    + "WHERE 1=1 "
-            );
+            String search = (keyword != null && !keyword.trim().isEmpty()
+                    && !keyword.equals("Search borrower or book..."))
+                    ? "%" + keyword.trim() + "%" : null;
 
-            // Add status filter if not "All"
-            if (statusFilter != null && !statusFilter.equals("All")) {
-                sql.append("AND f.status = ? ");
+            boolean showUnpaid = statusFilter == null || statusFilter.equals("All") || statusFilter.equals("Unpaid");
+            boolean showNoFine = statusFilter == null || statusFilter.equals("All") || statusFilter.equals("No Fine Yet");
+            boolean showPaid = statusFilter == null || statusFilter.equals("All") || statusFilter.equals("Paid");
+
+            java.util.List<Object[]> rows = new java.util.ArrayList<>();
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy");
+
+            // ── PART 1: Unpaid fines ──────────────────────────────────────────
+            if (showUnpaid) {
+                StringBuilder sql = new StringBuilder(
+                        "SELECT f.fine_id AS id, "
+                        + "CONCAT(b.first_name, ' ', b.last_name) AS borrower, "
+                        + "bo.title, "
+                        + "bc.acquisition_number, "
+                        + "t.due_date, "
+                        + "f.days_overdue, "
+                        + "f.amount, "
+                        + "'Unpaid' AS status "
+                        + "FROM fine f "
+                        + "JOIN borrower b ON f.borrower_id = b.borrower_id "
+                        + "JOIN `transaction` t ON f.transaction_id = t.transaction_id "
+                        + "JOIN book bo ON t.book_id = bo.book_id "
+                        + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                        + "WHERE f.status = 'Unpaid' "
+                );
+                if (search != null) {
+                    sql.append("AND (CONCAT(b.first_name, ' ', b.last_name) LIKE ? OR bo.title LIKE ?) ");
+                }
+                sql.append("ORDER BY f.days_overdue DESC");
+
+                PreparedStatement pst = con.prepareStatement(sql.toString());
+                if (search != null) {
+                    pst.setString(1, search);
+                    pst.setString(2, search);
+                }
+                ResultSet rs = pst.executeQuery();
+                while (rs.next()) {
+                    rows.add(new Object[]{
+                        rs.getInt("id"),
+                        rs.getString("borrower"),
+                        rs.getString("title"),
+                        rs.getString("acquisition_number"),
+                        sdf.format(rs.getDate("due_date")),
+                        rs.getInt("days_overdue"),
+                        String.format("₱%.2f", rs.getDouble("amount")),
+                        rs.getString("status")
+                    });
+                }
             }
 
-            // Add keyword search if not empty
-            if (keyword != null && !keyword.trim().isEmpty()
-                    && !keyword.equals("Search borrower or book...")) {
-                sql.append("AND (CONCAT(b.first_name, ' ', b.last_name) LIKE ? ");
-                sql.append("OR bo.title LIKE ?) ");
+            // ── PART 2: Overdue with No Fine Yet ─────────────────────────────
+            // Uses FineCalculator for accurate weekday/holiday-aware calculation
+            if (showNoFine) {
+                StringBuilder sql = new StringBuilder(
+                        "SELECT t.transaction_id AS id, "
+                        + "CONCAT(b.first_name, ' ', b.last_name) AS borrower, "
+                        + "bo.title, "
+                        + "bc.acquisition_number, "
+                        + "t.due_date "
+                        + "FROM `transaction` t "
+                        + "JOIN borrower b ON t.borrower_id = b.borrower_id "
+                        + "JOIN book bo ON t.book_id = bo.book_id "
+                        + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                        + "WHERE t.status = 'Borrowed' "
+                        + "AND t.due_date < CURDATE() "
+                        + "AND NOT EXISTS (SELECT 1 FROM fine f WHERE f.transaction_id = t.transaction_id) "
+                );
+                if (search != null) {
+                    sql.append("AND (CONCAT(b.first_name, ' ', b.last_name) LIKE ? OR bo.title LIKE ?) ");
+                }
+
+                PreparedStatement pst = con.prepareStatement(sql.toString());
+                if (search != null) {
+                    pst.setString(1, search);
+                    pst.setString(2, search);
+                }
+                ResultSet rs = pst.executeQuery();
+
+                // Get today as sql.Date for FineCalculator
+                java.sql.Date today = java.sql.Date.valueOf(LocalDate.now());
+
+                while (rs.next()) {
+                    java.sql.Date dueDate = rs.getDate("due_date");
+
+                    // ✅ Use FineCalculator — skips Sundays + Philippine holidays
+                    long daysOverdue = My_Classes.FineCalculator.countWeekdaysLate(dueDate, today);
+                    double amount = My_Classes.FineCalculator.calculateFine(dueDate, today);
+
+                    rows.add(new Object[]{
+                        rs.getInt("id"),
+                        rs.getString("borrower"),
+                        rs.getString("title"),
+                        rs.getString("acquisition_number"),
+                        sdf.format(dueDate),
+                        daysOverdue,
+                        String.format("₱%.2f", amount),
+                        "No Fine Yet"
+                    });
+                }
+
+                // Sort No Fine Yet rows by days overdue descending
+                rows.sort((a, b) -> Long.compare((long) b[5], (long) a[5]));
             }
 
-            sql.append("ORDER BY f.fine_date DESC");
+            // ── PART 3: Paid fines ────────────────────────────────────────────
+            if (showPaid) {
+                StringBuilder sql = new StringBuilder(
+                        "SELECT f.fine_id AS id, "
+                        + "CONCAT(b.first_name, ' ', b.last_name) AS borrower, "
+                        + "bo.title, "
+                        + "bc.acquisition_number, "
+                        + "t.due_date, "
+                        + "f.days_overdue, "
+                        + "f.amount, "
+                        + "'Paid' AS status "
+                        + "FROM fine f "
+                        + "JOIN borrower b ON f.borrower_id = b.borrower_id "
+                        + "JOIN `transaction` t ON f.transaction_id = t.transaction_id "
+                        + "JOIN book bo ON t.book_id = bo.book_id "
+                        + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                        + "WHERE f.status = 'Paid' "
+                );
+                if (search != null) {
+                    sql.append("AND (CONCAT(b.first_name, ' ', b.last_name) LIKE ? OR bo.title LIKE ?) ");
+                }
+                sql.append("ORDER BY f.days_overdue DESC");
 
-            PreparedStatement pst = con.prepareStatement(sql.toString());
-
-            // Bind parameters in order
-            int paramIndex = 1;
-            if (statusFilter != null && !statusFilter.equals("All")) {
-                pst.setString(paramIndex++, statusFilter);
+                PreparedStatement pst = con.prepareStatement(sql.toString());
+                if (search != null) {
+                    pst.setString(1, search);
+                    pst.setString(2, search);
+                }
+                ResultSet rs = pst.executeQuery();
+                while (rs.next()) {
+                    rows.add(new Object[]{
+                        rs.getInt("id"),
+                        rs.getString("borrower"),
+                        rs.getString("title"),
+                        rs.getString("acquisition_number"),
+                        sdf.format(rs.getDate("due_date")),
+                        rs.getInt("days_overdue"),
+                        String.format("₱%.2f", rs.getDouble("amount")),
+                        rs.getString("status")
+                    });
+                }
             }
-            if (keyword != null && !keyword.trim().isEmpty()
-                    && !keyword.equals("Search borrower or book...")) {
-                String search = "%" + keyword.trim() + "%";
-                pst.setString(paramIndex++, search);
-                pst.setString(paramIndex++, search);
+
+            // ── Add all rows to table ─────────────────────────────────────────
+            for (Object[] row : rows) {
+                model.addRow(row);
             }
 
-            ResultSet rs = pst.executeQuery();
-            while (rs.next()) {
-                model.addRow(new Object[]{
-                    rs.getInt("fine_id"),
-                    rs.getString("borrower"),
-                    rs.getString("title"),
-                    rs.getString("acquisition_number"),
-                    rs.getInt("days_overdue"),
-                    String.format("₱%.2f", rs.getDouble("amount")),
-                    rs.getString("status")
-                });
-            }
-
-            // Update table styling
-            tblDashboard.getTableHeader().setFont(
-                    tblDashboard.getTableHeader().getFont().deriveFont(18f));
+            tblDashboard.getTableHeader().setFont(tblDashboard.getTableHeader().getFont().deriveFont(18f));
             tblDashboard.setFont(tblDashboard.getFont().deriveFont(16f));
             tblDashboard.setRowHeight(30);
 
@@ -440,7 +537,7 @@ public class Reports extends javax.swing.JFrame {
         });
         jPanel1.add(txtSearch, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 490, 290, 40));
 
-        cmbCategory.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "All", "Unpaid", "Paid" }));
+        cmbCategory.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "All", "Unpaid", "Paid", "No Fine Yet" }));
         cmbCategory.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmbCategoryActionPerformed(evt);
