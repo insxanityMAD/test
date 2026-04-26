@@ -5,6 +5,7 @@
 package My_Form;
 
 import My_Classes.DB_connect;
+import My_Classes.FineCalculator;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -31,7 +32,6 @@ public class AddLoan1 extends javax.swing.JFrame {
 
     private boolean isUpdating = false;
     private boolean isSelectingBorrower = false;
-   
 
     class Borrower {
 
@@ -67,71 +67,68 @@ public class AddLoan1 extends javax.swing.JFrame {
     public AddLoan1() {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
-        
-        
+
         setupSearch();
         loadTransactions();
-            
 
 // ✅ Load borrowers but no default selection
         loadBorrowers();
-        
+
         DefaultTableModel model = new DefaultTableModel(
-    new Object[]{"copy_id", "book_id", "Acquisition No.", "Title", "Author", "Category", "Status"}, 0
-);
-tblModel.setModel(model);
+                new Object[]{"copy_id", "book_id", "Acquisition No.", "Title", "Author", "Category", "Status"}, 0
+        );
+        tblModel.setModel(model);
 
 // Hide copy_id and book_id
-SwingUtilities.invokeLater(() -> {
-    tblModel.getColumnModel().getColumn(0).setMinWidth(0);
-    tblModel.getColumnModel().getColumn(0).setMaxWidth(0);
-    tblModel.getColumnModel().getColumn(0).setWidth(0);
+        SwingUtilities.invokeLater(() -> {
+            tblModel.getColumnModel().getColumn(0).setMinWidth(0);
+            tblModel.getColumnModel().getColumn(0).setMaxWidth(0);
+            tblModel.getColumnModel().getColumn(0).setWidth(0);
 
-    tblModel.getColumnModel().getColumn(1).setMinWidth(0);
-    tblModel.getColumnModel().getColumn(1).setMaxWidth(0);
-    tblModel.getColumnModel().getColumn(1).setWidth(0);
-});
-        
-      
-   
+            tblModel.getColumnModel().getColumn(1).setMinWidth(0);
+            tblModel.getColumnModel().getColumn(1).setMaxWidth(0);
+            tblModel.getColumnModel().getColumn(1).setWidth(0);
+        });
 
-    // ✅ Force clear BOTH tables on startup
-    ((DefaultTableModel) tblTransaction.getModel()).setRowCount(0);
-    ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
+        // ✅ Force clear BOTH tables on startup
+        ((DefaultTableModel) tblTransaction.getModel()).setRowCount(0);
+        ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
 
-    // ✅ Only loads when librarian manually selects a real borrower
-    cmbBorrowerName.addItemListener(new ItemListener() {
-    @Override
-    public void itemStateChanged(ItemEvent e) {
-        if (e.getStateChange() == ItemEvent.SELECTED) {
-            if (isUpdating) return;
+        // ✅ Only loads when librarian manually selects a real borrower
+        cmbBorrowerName.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    if (isUpdating) {
+                        return;
+                    }
 
-            Object selectedItem = cmbBorrowerName.getSelectedItem();
+                    Object selectedItem = cmbBorrowerName.getSelectedItem();
 
-            if (selectedItem instanceof Borrower) {
-                Borrower selected = (Borrower) selectedItem;
-                loadTransactions(selected.getId());
-                ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
-            } else {
-                // ✅ If nothing selected or search is empty, clear both tables
-                ((DefaultTableModel) tblTransaction.getModel()).setRowCount(0);
-                ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
+                    if (selectedItem instanceof Borrower) {
+                        Borrower selected = (Borrower) selectedItem;
+                        loadTransactions(selected.getId());
+                        ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
+                    } else {
+                        // ✅ If nothing selected or search is empty, clear both tables
+                        ((DefaultTableModel) tblTransaction.getModel()).setRowCount(0);
+                        ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
+                    }
+                }
             }
-        }
-    }
-});
-    
-    JTextField editor = (JTextField) cmbBorrowerName.getEditor().getEditorComponent();
-editor.addKeyListener(new java.awt.event.KeyAdapter() {
-    @Override
-    public void keyReleased(java.awt.event.KeyEvent e) {
-        if (editor.getText().trim().isEmpty()) {
-            // ✅ Clear both tables when search is cleared
-            ((DefaultTableModel) tblTransaction.getModel()).setRowCount(0);
-            ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
-        }
-    }
-});
+        });
+
+        JTextField editor = (JTextField) cmbBorrowerName.getEditor().getEditorComponent();
+        editor.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent e) {
+                if (editor.getText().trim().isEmpty()) {
+                    // ✅ Clear both tables when search is cleared
+                    ((DefaultTableModel) tblTransaction.getModel()).setRowCount(0);
+                    ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
+                }
+            }
+        });
     }
 
     private void clearBorrowerDetails() {
@@ -162,34 +159,34 @@ editor.addKeyListener(new java.awt.event.KeyAdapter() {
     }
 
     public void loadBorrowers() {
-       try {
-    Connection con = DB_connect.getConnection();
-    String sql = "SELECT borrower_id, first_name, last_name, Id_number FROM borrower ORDER BY first_name ASC";
-    PreparedStatement ps = con.prepareStatement(sql);
-    ResultSet rs = ps.executeQuery();
+        try {
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT borrower_id, first_name, last_name, Id_number FROM borrower ORDER BY first_name ASC";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
 
-    isUpdating = true; // ✅ Prevent ItemListener from firing
-    cmbBorrowerName.removeAllItems();
+            isUpdating = true; // ✅ Prevent ItemListener from firing
+            cmbBorrowerName.removeAllItems();
 
-    while (rs.next()) {
-        cmbBorrowerName.addItem(new Borrower(
-            rs.getInt("borrower_id"),
-            rs.getString("first_name") + " " + rs.getString("last_name"),
-            rs.getString("Id_number")
-        ));
-    }
+            while (rs.next()) {
+                cmbBorrowerName.addItem(new Borrower(
+                        rs.getInt("borrower_id"),
+                        rs.getString("first_name") + " " + rs.getString("last_name"),
+                        rs.getString("Id_number")
+                ));
+            }
 
-    cmbBorrowerName.setSelectedIndex(-1); // ✅ No default selection
-    isUpdating = false; // ✅ Re-enable ItemListener
+            cmbBorrowerName.setSelectedIndex(-1); // ✅ No default selection
+            isUpdating = false; // ✅ Re-enable ItemListener
 
-    rs.close();
-    ps.close();
-    con.close();
+            rs.close();
+            ps.close();
+            con.close();
 
-} catch (Exception e) {
-    e.printStackTrace();
-    JOptionPane.showMessageDialog(null, "Error loading borrowers: " + e.getMessage());
-}
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error loading borrowers: " + e.getMessage());
+        }
     }
 
     public void setupSearch() {
@@ -209,8 +206,7 @@ editor.addKeyListener(new java.awt.event.KeyAdapter() {
                         txt.setText("");
                         txt.setForeground(java.awt.Color.BLACK);
                         isUpdating = false;
-                        
-                        
+
                     });
                 }
             }
@@ -363,235 +359,226 @@ editor.addKeyListener(new java.awt.event.KeyAdapter() {
                     "Error loading borrower details: " + e.getMessage());
         }
     }
-    
+
     public void loadTransactions() {
-    try {
+        try {
+            Connection conn = DB_connect.getConnection();
+
+            String sql = "SELECT br.first_name, br.last_name, bc.acquisition_number, b.title, "
+                    + "t.rental_date, t.due_date, t.status, "
+                    + "COALESCE(f.amount, 0) AS fine_amount, "
+                    + "COALESCE(f.status, 'N/A') AS fine_status "
+                    + "FROM transaction t "
+                    + "JOIN borrower br ON t.borrower_id = br.borrower_id "
+                    + "JOIN book b ON t.book_id = b.book_id "
+                    + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                    + "LEFT JOIN fine f ON t.transaction_id = f.transaction_id "
+                    + "WHERE t.status = 'Borrowed' "
+                    + "ORDER BY t.rental_date DESC";
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+
+            DefaultTableModel model = (DefaultTableModel) tblTransaction.getModel();
+            model.setRowCount(0); // ✅ Clear before reloading
+
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getString("first_name") + " " + rs.getString("last_name"), // Borrower Name
+                    rs.getString("acquisition_number"), // Acquisition No.
+                    rs.getString("title"), // Book Title
+                    rs.getString("rental_date"), // Rental Date
+                    rs.getString("due_date"), // Due Date
+                    rs.getString("status"), // Status
+                    rs.getString("fine_amount"), // Fine Amount
+                    rs.getString("fine_status") // Fine Status
+                });
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }
+
+    public void insertQueue() {
+
         Connection conn = DB_connect.getConnection();
 
-        String sql = "SELECT br.first_name, br.last_name, bc.acquisition_number, b.title, " +
-                     "t.rental_date, t.due_date, t.status, " +
-                     "COALESCE(f.amount, 0) AS fine_amount, " +
-                     "COALESCE(f.status, 'N/A') AS fine_status " +
-                     "FROM transaction t " +
-                     "JOIN borrower br ON t.borrower_id = br.borrower_id " +
-                     "JOIN book b ON t.book_id = b.book_id " +
-                     "JOIN book_copy bc ON t.copy_id = bc.copy_id " +
-                     "LEFT JOIN fine f ON t.transaction_id = f.transaction_id " +
-                     "WHERE t.status = 'Borrowed' " +
-                     "ORDER BY t.rental_date DESC";
+    }
 
+    private int getBorrowerIdFromCombo() throws SQLException {
+
+        if (cmbBorrowerName.getSelectedItem() == null
+                || cmbBorrowerName.getSelectedItem().toString().trim().isEmpty()) {
+            throw new SQLException("No borrower selected!");
+        }
+
+        String fullName = cmbBorrowerName.getSelectedItem().toString().trim();
+        String[] parts = fullName.split(" ");
+        String firstName = parts[0];
+        String lastName = parts[1];
+
+        Connection conn = DB_connect.getConnection();
+        String sql = "SELECT borrower_id FROM borrower WHERE first_name = ? AND last_name = ?";
         PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, firstName);
+        ps.setString(2, lastName);
         ResultSet rs = ps.executeQuery();
 
-        DefaultTableModel model = (DefaultTableModel) tblTransaction.getModel();
-        model.setRowCount(0); // ✅ Clear before reloading
-
-        while (rs.next()) {
-            model.addRow(new Object[]{
-                rs.getString("first_name") + " " + rs.getString("last_name"), // Borrower Name
-                rs.getString("acquisition_number"),                            // Acquisition No.
-                rs.getString("title"),                                         // Book Title
-                rs.getString("rental_date"),                                   // Rental Date
-                rs.getString("due_date"),                                      // Due Date
-                rs.getString("status"),                                        // Status
-                rs.getString("fine_amount"),                                   // Fine Amount
-                rs.getString("fine_status")                                    // Fine Status
-            });
+        if (rs.next()) {
+            return rs.getInt("borrower_id");
         }
-
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(null, e);
-    }
-}
-    public void insertQueue() {
-        
-        Connection conn = DB_connect.getConnection();
-        
-       
-        
-        
-    }
-    
-    private int getBorrowerIdFromCombo() throws SQLException {
-        
-        
-        
-      if (cmbBorrowerName.getSelectedItem() == null || 
-        cmbBorrowerName.getSelectedItem().toString().trim().isEmpty()) {
-        throw new SQLException("No borrower selected!");
+        throw new SQLException("Borrower not found!");
     }
 
-      
-      
-      
-      
-    String fullName  = cmbBorrowerName.getSelectedItem().toString().trim();
-    String[] parts   = fullName.split(" ");
-    String firstName = parts[0];
-    String lastName  = parts[1];
-    
-    
-
-    Connection conn = DB_connect.getConnection();
-    String sql = "SELECT borrower_id FROM borrower WHERE first_name = ? AND last_name = ?";
-    PreparedStatement ps = conn.prepareStatement(sql);
-    ps.setString(1, firstName);
-    ps.setString(2, lastName);
-    ResultSet rs = ps.executeQuery();
-
-    if (rs.next()) {
-        return rs.getInt("borrower_id");
-    }
-    throw new SQLException("Borrower not found!");
-}
-
-public void getBookById(String acquisition) {
-    try {
-        // ✅ CHECK: Borrower selected before adding to queue
-        if (cmbBorrowerName.getSelectedItem() == null || 
-            cmbBorrowerName.getSelectedItem().toString().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                "Please select a borrower first before adding books to the queue.",
-                "No Borrower Selected", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        Connection conn = DB_connect.getConnection();
-        String sql = "SELECT l.copy_id, l.book_id, l.acquisition_number, b.title, b.author, c.category_name, l.status " +
-                     "FROM book_copy l " +
-                     "JOIN book b ON l.book_id = b.book_id " +
-                     "JOIN category c ON b.category_id = c.category_id " +
-                     "WHERE l.acquisition_number = ?";
-
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1, acquisition);
-        ResultSet res = ps.executeQuery();
-
-        DefaultTableModel model = (DefaultTableModel) tblModel.getModel();
-
-        if (!res.isBeforeFirst()) {
-            // No book found
-            JOptionPane.showMessageDialog(this,
-                "No book found with acquisition number: " + acquisition,
-                "Not Found", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        while (res.next()) {
-            String status = res.getString("status");
-
-            if (status.equalsIgnoreCase("Borrowed")) {
+    public void getBookById(String acquisition) {
+        try {
+            // ✅ CHECK: Borrower selected before adding to queue
+            if (cmbBorrowerName.getSelectedItem() == null
+                    || cmbBorrowerName.getSelectedItem().toString().trim().isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                    "This book is already BORROWED and is not available for checkout.",
-                    "Book Unavailable", JOptionPane.WARNING_MESSAGE);
+                        "Please select a borrower first before adding books to the queue.",
+                        "No Borrower Selected", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            // ✅ CHECK: Already in queue (duplicate acquisition number)
-            for (int i = 0; i < model.getRowCount(); i++) {
-                String existingAcq = model.getValueAt(i, 2).toString();
-                if (existingAcq.equalsIgnoreCase(res.getString("acquisition_number"))) {
+            Connection conn = DB_connect.getConnection();
+            String sql = "SELECT l.copy_id, l.book_id, l.acquisition_number, b.title, b.author, c.category_name, l.status "
+                    + "FROM book_copy l "
+                    + "JOIN book b ON l.book_id = b.book_id "
+                    + "JOIN category c ON b.category_id = c.category_id "
+                    + "WHERE l.acquisition_number = ?";
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, acquisition);
+            ResultSet res = ps.executeQuery();
+
+            DefaultTableModel model = (DefaultTableModel) tblModel.getModel();
+
+            if (!res.isBeforeFirst()) {
+                // No book found
+                JOptionPane.showMessageDialog(this,
+                        "No book found with acquisition number: " + acquisition,
+                        "Not Found", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            while (res.next()) {
+                String status = res.getString("status");
+
+                if (status.equalsIgnoreCase("Borrowed")) {
                     JOptionPane.showMessageDialog(this,
-                        "This book is already in the queue!",
-                        "Duplicate Book", JOptionPane.WARNING_MESSAGE);
+                            "This book is already BORROWED and is not available for checkout.",
+                            "Book Unavailable", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
+
+                // ✅ CHECK: Already in queue (duplicate acquisition number)
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    String existingAcq = model.getValueAt(i, 2).toString();
+                    if (existingAcq.equalsIgnoreCase(res.getString("acquisition_number"))) {
+                        JOptionPane.showMessageDialog(this,
+                                "This book is already in the queue!",
+                                "Duplicate Book", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                }
+
+                model.addRow(new Object[]{
+                    res.getInt("copy_id"), // col 0 - HIDDEN
+                    res.getInt("book_id"), // col 1 - HIDDEN
+                    res.getString("acquisition_number"), // col 2
+                    res.getString("title"), // col 3
+                    res.getString("author"), // col 4
+                    res.getString("category_name"), // col 5
+                    res.getString("status") // col 6
+                });
+
+                // ✅ Clear the text field after adding
+                txtAcquisition.setText("");
+
             }
-            
-         
-            model.addRow(new Object[]{
-                
-                
-                
-                res.getInt("copy_id"),               // col 0 - HIDDEN
-                res.getInt("book_id"),               // col 1 - HIDDEN
-                res.getString("acquisition_number"), // col 2
-                res.getString("title"),              // col 3
-                res.getString("author"),             // col 4
-                res.getString("category_name"),      // col 5
-                res.getString("status")              // col 6
-            });
-            
-            
-
-            // ✅ Clear the text field after adding
-            txtAcquisition.setText("");
-
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e);
         }
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(null, e);
+
     }
-        
-        
-    }
-    
-    
+
     public void loadBorrowerTransactions(int borrowerID) {
-    try {
-        Connection con = DB_connect.getConnection();
-        String sql = "SELECT CONCAT(br.first_name, ' ', br.last_name) AS full_name, " +
-                     "bc.acquisition_number, b.title, t.rental_date, t.due_date, t.returned_date, " +
-                     "t.status AS transaction_status, " +
-                     "COALESCE(f.amount, 0) AS fine_amount, " +
-                     "COALESCE(f.status, 'No Fine') AS fine_status " +
-                     "FROM transaction t " +
-                     "JOIN borrower br ON t.borrower_id = br.borrower_id " +
-                     "JOIN book_copy bc ON t.copy_id = bc.copy_id " +
-                     "JOIN book b ON bc.book_id = b.book_id " +
-                     "LEFT JOIN fine f ON f.transaction_id = t.transaction_id " +
-                     "WHERE t.borrower_id = ? " +
-                     "AND t.status = 'Borrowed' " +  // ← only this line added
-                     "ORDER BY t.rental_date DESC";
+        try {
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT CONCAT(br.first_name, ' ', br.last_name) AS full_name, "
+                    + "bc.acquisition_number, b.title, t.rental_date, t.due_date, t.returned_date, "
+                    + "t.status AS transaction_status, "
+                    + "COALESCE(f.amount, 0) AS fine_amount, "
+                    + "COALESCE(f.status, 'No Fine') AS fine_status "
+                    + "FROM transaction t "
+                    + "JOIN borrower br ON t.borrower_id = br.borrower_id "
+                    + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                    + "JOIN book b ON bc.book_id = b.book_id "
+                    + "LEFT JOIN fine f ON f.transaction_id = t.transaction_id "
+                    + "WHERE t.borrower_id = ? "
+                    + "AND t.status = 'Borrowed' "
+                    + // ← only this line added
+                    "ORDER BY t.rental_date DESC";
 
-        PreparedStatement ps = con.prepareStatement(sql);
-        ps.setInt(1, borrowerID);
-        ResultSet res = ps.executeQuery();
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, borrowerID);
+            ResultSet res = ps.executeQuery();
 
-        DefaultTableModel model = (DefaultTableModel) tblTransaction.getModel();
-        model.setRowCount(0);
+            DefaultTableModel model = (DefaultTableModel) tblTransaction.getModel();
+            model.setRowCount(0);
 
-        while (res.next()) {
-            model.addRow(new Object[]{
-                res.getString("full_name"),
-                res.getString("acquisition_number"),
-                res.getString("title"),
-                res.getString("rental_date"),
-                res.getString("due_date"),
-                res.getString("transaction_status"),
-                res.getString("fine_amount"),
-                res.getString("fine_status")
-            });
+            while (res.next()) {
+                model.addRow(new Object[]{
+                    res.getString("full_name"),
+                    res.getString("acquisition_number"),
+                    res.getString("title"),
+                    res.getString("rental_date"),
+                    res.getString("due_date"),
+                    res.getString("transaction_status"),
+                    res.getString("fine_amount"),
+                    res.getString("fine_status")
+                });
+            }
+
+        } catch (SQLException error) {
+            JOptionPane.showMessageDialog(null, error);
         }
-
-    } catch (SQLException error) {
-        JOptionPane.showMessageDialog(null, error);
     }
-}
-    
-    public void loadTransactions(int borrowerId) {
+
+   public void loadTransactions(int borrowerId) {
     try {
         Connection conn = DB_connect.getConnection();
 
-        String sql = "SELECT br.first_name, br.last_name, bc.acquisition_number, b.title, " +
-                     "t.rental_date, t.due_date, t.status, " +
-                     "COALESCE(f.amount, 0) AS fine_amount, " +
-                     "COALESCE(f.status, 'N/A') AS fine_status " +
-                     "FROM transaction t " +
-                     "JOIN borrower br ON t.borrower_id = br.borrower_id " +
-                     "JOIN book b ON t.book_id = b.book_id " +
-                     "JOIN book_copy bc ON t.copy_id = bc.copy_id " +
-                     "LEFT JOIN fine f ON t.transaction_id = f.transaction_id " +
-                     "WHERE t.status = 'Borrowed' AND t.borrower_id = ? " +
-                     "ORDER BY t.rental_date DESC";
+        String sql = "SELECT br.first_name, br.last_name, bc.acquisition_number, b.title, "
+                + "t.rental_date, t.due_date, t.status "
+                + "FROM transaction t "
+                + "JOIN borrower br ON t.borrower_id = br.borrower_id "
+                + "JOIN book b ON t.book_id = b.book_id "
+                + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+                + "WHERE t.status = 'Borrowed' AND t.borrower_id = ? "
+                + "ORDER BY t.rental_date DESC";
 
         PreparedStatement ps = conn.prepareStatement(sql);
         ps.setInt(1, borrowerId);
         ResultSet rs = ps.executeQuery();
 
         DefaultTableModel model = (DefaultTableModel) tblTransaction.getModel();
-        model.setRowCount(0); // ✅ Clear before reloading
+        model.setRowCount(0);
 
-        while (rs.next()) {
+        while (rs.next()) {  // ← fine calc goes INSIDE here
+            java.sql.Date dueDate = rs.getDate("due_date");
+            java.sql.Date today = java.sql.Date.valueOf(LocalDate.now());
+
+            double fineAmount = 0.0;
+            String fineStatus = "No Fine";
+
+            if (today.after(dueDate)) {
+                fineAmount = FineCalculator.calculateFine(dueDate, today);
+                fineStatus = fineAmount > 0 ? "Unpaid" : "No Fine";
+            }
+
             model.addRow(new Object[]{
                 rs.getString("first_name") + " " + rs.getString("last_name"),
                 rs.getString("acquisition_number"),
@@ -599,8 +586,8 @@ public void getBookById(String acquisition) {
                 rs.getString("rental_date"),
                 rs.getString("due_date"),
                 rs.getString("status"),
-                rs.getString("fine_amount"),
-                rs.getString("fine_status")
+                fineAmount > 0 ? String.format("₱%.2f", fineAmount) : "₱0.00",
+                fineStatus
             });
         }
 
@@ -608,15 +595,8 @@ public void getBookById(String acquisition) {
         JOptionPane.showMessageDialog(null, e);
     }
 }
-    
-    
 
 //        checkFineStatus(borrowerID); // ← auto checks fine after loading
-
-   
-   
-   
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1162,13 +1142,13 @@ public void getBookById(String acquisition) {
                                 .addComponent(jButton4))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(77, 77, 77)
+                                .addGap(18, 18, 18)
                                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(311, 311, 311)
                         .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(816, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1243,256 +1223,262 @@ public void getBookById(String acquisition) {
 
     private void cmbBorrowerNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbBorrowerNameActionPerformed
         // TODO add your handling code here:
-     if (isUpdating) {
-        return;
-    }
+        if (isUpdating) {
+            return;
+        }
 
-    Object selectedItem = cmbBorrowerName.getSelectedItem();
+        Object selectedItem = cmbBorrowerName.getSelectedItem();
 
-    if (selectedItem instanceof Borrower) {
-        isSelectingBorrower = true;
+        if (selectedItem instanceof Borrower) {
+            isSelectingBorrower = true;
 
-        Borrower selected = (Borrower) selectedItem;
-        loadBorrowerDetails(selected.getId());
+            Borrower selected = (Borrower) selectedItem;
+            loadBorrowerDetails(selected.getId());
 
-        JTextField editor = (JTextField) cmbBorrowerName.getEditor().getEditorComponent();
-        isUpdating = true;
-        editor.setText(selected.getFullName());
-        editor.setForeground(java.awt.Color.BLACK);
-        cmbBorrowerName.hidePopup();
-        isUpdating = false;
+            JTextField editor = (JTextField) cmbBorrowerName.getEditor().getEditorComponent();
+            isUpdating = true;
+            editor.setText(selected.getFullName());
+            editor.setForeground(java.awt.Color.BLACK);
+            cmbBorrowerName.hidePopup();
+            isUpdating = false;
 
-        isSelectingBorrower = false;
-    }
+            isSelectingBorrower = false;
+        }
     }//GEN-LAST:event_cmbBorrowerNameActionPerformed
 
     private void btnFindBorrowerMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnFindBorrowerMouseClicked
-  String selectedBorrower = cmbBorrowerName.getSelectedItem().toString();
+        String selectedBorrower = cmbBorrowerName.getSelectedItem().toString();
 
-    try {
-        Connection con = DB_connect.getConnection();
-        String sql = "SELECT borrower_id FROM borrower " +
-                     "WHERE CONCAT(first_name, ' ', last_name) = ?";
+        try {
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT borrower_id FROM borrower "
+                    + "WHERE CONCAT(first_name, ' ', last_name) = ?";
 
-        PreparedStatement ps = con.prepareStatement(sql);
-        ps.setString(1, selectedBorrower);
-        ResultSet res = ps.executeQuery();
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, selectedBorrower);
+            ResultSet res = ps.executeQuery();
 
-        if (res.next()) {
-            int borrowerID = res.getInt("borrower_id");
-            loadBorrowerTransactions(borrowerID);
-        } else {
-            JOptionPane.showMessageDialog(null, "Borrower not found!");
+            if (res.next()) {
+                int borrowerID = res.getInt("borrower_id");
+                loadBorrowerTransactions(borrowerID);
+            } else {
+                JOptionPane.showMessageDialog(null, "Borrower not found!");
+            }
+
+        } catch (SQLException error) {
+            JOptionPane.showMessageDialog(null, error);
         }
-        
-    } catch (SQLException error) {
-        JOptionPane.showMessageDialog(null, error);
-    }
     }//GEN-LAST:event_btnFindBorrowerMouseClicked
 
     private void btnFindBorrowerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFindBorrowerActionPerformed
         String selectedBorrower = cmbBorrowerName.getSelectedItem().toString();
-    
-    try {
-        Connection con = DB_connect.getConnection();
-        String sql = "SELECT borrower_id FROM borrower " +
-                     "WHERE CONCAT(first_name, ' ', last_name) = ?";
-        
-        PreparedStatement ps = con.prepareStatement(sql);
-        ps.setString(1, selectedBorrower);
-        ResultSet res = ps.executeQuery();
-        
-        if (res.next()) {
-            int borrowerID = res.getInt("borrower_id");
-            loadBorrowerTransactions(borrowerID); // ← this loads to tblTransaction
-        } else {
-            JOptionPane.showMessageDialog(null, "Borrower not found!");
+
+        try {
+            Connection con = DB_connect.getConnection();
+            String sql = "SELECT borrower_id FROM borrower "
+                    + "WHERE CONCAT(first_name, ' ', last_name) = ?";
+
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, selectedBorrower);
+            ResultSet res = ps.executeQuery();
+
+            if (res.next()) {
+                int borrowerID = res.getInt("borrower_id");
+                loadBorrowerTransactions(borrowerID); // ← this loads to tblTransaction
+            } else {
+                JOptionPane.showMessageDialog(null, "Borrower not found!");
+            }
+
+        } catch (SQLException error) {
+            JOptionPane.showMessageDialog(null, error);
         }
-        
-    } catch (SQLException error) {
-        JOptionPane.showMessageDialog(null, error);
-    }
-        
+
     }//GEN-LAST:event_btnFindBorrowerActionPerformed
 
     private void jButton3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton3MouseClicked
-       
+
     }//GEN-LAST:event_jButton3MouseClicked
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
 // ✅ 1. CHECK: Queue is not empty
-if (tblModel.getRowCount() == 0) {
-    JOptionPane.showMessageDialog(this, "No books in the queue!", "Empty Queue", JOptionPane.WARNING_MESSAGE);
-    return;
-}
+        if (tblModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "No books in the queue!", "Empty Queue", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
 // ✅ 2. CHECK: Borrower is selected
-if (!(cmbBorrowerName.getSelectedItem() instanceof Borrower)) {
-    JOptionPane.showMessageDialog(this,
-        "Please select a borrower before proceeding.",
-        "No Borrower Selected", JOptionPane.WARNING_MESSAGE);
-    return;
-}
+        if (!(cmbBorrowerName.getSelectedItem() instanceof Borrower)) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a borrower before proceeding.",
+                    "No Borrower Selected", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
 // ✅ 3. CHECK: Duplicate in queue (same acquisition number or same title)
-DefaultTableModel queueModel = (DefaultTableModel) tblModel.getModel();
-for (int i = 0; i < queueModel.getRowCount(); i++) {
-    String acqI   = queueModel.getValueAt(i, 2).toString();
-    String titleI = queueModel.getValueAt(i, 3).toString();
-
-    for (int j = i + 1; j < queueModel.getRowCount(); j++) {
-        String acqJ   = queueModel.getValueAt(j, 2).toString();
-        String titleJ = queueModel.getValueAt(j, 3).toString();
-
-        if (acqI.equalsIgnoreCase(acqJ)) {
-            JOptionPane.showMessageDialog(this,
-                "❌ Duplicate found in queue!\n" +
-                "Acquisition Number: " + acqI + " appears more than once.\n\n" +
-                "Please remove the duplicate before proceeding.",
-                "Duplicate Book", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        if (titleI.equalsIgnoreCase(titleJ)) {
-            JOptionPane.showMessageDialog(this,
-                "❌ Duplicate found in queue!\n" +
-                "Book Title: \"" + titleI + "\" appears more than once.\n\n" +
-                "Please remove the duplicate before proceeding.",
-                "Duplicate Book", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-    }
-}
-
-try {
-    int borrowerId = getBorrowerIdFromCombo();
-    Connection conn = DB_connect.getConnection();
-
-    // ✅ 4. CHECK: Borrower status (Active/Inactive/Blocked)
-    String statusSQL = "SELECT status, borrower_type FROM borrower WHERE borrower_id = ?";
-    PreparedStatement psStatus = conn.prepareStatement(statusSQL);
-    psStatus.setInt(1, borrowerId);
-    ResultSet rsStatus = psStatus.executeQuery();
-
-    if (rsStatus.next()) {
-        String borrowerStatus = rsStatus.getString("status");
-        String borrowerType   = rsStatus.getString("borrower_type");
-
-        if (!borrowerStatus.equalsIgnoreCase("Active")) {
-            JOptionPane.showMessageDialog(this,
-                "❌ This borrower is " + borrowerStatus + " and cannot borrow books.",
-                "Borrower Blocked", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // ✅ 5. CHECK: Same title already borrowed in transaction table
+        DefaultTableModel queueModel = (DefaultTableModel) tblModel.getModel();
         for (int i = 0; i < queueModel.getRowCount(); i++) {
-            String queueTitle = queueModel.getValueAt(i, 3).toString();
+            String acqI = queueModel.getValueAt(i, 2).toString();
+            String titleI = queueModel.getValueAt(i, 3).toString();
 
-            String dupSQL = "SELECT t.transaction_id FROM transaction t " +
-                            "JOIN book b ON t.book_id = b.book_id " +
-                            "WHERE t.borrower_id = ? AND t.status = 'Borrowed' " +
-                            "AND LOWER(b.title) = LOWER(?)";
-            PreparedStatement psDup = conn.prepareStatement(dupSQL);
-            psDup.setInt(1, borrowerId);
-            psDup.setString(2, queueTitle);
-            ResultSet rsDup = psDup.executeQuery();
+            for (int j = i + 1; j < queueModel.getRowCount(); j++) {
+                String acqJ = queueModel.getValueAt(j, 2).toString();
+                String titleJ = queueModel.getValueAt(j, 3).toString();
 
-            if (rsDup.next()) {
-                JOptionPane.showMessageDialog(this,
-                    "❌ Cannot proceed!\n" +
-                    "\"" + queueTitle + "\" is already currently borrowed by this borrower.\n\n" +
-                    "A borrower can only borrow one copy of the same title at a time.",
-                    "Duplicate Title", JOptionPane.WARNING_MESSAGE);
-                return;
+                if (acqI.equalsIgnoreCase(acqJ)) {
+                    JOptionPane.showMessageDialog(this,
+                            "❌ Duplicate found in queue!\n"
+                            + "Acquisition Number: " + acqI + " appears more than once.\n\n"
+                            + "Please remove the duplicate before proceeding.",
+                            "Duplicate Book", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                if (titleI.equalsIgnoreCase(titleJ)) {
+                    JOptionPane.showMessageDialog(this,
+                            "❌ Duplicate found in queue!\n"
+                            + "Book Title: \"" + titleI + "\" appears more than once.\n\n"
+                            + "Please remove the duplicate before proceeding.",
+                            "Duplicate Book", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
             }
         }
 
-        // ✅ 6. CHECK: Borrow limit based on borrower_type
-        int borrowLimit;
-        switch (borrowerType.toLowerCase()) {
-            case "teacher": borrowLimit = 5; break;
-            case "guest":   borrowLimit = 3; break;
-            case "student":
-            default:        borrowLimit = 4; break;
-        }
+        try {
+            int borrowerId = getBorrowerIdFromCombo();
+            Connection conn = DB_connect.getConnection();
 
-        String countSQL = "SELECT COUNT(*) FROM transaction WHERE borrower_id = ? AND status = 'Borrowed'";
-        PreparedStatement psCount = conn.prepareStatement(countSQL);
-        psCount.setInt(1, borrowerId);
-        ResultSet rsCount = psCount.executeQuery();
-        rsCount.next();
-        int currentlyBorrowed = rsCount.getInt(1);
-        int queueCount        = queueModel.getRowCount();
-        int totalAfterBorrow  = currentlyBorrowed + queueCount;
+            // ✅ 4. CHECK: Borrower status (Active/Inactive/Blocked)
+            String statusSQL = "SELECT status, borrower_type FROM borrower WHERE borrower_id = ?";
+            PreparedStatement psStatus = conn.prepareStatement(statusSQL);
+            psStatus.setInt(1, borrowerId);
+            ResultSet rsStatus = psStatus.executeQuery();
 
-        if (totalAfterBorrow > borrowLimit) {
+            if (rsStatus.next()) {
+                String borrowerStatus = rsStatus.getString("status");
+                String borrowerType = rsStatus.getString("borrower_type");
+
+                if (!borrowerStatus.equalsIgnoreCase("Active")) {
+                    JOptionPane.showMessageDialog(this,
+                            "❌ This borrower is " + borrowerStatus + " and cannot borrow books.",
+                            "Borrower Blocked", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // ✅ 5. CHECK: Same title already borrowed in transaction table
+                for (int i = 0; i < queueModel.getRowCount(); i++) {
+                    String queueTitle = queueModel.getValueAt(i, 3).toString();
+
+                    String dupSQL = "SELECT t.transaction_id FROM transaction t "
+                            + "JOIN book b ON t.book_id = b.book_id "
+                            + "WHERE t.borrower_id = ? AND t.status = 'Borrowed' "
+                            + "AND LOWER(b.title) = LOWER(?)";
+                    PreparedStatement psDup = conn.prepareStatement(dupSQL);
+                    psDup.setInt(1, borrowerId);
+                    psDup.setString(2, queueTitle);
+                    ResultSet rsDup = psDup.executeQuery();
+
+                    if (rsDup.next()) {
+                        JOptionPane.showMessageDialog(this,
+                                "❌ Cannot proceed!\n"
+                                + "\"" + queueTitle + "\" is already currently borrowed by this borrower.\n\n"
+                                + "A borrower can only borrow one copy of the same title at a time.",
+                                "Duplicate Title", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                }
+
+                // ✅ 6. CHECK: Borrow limit based on borrower_type
+                int borrowLimit;
+                switch (borrowerType.toLowerCase()) {
+                    case "teacher":
+                        borrowLimit = 5;
+                        break;
+                    case "guest":
+                        borrowLimit = 3;
+                        break;
+                    case "student":
+                    default:
+                        borrowLimit = 4;
+                        break;
+                }
+
+                String countSQL = "SELECT COUNT(*) FROM transaction WHERE borrower_id = ? AND status = 'Borrowed'";
+                PreparedStatement psCount = conn.prepareStatement(countSQL);
+                psCount.setInt(1, borrowerId);
+                ResultSet rsCount = psCount.executeQuery();
+                rsCount.next();
+                int currentlyBorrowed = rsCount.getInt(1);
+                int queueCount = queueModel.getRowCount();
+                int totalAfterBorrow = currentlyBorrowed + queueCount;
+
+                if (totalAfterBorrow > borrowLimit) {
+                    JOptionPane.showMessageDialog(this,
+                            "❌ Borrow limit exceeded!\n"
+                            + "Borrower Type      : " + borrowerType + "\n"
+                            + "Borrow Limit       : " + borrowLimit + "\n"
+                            + "Currently Borrowed : " + currentlyBorrowed + "\n"
+                            + "Trying to Borrow   : " + queueCount + "\n\n"
+                            + "Please reduce the number of books in the queue.",
+                            "Limit Exceeded", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+            }
+
+            // ✅ 7. BATCH INSERT
+            conn.setAutoCommit(false);
+
+            String insertSQL = "INSERT INTO transaction (borrower_id, book_id, copy_id, rental_date, due_date, status) "
+                    + "VALUES (?, ?, ?, ?, ?, 'Borrowed')";
+            String updateSQL = "UPDATE book_copy SET status = 'Borrowed' WHERE copy_id = ?";
+
+            PreparedStatement psInsert = conn.prepareStatement(insertSQL);
+            PreparedStatement psUpdate = conn.prepareStatement(updateSQL);
+
+            // ✅ Save count BEFORE clearing
+            int totalBorrowed = queueModel.getRowCount();
+
+            for (int i = 0; i < queueModel.getRowCount(); i++) {
+                int copyId = (int) queueModel.getValueAt(i, 0);
+                int bookId = (int) queueModel.getValueAt(i, 1);
+
+                psInsert.setInt(1, borrowerId);
+                psInsert.setInt(2, bookId);
+                psInsert.setInt(3, copyId);
+                psInsert.setDate(4, Date.valueOf(LocalDate.now()));
+                psInsert.setDate(5, Date.valueOf(LocalDate.now().plusDays(7)));
+                psInsert.addBatch();
+
+                psUpdate.setInt(1, copyId);
+                psUpdate.addBatch();
+            }
+
+            psInsert.executeBatch();
+            psUpdate.executeBatch();
+            conn.commit();
+
+            // ✅ Use saved count, not queueModel.getRowCount() which is 0 after clear
+            queueModel.setRowCount(0);
+            loadTransactions(borrowerId);
+
             JOptionPane.showMessageDialog(this,
-                "❌ Borrow limit exceeded!\n" +
-                "Borrower Type      : " + borrowerType + "\n" +
-                "Borrow Limit       : " + borrowLimit + "\n" +
-                "Currently Borrowed : " + currentlyBorrowed + "\n" +
-                "Trying to Borrow   : " + queueCount + "\n\n" +
-                "Please reduce the number of books in the queue.",
-                "Limit Exceeded", JOptionPane.WARNING_MESSAGE);
-            return;
+                    "✅ " + totalBorrowed + " book(s) successfully borrowed!",
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "❌ Error: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    // ✅ 7. BATCH INSERT
-    conn.setAutoCommit(false);
-
-    String insertSQL = "INSERT INTO transaction (borrower_id, book_id, copy_id, rental_date, due_date, status) " +
-                       "VALUES (?, ?, ?, ?, ?, 'Borrowed')";
-    String updateSQL = "UPDATE book_copy SET status = 'Borrowed' WHERE copy_id = ?";
-
-    PreparedStatement psInsert = conn.prepareStatement(insertSQL);
-    PreparedStatement psUpdate = conn.prepareStatement(updateSQL);
-
-    // ✅ Save count BEFORE clearing
-    int totalBorrowed = queueModel.getRowCount();
-
-    for (int i = 0; i < queueModel.getRowCount(); i++) {
-        int copyId = (int) queueModel.getValueAt(i, 0);
-        int bookId = (int) queueModel.getValueAt(i, 1);
-
-        psInsert.setInt(1, borrowerId);
-        psInsert.setInt(2, bookId);
-        psInsert.setInt(3, copyId);
-        psInsert.setDate(4, Date.valueOf(LocalDate.now()));
-        psInsert.setDate(5, Date.valueOf(LocalDate.now().plusDays(7)));
-        psInsert.addBatch();
-
-        psUpdate.setInt(1, copyId);
-        psUpdate.addBatch();
-    }
-
-    psInsert.executeBatch();
-    psUpdate.executeBatch();
-    conn.commit();
-
-    // ✅ Use saved count, not queueModel.getRowCount() which is 0 after clear
-    queueModel.setRowCount(0);
-    loadTransactions(borrowerId);
-
-    JOptionPane.showMessageDialog(this,
-        "✅ " + totalBorrowed + " book(s) successfully borrowed!",
-        "Success", JOptionPane.INFORMATION_MESSAGE);
-
-} catch (SQLException e) {
-    JOptionPane.showMessageDialog(this, "❌ Error: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
-}
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton4MouseClicked
-       
+
         String acquisition = txtAcquisition.getText().trim();
-        
+
         getBookById(acquisition);
     }//GEN-LAST:event_jButton4MouseClicked
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-                    // TODO add your handling code here:
+        // TODO add your handling code here:
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton5MouseClicked
@@ -1500,24 +1486,24 @@ try {
     }//GEN-LAST:event_jButton5MouseClicked
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-int selectedRow = tblModel.getSelectedRow();
-    
-    if (selectedRow == -1) {
-        JOptionPane.showMessageDialog(this,
-            "Please select a book to remove.",
-            "No Selection", JOptionPane.WARNING_MESSAGE);
-        return;
-    }
-    
-    String title = tblModel.getValueAt(selectedRow, 3).toString(); // col 3 = title
-    
-    int confirm = JOptionPane.showConfirmDialog(this,
-        "Remove \"" + title + "\" from the queue?",
-        "Confirm Remove", JOptionPane.YES_NO_OPTION);
-    
-    if (confirm == JOptionPane.YES_OPTION) {
-        ((DefaultTableModel) tblModel.getModel()).removeRow(selectedRow);
-    }
+        int selectedRow = tblModel.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a book to remove.",
+                    "No Selection", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String title = tblModel.getValueAt(selectedRow, 3).toString(); // col 3 = title
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Remove \"" + title + "\" from the queue?",
+                "Confirm Remove", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            ((DefaultTableModel) tblModel.getModel()).removeRow(selectedRow);
+        }
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void btnClearMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnClearMouseClicked
@@ -1525,20 +1511,20 @@ int selectedRow = tblModel.getSelectedRow();
     }//GEN-LAST:event_btnClearMouseClicked
 
     private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
-       if (tblModel.getRowCount() == 0) {
-        JOptionPane.showMessageDialog(this,
-            "Queue is already empty!",
-            "Empty Queue", JOptionPane.INFORMATION_MESSAGE);
-        return;
-    }
-    
-    int confirm = JOptionPane.showConfirmDialog(this,
-        "Are you sure you want to clear all books in the queue?",
-        "Confirm Clear", JOptionPane.YES_NO_OPTION);
-    
-    if (confirm == JOptionPane.YES_OPTION) {
-        ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
-    }
+        if (tblModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Queue is already empty!",
+                    "Empty Queue", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to clear all books in the queue?",
+                "Confirm Clear", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            ((DefaultTableModel) tblModel.getModel()).setRowCount(0);
+        }
     }//GEN-LAST:event_btnClearActionPerformed
 
     private void jPanel6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanel6MouseClicked
