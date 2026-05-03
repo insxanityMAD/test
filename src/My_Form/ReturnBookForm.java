@@ -29,6 +29,17 @@ public class ReturnBookForm extends javax.swing.JFrame {
     public ReturnBookForm() {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
+        
+        tblModel.setRowHeight(30);
+           
+         tblModel.getTableHeader().setPreferredSize(
+        new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 50)
+    );
+           tblModel.getTableHeader().setFont(
+        tblModel.getTableHeader().getFont().deriveFont(20f)
+    );
+           
+           tblModel.setFont(tblModel.getFont().deriveFont(25));
        // Lock borrower info label sizes
     txtID.setPreferredSize(txtID.getPreferredSize());
     txtName.setPreferredSize(txtName.getPreferredSize());
@@ -571,6 +582,8 @@ public class ReturnBookForm extends javax.swing.JFrame {
         jLabel24.setForeground(new java.awt.Color(0, 0, 0));
         jLabel24.setText("BOOKS TO RETURN (QUEUE)");
 
+        txtAcquisition.setFont(new java.awt.Font("Segoe UI", 0, 20)); // NOI18N
+
         btnAdd.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         btnAdd.setText("Add To Return");
         btnAdd.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -642,19 +655,22 @@ public class ReturnBookForm extends javax.swing.JFrame {
                         .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 970, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel9Layout.createSequentialGroup()
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanel9Layout.createSequentialGroup()
                                         .addComponent(jLabel24)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addGap(48, 48, 48)
                                         .addComponent(btnRemoveSelected))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel9Layout.createSequentialGroup()
+                                    .addGroup(jPanel9Layout.createSequentialGroup()
                                         .addComponent(jLabel23)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(txtAcquisition, javax.swing.GroupLayout.PREFERRED_SIZE, 245, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(18, 18, 18)
+                                        .addComponent(txtAcquisition, javax.swing.GroupLayout.PREFERRED_SIZE, 275, javax.swing.GroupLayout.PREFERRED_SIZE)))
                                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(btnAdd, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))))))
+                                    .addGroup(jPanel9Layout.createSequentialGroup()
+                                        .addGap(18, 18, 18)
+                                        .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(jPanel9Layout.createSequentialGroup()
+                                        .addGap(103, 103, 103)
+                                        .addComponent(btnAdd, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))))))
                 .addContainerGap(40, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
@@ -669,7 +685,7 @@ public class ReturnBookForm extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel23, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtAcquisition, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtAcquisition, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnAdd, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(39, 39, 39)
                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -723,7 +739,7 @@ public class ReturnBookForm extends javax.swing.JFrame {
                             .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGap(18, 18, 18)
                 .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(24, Short.MAX_VALUE))
+                .addContainerGap(19, Short.MAX_VALUE))
         );
 
         getContentPane().add(jPanel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 160, 1110, 780));
@@ -844,7 +860,40 @@ public class ReturnBookForm extends javax.swing.JFrame {
     }//GEN-LAST:event_btnRemoveSelectedMouseClicked
 
     private void btnRemoveSelectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveSelectedActionPerformed
-       
+int[] selectedRows = tblModel.getSelectedRows();
+
+    if (selectedRows.length == 0) {
+        JOptionPane.showMessageDialog(this,
+            "Please select at least one book to remove from the queue.",
+            "No Selection", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    int confirm = JOptionPane.showConfirmDialog(this,
+        "Remove " + selectedRows.length + " selected book(s) from the return queue?",
+        "Confirm Remove", JOptionPane.YES_NO_OPTION);
+
+    if (confirm != JOptionPane.YES_OPTION) return;
+
+    DefaultTableModel model = (DefaultTableModel) tblModel.getModel();
+
+    // Remove from bottom to top so row indexes don't shift
+    for (int i = selectedRows.length - 1; i >= 0; i--) {
+        model.removeRow(selectedRows[i]);
+    }
+
+    // If queue is now empty, reset borrower info too
+    if (model.getRowCount() == 0) {
+        txtID.setText("-");
+        txtName.setText("-");
+        txtEmail.setText("-");
+        txtContactNumber.setText("-");
+        lblBorrowed.setText("-");
+        lblOverdue.setText("-");
+        lblFine.setText("-");
+        lblStatus.setText("-");
+        lblStatus.setForeground(java.awt.Color.BLACK);
+    }       
     }//GEN-LAST:event_btnRemoveSelectedActionPerformed
 
     private void btnConfirmMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnConfirmMouseClicked
@@ -1002,7 +1051,37 @@ public class ReturnBookForm extends javax.swing.JFrame {
     }//GEN-LAST:event_btnClearMouseClicked
 
     private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
-        // TODO add your handling code here:
+ DefaultTableModel model = (DefaultTableModel) tblModel.getModel();
+
+    if (model.getRowCount() == 0) {
+        JOptionPane.showMessageDialog(this,
+            "The queue is already empty.",
+            "Nothing to Clear", JOptionPane.INFORMATION_MESSAGE);
+        return;
+    }
+
+    int confirm = JOptionPane.showConfirmDialog(this,
+        "Clear all " + model.getRowCount() + " book(s) from the return queue?",
+        "Confirm Clear", JOptionPane.YES_NO_OPTION,
+        JOptionPane.WARNING_MESSAGE);
+
+    if (confirm != JOptionPane.YES_OPTION) return;
+
+    model.setRowCount(0);
+
+    // Reset borrower info panel
+    txtID.setText("-");
+    txtName.setText("-");
+    txtEmail.setText("-");
+    txtContactNumber.setText("-");
+    lblBorrowed.setText("-");
+    lblOverdue.setText("-");
+    lblFine.setText("-");
+    lblStatus.setText("-");
+    lblStatus.setForeground(java.awt.Color.BLACK);
+
+    txtAcquisition.setText("");
+    txtAcquisition.requestFocus();        // TODO add your handling code here:
     }//GEN-LAST:event_btnClearActionPerformed
 
     private void btnAddKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_btnAddKeyPressed

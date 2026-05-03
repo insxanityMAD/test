@@ -79,6 +79,17 @@ public class PayFine1 extends javax.swing.JFrame {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
         
+       tblModel.setRowHeight(30);
+           
+         tblModel.getTableHeader().setPreferredSize(
+        new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 70)
+    );
+           tblModel.getTableHeader().setFont(
+        tblModel.getTableHeader().getFont().deriveFont(20f)
+    );
+           
+           tblModel.setFont(tblModel.getFont().deriveFont(25));
+        
    loadBorrowers();  // ✅ Only once
     setupSearch();    // ✅ Only once
     hideFineidColumn();
@@ -1183,7 +1194,7 @@ private void generateReceipt(double total, double tendered, double change) {
         jLabel9.setForeground(new java.awt.Color(51, 51, 51));
         jLabel9.setText("Select Borrower:");
 
-        cmbBorrowerName.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        cmbBorrowerName.setFont(new java.awt.Font("Tahoma", 0, 20)); // NOI18N
         cmbBorrowerName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmbBorrowerNameActionPerformed(evt);

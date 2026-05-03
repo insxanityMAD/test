@@ -67,6 +67,30 @@ public class AddLoan1 extends javax.swing.JFrame {
     public AddLoan1() {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
+        tblTransaction.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        
+        tblModel.setRowHeight(30);
+           
+         tblModel.getTableHeader().setPreferredSize(
+        new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 50)
+    );
+           tblModel.getTableHeader().setFont(
+        tblModel.getTableHeader().getFont().deriveFont(20f)
+    );
+           
+           tblTransaction.setFont(tblTransaction.getFont().deriveFont(25));
+        
+        tblTransaction.setRowHeight(30);
+           
+         tblTransaction.getTableHeader().setPreferredSize(
+        new java.awt.Dimension(tblTransaction.getTableHeader().getWidth(), 50)
+    );
+           tblTransaction.getTableHeader().setFont(
+        tblTransaction.getTableHeader().getFont().deriveFont(20f)
+    );
+           
+           tblTransaction.setFont(tblTransaction.getFont().deriveFont(25));
+        
         
         
         
@@ -194,6 +218,154 @@ public class AddLoan1 extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, "Error loading borrowers: " + e.getMessage());
         }
     }
+    
+    private void cancelBorrowedBook() {
+    int[] selectedRows = tblTransaction.getSelectedRows();
+
+    if (selectedRows.length == 0) {
+        JOptionPane.showMessageDialog(this,
+            "Please select at least one borrowed book to cancel.",
+            "No Selection", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    java.time.LocalDate today = java.time.LocalDate.now();
+
+    // ✅ FIRST PASS: Validate ALL selected rows before doing anything
+    for (int row : selectedRows) {
+        String rentalDateStr = tblTransaction.getValueAt(row, 3).toString(); // col 3 = Rental Date
+        java.time.LocalDate rentalDate;
+
+        try {
+            rentalDate = java.time.LocalDate.parse(rentalDateStr);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Invalid rental date format on row " + (row + 1) + ".",
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (rentalDate.isBefore(today)) {
+            String bookTitle = tblTransaction.getValueAt(row, 2).toString(); // col 2 = Book Title
+            JOptionPane.showMessageDialog(this,
+                "❌ Cannot cancel — one or more selected books were borrowed on a previous day!\n\n"
+                + "Book        : \"" + bookTitle + "\"\n"
+                + "Borrow Date : " + rentalDateStr + "\n"
+                + "Today       : " + today + "\n\n"
+                + "Cancellation is only allowed on the same day of borrowing.\n"
+                + "None of the selected books were cancelled.",
+                "Cancellation Not Allowed", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+    }
+
+    // ✅ Build confirmation summary of ALL selected rows
+    StringBuilder summary = new StringBuilder();
+    for (int row : selectedRows) {
+        String borrowerName  = tblTransaction.getValueAt(row, 0).toString();
+        String acquisitionNo = tblTransaction.getValueAt(row, 1).toString();
+        String bookTitle     = tblTransaction.getValueAt(row, 2).toString();
+        String rentalDate    = tblTransaction.getValueAt(row, 3).toString();
+
+        summary.append("• ").append(bookTitle)
+               .append(" (Acq: ").append(acquisitionNo).append(")")
+               .append(" — Borrowed: ").append(rentalDate)
+               .append("\n");
+    }
+
+    int confirm = JOptionPane.showConfirmDialog(this,
+        "Cancel the following " + selectedRows.length + " borrowed book(s)?\n\n"
+        + summary.toString(),
+        "Confirm Cancellation", JOptionPane.YES_NO_OPTION,
+        JOptionPane.WARNING_MESSAGE);
+
+    if (confirm != JOptionPane.YES_OPTION) return;
+
+    // ✅ SECOND PASS: Process all cancellations in one DB transaction
+    try {
+        Connection con = DB_connect.getConnection();
+        con.setAutoCommit(false);
+
+        String selectSql = "SELECT t.transaction_id, t.copy_id "
+            + "FROM transaction t "
+            + "JOIN book_copy bc ON t.copy_id = bc.copy_id "
+            + "WHERE bc.acquisition_number = ? "
+            + "AND t.status = 'Borrowed' "
+            + "AND t.rental_date = ?";
+
+        String cancelSql = "UPDATE transaction "
+            + "SET status = 'Cancelled', cancelled_date = ? "
+            + "WHERE transaction_id = ?";
+
+        String updateCopySql = "UPDATE book_copy SET status = 'Available' WHERE copy_id = ?";
+
+        PreparedStatement psSelect = con.prepareStatement(selectSql);
+        PreparedStatement psCancel = con.prepareStatement(cancelSql);
+        PreparedStatement psUpdateCopy = con.prepareStatement(updateCopySql);
+
+        int cancelledCount = 0;
+
+        for (int row : selectedRows) {
+            String acquisitionNo = tblTransaction.getValueAt(row, 1).toString();
+            String rentalDateStr = tblTransaction.getValueAt(row, 3).toString();
+            java.time.LocalDate rentalDate = java.time.LocalDate.parse(rentalDateStr);
+
+            psSelect.setString(1, acquisitionNo);
+            psSelect.setDate(2, java.sql.Date.valueOf(rentalDate));
+            ResultSet rs = psSelect.executeQuery();
+
+            if (!rs.next()) {
+                con.rollback();
+                JOptionPane.showMessageDialog(this,
+                    "Transaction not found for acquisition number: " + acquisitionNo + "\n"
+                    + "No changes were saved.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            int transactionId = rs.getInt("transaction_id");
+            int copyId        = rs.getInt("copy_id");
+            rs.close();
+
+            // ✅ Update status to 'Cancelled' + set cancelled_date (keeps history)
+            psCancel.setDate(1, java.sql.Date.valueOf(today));
+            psCancel.setInt(2, transactionId);
+            psCancel.addBatch();
+
+            psUpdateCopy.setInt(1, copyId);
+            psUpdateCopy.addBatch();
+
+            cancelledCount++;
+        }
+
+        psCancel.executeBatch();
+        psUpdateCopy.executeBatch();
+        con.commit();
+
+        psSelect.close();
+        psCancel.close();
+        psUpdateCopy.close();
+        con.close();
+
+        JOptionPane.showMessageDialog(this,
+            "✅ " + cancelledCount + " book(s) cancelled successfully!\n",
+       
+            "Cancelled", JOptionPane.INFORMATION_MESSAGE);
+
+        // ✅ Refresh transaction table
+        if (cmbBorrowerName.getSelectedItem() instanceof Borrower) {
+            loadTransactions(((Borrower) cmbBorrowerName.getSelectedItem()).getId());
+        } else {
+            loadTransactions();
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this,
+            "Error cancelling borrowed book(s): " + e.getMessage(),
+            "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
 
     public void setupSearch() {
         cmbBorrowerName.setEditable(true);
@@ -685,6 +857,7 @@ public class AddLoan1 extends javax.swing.JFrame {
         btnAddBook = new javax.swing.JButton();
         btnRemove = new javax.swing.JButton();
         btnClear = new javax.swing.JButton();
+        btnCancel = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -1000,7 +1173,7 @@ public class AddLoan1 extends javax.swing.JFrame {
         jLabel9.setForeground(new java.awt.Color(51, 51, 51));
         jLabel9.setText("Select Borrower:");
 
-        cmbBorrowerName.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        cmbBorrowerName.setFont(new java.awt.Font("Tahoma", 0, 20)); // NOI18N
         cmbBorrowerName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmbBorrowerNameActionPerformed(evt);
@@ -1009,6 +1182,7 @@ public class AddLoan1 extends javax.swing.JFrame {
 
         jPanel5.setBackground(new java.awt.Color(255, 255, 255));
 
+        tblModel.setFont(new java.awt.Font("Segoe UI", 0, 20)); // NOI18N
         tblModel.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -1057,6 +1231,7 @@ public class AddLoan1 extends javax.swing.JFrame {
             }
         });
 
+        tblTransaction.setFont(new java.awt.Font("Segoe UI", 0, 20)); // NOI18N
         tblTransaction.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null, null, null},
@@ -1098,6 +1273,8 @@ public class AddLoan1 extends javax.swing.JFrame {
         jLabel23.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
         jLabel23.setForeground(new java.awt.Color(51, 51, 51));
         jLabel23.setText("Book Acquisition:");
+
+        txtAcquisition.setFont(new java.awt.Font("Segoe UI", 0, 20)); // NOI18N
 
         btnConfirm.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         btnConfirm.setText("CONFIRM");
@@ -1151,13 +1328,26 @@ public class AddLoan1 extends javax.swing.JFrame {
             }
         });
 
+        btnCancel.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        btnCancel.setText("CANCEL");
+        btnCancel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                btnCancelMouseClicked(evt);
+            }
+        });
+        btnCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCancelActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(55, 55, 55)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1182,7 +1372,9 @@ public class AddLoan1 extends javax.swing.JFrame {
                             .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(311, 311, 311)
-                        .addComponent(btnConfirm, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(btnConfirm, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnCancel, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(817, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -1209,8 +1401,10 @@ public class AddLoan1 extends javax.swing.JFrame {
                     .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnConfirm, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(134, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnConfirm, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnCancel, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(133, Short.MAX_VALUE))
         );
 
         pack();
@@ -1575,6 +1769,14 @@ try {
         // TODO add your handling code here:
     }//GEN-LAST:event_txtUserMouseClicked
 
+    private void btnCancelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnCancelMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnCancelMouseClicked
+
+    private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
+            cancelBorrowedBook();
+    }//GEN-LAST:event_btnCancelActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1602,6 +1804,7 @@ try {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAddBook;
+    private javax.swing.JButton btnCancel;
     private javax.swing.JButton btnClear;
     private javax.swing.JButton btnConfirm;
     private javax.swing.JButton btnRemove;

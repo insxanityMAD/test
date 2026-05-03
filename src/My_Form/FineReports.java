@@ -134,6 +134,9 @@ public class FineReports extends javax.swing.JFrame {
         jLabel9 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblModel = new javax.swing.JTable();
+        tblModel.getTableHeader().setFont(
+            new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16)
+        );
         btnExport = new javax.swing.JButton();
         btnUnpaid = new javax.swing.JButton();
         btnPaid = new javax.swing.JButton();

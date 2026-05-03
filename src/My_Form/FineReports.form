@@ -324,6 +324,9 @@
               <TableHeader reorderingAllowed="true" resizingAllowed="true"/>
             </Property>
           </Properties>
+          <AuxValues>
+            <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="tblModel.getTableHeader().setFont(&#xd;&#xa;    new java.awt.Font(&quot;Segoe UI&quot;, java.awt.Font.BOLD, 16)&#xd;&#xa;);"/>
+          </AuxValues>
         </Component>
       </SubComponents>
     </Container>
