@@ -149,6 +149,7 @@ public class AddCategory extends javax.swing.JFrame {
         txtLogout1 = new javax.swing.JLabel();
         txtDashboard = new javax.swing.JLabel();
         txtBooks = new javax.swing.JLabel();
+        txtUser1 = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
         jLabel9 = new javax.swing.JLabel();
         jLabel16 = new javax.swing.JLabel();
@@ -229,16 +230,27 @@ public class AddCategory extends javax.swing.JFrame {
             }
         });
 
+        txtUser1.setBackground(new java.awt.Color(255, 255, 255));
+        txtUser1.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtUser1.setText("User");
+        txtUser1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtUser1MouseClicked(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(78, 78, 78)
+                .addGap(37, 37, 37)
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(120, 120, 120)
+                .addGap(96, 96, 96)
+                .addComponent(txtUser1, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30)
                 .addComponent(txtDashboard)
                 .addGap(30, 30, 30)
                 .addComponent(txtBooks)
@@ -250,7 +262,7 @@ public class AddCategory extends javax.swing.JFrame {
                 .addComponent(txtReports)
                 .addGap(30, 30, 30)
                 .addComponent(txtLogout1)
-                .addContainerGap())
+                .addContainerGap(790, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -259,15 +271,16 @@ public class AddCategory extends javax.swing.JFrame {
                 .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGap(28, 28, 28)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(txtMembers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(txtTransactions)
                         .addComponent(txtReports)
-                        .addComponent(txtLogout1))
-                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(txtLogout1)
+                        .addComponent(txtUser1, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))))
         );
 
         getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 2303, -1));
@@ -294,7 +307,7 @@ public class AddCategory extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap(150, Short.MAX_VALUE)
+                .addContainerGap(152, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel9)
@@ -413,7 +426,7 @@ public class AddCategory extends javax.swing.JFrame {
                 .addComponent(btnSave, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(btnClose)
-                .addContainerGap(14, Short.MAX_VALUE))
+                .addContainerGap(16, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
@@ -644,6 +657,10 @@ public class AddCategory extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked
 
+    private void txtUser1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtUser1MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtUser1MouseClicked
+
     /**
      * @param args the command line arguments
      */
@@ -694,5 +711,7 @@ public class AddCategory extends javax.swing.JFrame {
     private javax.swing.JLabel txtReports;
     private javax.swing.JTextField txtSearch;
     private javax.swing.JLabel txtTransactions;
+    private javax.swing.JLabel txtUser;
+    private javax.swing.JLabel txtUser1;
     // End of variables declaration//GEN-END:variables
 }

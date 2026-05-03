@@ -188,12 +188,6 @@ public class AddCopies extends javax.swing.JFrame {
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
-        txtMembers = new javax.swing.JLabel();
-        txtTransactions = new javax.swing.JLabel();
-        txtReports = new javax.swing.JLabel();
-        txtLogout1 = new javax.swing.JLabel();
-        txtDashboard = new javax.swing.JLabel();
-        txtBooks = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
         txtSearch = new javax.swing.JTextField();
@@ -232,60 +226,6 @@ public class AddCopies extends javax.swing.JFrame {
 
         jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/Adobe_Express_-_file-removebg-preview.png"))); // NOI18N
 
-        txtMembers.setBackground(new java.awt.Color(204, 204, 204));
-        txtMembers.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtMembers.setText("Members");
-        txtMembers.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtMembersMouseClicked(evt);
-            }
-        });
-
-        txtTransactions.setBackground(new java.awt.Color(204, 204, 204));
-        txtTransactions.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtTransactions.setText("Transactions");
-        txtTransactions.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtTransactionsMouseClicked(evt);
-            }
-        });
-
-        txtReports.setBackground(new java.awt.Color(204, 204, 204));
-        txtReports.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtReports.setText("Reports");
-        txtReports.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtReportsMouseClicked(evt);
-            }
-        });
-
-        txtLogout1.setBackground(new java.awt.Color(204, 204, 204));
-        txtLogout1.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtLogout1.setText("Logout");
-        txtLogout1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtLogout1MouseClicked(evt);
-            }
-        });
-
-        txtDashboard.setBackground(new java.awt.Color(255, 255, 255));
-        txtDashboard.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtDashboard.setText("Dashboard");
-        txtDashboard.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtDashboardMouseClicked(evt);
-            }
-        });
-
-        txtBooks.setBackground(new java.awt.Color(204, 204, 204));
-        txtBooks.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        txtBooks.setText("Books");
-        txtBooks.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtBooksMouseClicked(evt);
-            }
-        });
-
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -295,19 +235,7 @@ public class AddCopies extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(120, 120, 120)
-                .addComponent(txtDashboard)
-                .addGap(30, 30, 30)
-                .addComponent(txtBooks)
-                .addGap(30, 30, 30)
-                .addComponent(txtMembers)
-                .addGap(30, 30, 30)
-                .addComponent(txtTransactions)
-                .addGap(30, 30, 30)
-                .addComponent(txtReports)
-                .addGap(30, 30, 30)
-                .addComponent(txtLogout1)
-                .addContainerGap(461, Short.MAX_VALUE))
+                .addContainerGap(1294, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -315,15 +243,7 @@ public class AddCopies extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(28, 28, 28)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(txtMembers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(txtTransactions)
-                                .addComponent(txtReports)
-                                .addComponent(txtLogout1))
-                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(16, 16, 16)
                         .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -857,44 +777,6 @@ public class AddCopies extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_txtSearchKeyReleased
 
-    private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
-        Members member = new Members();
-        member.setVisible(true);
-        this.dispose();
-    }//GEN-LAST:event_txtMembersMouseClicked
-
-    private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
-        Transactions transaction = new Transactions();
-        transaction.setVisible(true);
-        this.dispose();
-    }//GEN-LAST:event_txtTransactionsMouseClicked
-
-    private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
-        Reports report = new Reports();
-        report.setVisible(true);
-        this.dispose();
-    }//GEN-LAST:event_txtReportsMouseClicked
-
-    private void txtLogout1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtLogout1MouseClicked
-        // TODO add your handling code here:
-        // TODO add your handling code here:
-        LoginForm login = new LoginForm();
-        login.setVisible(true);
-        this.dispose();
-    }//GEN-LAST:event_txtLogout1MouseClicked
-
-    private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
-        dashboard.setVisible(true);
-        this.dispose();
-    }//GEN-LAST:event_txtDashboardMouseClicked
-
-    private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
-        book.setVisible(true); // show it
-        this.dispose();
-    }//GEN-LAST:event_txtBooksMouseClicked
-
     /**
      * @param args the command line arguments
      */
@@ -930,12 +812,6 @@ public class AddCopies extends javax.swing.JFrame {
     private javax.swing.JLabel lblTitle1;
     private javax.swing.JTable tblCopies;
     private javax.swing.JTextField txtAcquisition_number;
-    private javax.swing.JLabel txtBooks;
-    private javax.swing.JLabel txtDashboard;
-    private javax.swing.JLabel txtLogout1;
-    private javax.swing.JLabel txtMembers;
-    private javax.swing.JLabel txtReports;
     private javax.swing.JTextField txtSearch;
-    private javax.swing.JLabel txtTransactions;
     // End of variables declaration//GEN-END:variables
 }

@@ -34,6 +34,11 @@ public class PayFine1 extends javax.swing.JFrame {
 
     private boolean isUpdating = false;
     private boolean isSelectingBorrower = false;
+    private boolean overdueWarningShown = false;
+    private boolean isLoading = false;
+    
+    private boolean borrowerJustLoaded = false;
+    private int lastLoadedBorrowerId = -1;
 
     private void lockTextField(JLabel txtTotalFine1) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
@@ -74,46 +79,58 @@ public class PayFine1 extends javax.swing.JFrame {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
         
-    loadBorrowers();
-  setupSearch();
-        loadBorrowers(); 
-        hideFineidColumn();
-  
-    // 1. End of loadTransactions()
-updateFinesSummary();
+   loadBorrowers();  // ✅ Only once
+    setupSearch();    // ✅ Only once
+    hideFineidColumn();
+    updateFinesSummary();
 
-// 2. After successful payment (already inside loadTransactions via reload)
-if (cmbBorrowerName.getSelectedItem() instanceof Borrower) {
-    loadTransactions(((Borrower) cmbBorrowerName.getSelectedItem()).getId());
-}
-
-
-// ✅ Lock all text fields - paste this after initComponents()
-
-      
     // ✅ Table row selection listener
     tblModel.getSelectionModel().addListSelectionListener(e -> {
         if (!e.getValueIsAdjusting()) {
+            updateFinesSummary(); // ✅ Updates txtTotalFine1 on every selection change
             try {
+                if (tblModel.getSelectedRowCount() == 0) {
+                    txtChange.setText("");
+                    txtChange.setForeground(java.awt.Color.BLACK);
+                    return;
+                }
+
                 double total = getSelectedFinesTotal();
                 String input = txtAmountTendered.getText().trim();
-                if (!input.isEmpty()) {
-                    double tendered = Double.parseDouble(input);
-                    double change = tendered - total;
+
+                if (input.isEmpty()) {
+                    txtChange.setText("");
+                    txtChange.setForeground(java.awt.Color.BLACK);
+                    return;
+                }
+
+                double tendered = Double.parseDouble(input);
+                double change = tendered - total;
+
+                if (change < 0) {
+                    txtChange.setForeground(java.awt.Color.RED);
+                    txtChange.setText("Not enough! Short by ₱" + String.format("%.2f", Math.abs(change)));
+                } else {
+                    txtChange.setForeground(java.awt.Color.BLACK);
                     txtChange.setText(String.format("%.2f", change));
-                    txtChange.setForeground(change < 0 ? java.awt.Color.RED : java.awt.Color.BLACK);
                 }
             } catch (NumberFormatException ex) {
                 txtChange.setText("Invalid");
+                txtChange.setForeground(java.awt.Color.RED);
             }
         }
     });
 
-    
-     // ✅ Amount tendered live calculation
+    // ✅ Amount tendered live calculation
     txtAmountTendered.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
         private void calculate() {
             try {
+                if (tblModel.getSelectedRowCount() == 0) {
+                    txtChange.setText("");
+                    txtChange.setForeground(java.awt.Color.BLACK);
+                    return;
+                }
+
                 double total = getSelectedFinesTotal();
                 String input = txtAmountTendered.getText().trim();
 
@@ -138,113 +155,45 @@ if (cmbBorrowerName.getSelectedItem() instanceof Borrower) {
                 txtChange.setForeground(java.awt.Color.RED);
             }
         }
-     @Override public void insertUpdate(javax.swing.event.DocumentEvent e) { calculate(); }
+        @Override public void insertUpdate(javax.swing.event.DocumentEvent e) { calculate(); }
         @Override public void removeUpdate(javax.swing.event.DocumentEvent e) { calculate(); }
         @Override public void changedUpdate(javax.swing.event.DocumentEvent e) { calculate(); }
-});
-
-    // ✅ existing code below stays as is
-    cmbBorrowerName.addItemListener(new ItemListener() {
-        @Override
-        public void itemStateChanged(ItemEvent e) {
-        }
     });
 
-    JTextField editor = (JTextField) cmbBorrowerName.getEditor().getEditorComponent();
-    editor.addKeyListener(new java.awt.event.KeyAdapter() {
+    // ✅ Cancel warning if user clicks amount field before timer fires
+    txtAmountTendered.addFocusListener(new java.awt.event.FocusAdapter() {
         @Override
-        public void keyReleased(java.awt.event.KeyEvent e) {
-            if (editor.getText().trim().isEmpty()) {
-            }
+        public void focusGained(java.awt.event.FocusEvent e) {
+            borrowerJustLoaded = false;
         }
     });
-
-        
-        
-        
-        
-
-        setupSearch();
-//        loadTransactions();
-
-// ✅ Load borrowers but no default selection
-        loadBorrowers();
-        
-
-
-        DefaultTableModel model = new DefaultTableModel(
-                new Object[]{"copy_id", "book_id", "Acquisition No.", "Title", "Author", "Category", "Status"}, 0
-        );
-        
-     
- 
-
-// Hide copy_id and book_id
-        SwingUtilities.invokeLater(() -> {
-       
-        });
-
-        // ✅ Force clear BOTH tables on startup
-    
-        // ✅ Only loads when librarian manually selects a real borrower
-        cmbBorrowerName.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-            
-            }
-        });
-
-    
-        editor.addKeyListener(new java.awt.event.KeyAdapter() {
-            @Override
-            public void keyReleased(java.awt.event.KeyEvent e) {
-                if (editor.getText().trim().isEmpty()) {
-                    // ✅ Clear both tables when search is cleared
-                  
-                }
-            }
-        });
     }
     
    private void updateFinesSummary() {
     DefaultTableModel model = (DefaultTableModel) tblModel.getModel();
-    double totalFines = 0.0;
-    double totalPaid = 0.0;
+    double totalAllRows = 0.0;
+
+    // ✅ Guard — table not yet loaded with correct columns
+    if (model.getColumnCount() < 7) {
+        txtTotalFine1.setText("₱0.00");
+        txtRandom.setText("₱0.00");
+        return;
+    }
 
     for (int i = 0; i < model.getRowCount(); i++) {
-        Object fineObj = model.getValueAt(i, 5);   // ✅ Fine column
-        Object statusObj = model.getValueAt(i, 4); // ✅ Status column
-
-        double fine = 0.0;
+        Object fineObj = model.getValueAt(i, 6); // ✅ Fine is index 6
         if (fineObj != null) {
             try {
-                // ✅ Strip ₱ sign if present before parsing
-                String fineStr = fineObj.toString().replace("₱", "").trim();
-                fine = Double.parseDouble(fineStr);
+                String fineStr = fineObj.toString().replace("₱", "").replace(",", "").trim();
+                totalAllRows += Double.parseDouble(fineStr);
             } catch (NumberFormatException ignored) {}
         }
-
-        String status = statusObj != null ? statusObj.toString() : "";
-
-        if (status.equalsIgnoreCase("Unpaid")) {
-            totalFines += fine;
-        } else if (status.equalsIgnoreCase("Paid")) {
-            totalPaid += fine;
-        }
     }
 
-    double remaining = totalFines; // ✅ Only unpaid fines = remaining balance
+    double totalSelected = getSelectedFinesTotal();
 
-    if (totalFines == 0 && totalPaid == 0) {
-        // ✅ No fines at all — reset to zero
-        txtTotalFine1.setText("₱0.00");
-        txtAmountPaid1.setText("₱0.00");
-        txtRandom.setText("₱0.00");
-    } else {
-        txtTotalFine1.setText(String.format("₱%.2f", totalFines + totalPaid)); // grand total
-        txtAmountPaid1.setText(String.format("₱%.2f", totalPaid));
-        txtRandom.setText(String.format("₱%.2f", remaining));
-    }
+    txtTotalFine1.setText(String.format("₱%.2f", totalSelected)); // ✅ Selected rows total
+    txtRandom.setText(String.format("₱%.2f", totalAllRows)); 
 }
     private void clearBorrowerDetails() {
         lblBorrowerId.setText("-");
@@ -584,15 +533,26 @@ public void loadTransactions(int borrowerId) {
                       .append(daysOverdue).append(" day/s overdue)\n");
         }
 
-        if (overdueMsg.length() > 0) {
+        // REPLACE WITH:
+// REPLACE WITH:
+if (overdueMsg.length() > 0 && !overdueWarningShown) {
+    overdueWarningShown = true;
+    borrowerJustLoaded = true; // ✅ Mark as just loaded
+    final String msg = overdueMsg.toString();
+    javax.swing.Timer timer = new javax.swing.Timer(800, e -> {
+        if (borrowerJustLoaded) { // ✅ Only show if still in "just loaded" state
             JOptionPane.showMessageDialog(this,
                 "Warning! This borrower still has unreturned overdue book/s:\n\n"
-                + overdueMsg.toString()
+                + msg
                 + "\nOnly fines from returned books will be shown.",
                 "Unreturned Overdue Book/s",
                 JOptionPane.WARNING_MESSAGE);
         }
-
+        borrowerJustLoaded = false; // ✅ Reset after showing
+    });
+    timer.setRepeats(false);
+    timer.start();
+}
         checkRs.close();
         checkPs.close();
 
@@ -893,9 +853,6 @@ private void generateReceipt(double total, double tendered, double change) {
         tblModel = new javax.swing.JTable();
         jLabel26 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
-        jPanel4 = new javax.swing.JPanel();
-        jLabel3 = new javax.swing.JLabel();
-        txtAmountPaid1 = new javax.swing.JLabel();
         jPanel5 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
         txtRandom = new javax.swing.JLabel();
@@ -908,7 +865,6 @@ private void generateReceipt(double total, double tendered, double change) {
         jLabel24 = new javax.swing.JLabel();
         txtAmountTendered = new javax.swing.JTextField();
         jPanel11 = new javax.swing.JPanel();
-        btnPrint = new javax.swing.JButton();
         btnClear = new javax.swing.JButton();
         btnProcess = new javax.swing.JButton();
         txtChange = new javax.swing.JTextField();
@@ -1266,39 +1222,10 @@ private void generateReceipt(double total, double tendered, double change) {
         jLabel26.setForeground(new java.awt.Color(51, 51, 51));
         jLabel26.setText("Overdue Books (P10 fine /day per book)");
 
-        jLabel3.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel3.setText("Amount Paid");
-
-        txtAmountPaid1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        txtAmountPaid1.setText("-");
-
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGap(64, 64, 64)
-                .addComponent(jLabel3)
-                .addContainerGap(53, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(txtAmountPaid1, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(20, 20, 20))
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGap(14, 14, 14)
-                .addComponent(jLabel3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(txtAmountPaid1)
-                .addContainerGap(26, Short.MAX_VALUE))
-        );
-
         jLabel4.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel4.setText("Remaining Balance");
+        jLabel4.setText("Total Fine Amount");
 
-        txtRandom.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        txtRandom.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         txtRandom.setText("-");
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
@@ -1306,10 +1233,12 @@ private void generateReceipt(double total, double tendered, double change) {
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
-                .addContainerGap(40, Short.MAX_VALUE)
+                .addContainerGap(35, Short.MAX_VALUE)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(txtRandom, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
+                        .addComponent(txtRandom, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(13, 13, 13)))
                 .addGap(30, 30, 30))
         );
         jPanel5Layout.setVerticalGroup(
@@ -1317,30 +1246,27 @@ private void generateReceipt(double total, double tendered, double change) {
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addGap(14, 14, 14)
                 .addComponent(jLabel4)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(txtRandom)
-                .addContainerGap(26, Short.MAX_VALUE))
+                .addContainerGap(32, Short.MAX_VALUE))
         );
 
         jLabel2.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel2.setText("Total Fine");
+        jLabel2.setText("Total Fine Selected");
 
-        txtTotalFine1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        txtTotalFine1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         txtTotalFine1.setText("-");
 
         javax.swing.GroupLayout jPanel16Layout = new javax.swing.GroupLayout(jPanel16);
         jPanel16.setLayout(jPanel16Layout);
         jPanel16Layout.setHorizontalGroup(
             jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel16Layout.createSequentialGroup()
-                .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel16Layout.createSequentialGroup()
-                        .addGap(64, 64, 64)
-                        .addComponent(jLabel2))
-                    .addGroup(jPanel16Layout.createSequentialGroup()
-                        .addGap(83, 83, 83)
-                        .addComponent(txtTotalFine1, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(28, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel16Layout.createSequentialGroup()
+                .addContainerGap(46, Short.MAX_VALUE)
+                .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(txtTotalFine1, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2))
+                .addGap(41, 41, 41))
         );
         jPanel16Layout.setVerticalGroup(
             jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1359,17 +1285,18 @@ private void generateReceipt(double total, double tendered, double change) {
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addGap(20, 20, 20)
                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel26)
-                    .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 917, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 917, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGroup(jPanel9Layout.createSequentialGroup()
-                            .addComponent(jPanel16, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(103, 103, 103)
-                            .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(24, Short.MAX_VALUE))
+                    .addGroup(jPanel9Layout.createSequentialGroup()
+                        .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel26)
+                            .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 917, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 917, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addContainerGap(24, Short.MAX_VALUE))
+                    .addGroup(jPanel9Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jPanel16, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(28, 28, 28)
+                        .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(194, 194, 194))))
         );
         jPanel9Layout.setVerticalGroup(
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1382,7 +1309,6 @@ private void generateReceipt(double total, double tendered, double change) {
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 269, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel16, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(15, Short.MAX_VALUE))
@@ -1408,9 +1334,12 @@ private void generateReceipt(double total, double tendered, double change) {
             }
         });
 
-        btnPrint.setText("Print Receipt");
-
         btnClear.setText("Clear");
+        btnClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnClearActionPerformed(evt);
+            }
+        });
 
         btnProcess.setText("Process Payment");
         btnProcess.addActionListener(new java.awt.event.ActionListener() {
@@ -1426,9 +1355,8 @@ private void generateReceipt(double total, double tendered, double change) {
             .addGroup(jPanel11Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnPrint, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btnClear, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btnProcess, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(btnProcess, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnClear, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel11Layout.setVerticalGroup(
@@ -1436,8 +1364,6 @@ private void generateReceipt(double total, double tendered, double change) {
             .addGroup(jPanel11Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(btnProcess, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnPrint, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -1458,19 +1384,20 @@ private void generateReceipt(double total, double tendered, double change) {
                 .addContainerGap()
                 .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel10Layout.createSequentialGroup()
-                        .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel24)
-                            .addComponent(jLabel23))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(jLabel24)
+                        .addGap(405, 405, 405))
                     .addGroup(jPanel10Layout.createSequentialGroup()
                         .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel10Layout.createSequentialGroup()
                                 .addComponent(jLabel16)
                                 .addGap(0, 0, Short.MAX_VALUE))
                             .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtAmountTendered)
-                            .addComponent(txtChange, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jSeparator2))
+                            .addComponent(jSeparator2)
+                            .addComponent(txtChange)
+                            .addGroup(jPanel10Layout.createSequentialGroup()
+                                .addComponent(jLabel23)
+                                .addGap(311, 311, 311))
+                            .addComponent(txtAmountTendered))
                         .addContainerGap())))
         );
         jPanel10Layout.setVerticalGroup(
@@ -1480,17 +1407,17 @@ private void generateReceipt(double total, double tendered, double change) {
                 .addComponent(jLabel16)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 9, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(18, 18, 18)
                 .addComponent(jLabel23)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(txtAmountTendered, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(26, 26, 26)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 33, Short.MAX_VALUE)
                 .addComponent(jLabel24)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(txtChange, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 40, Short.MAX_VALUE)
+                .addGap(41, 41, 41)
                 .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(24, Short.MAX_VALUE))
+                .addGap(52, 52, 52))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -1512,7 +1439,7 @@ private void generateReceipt(double total, double tendered, double change) {
                         .addGap(61, 61, 61)
                         .addComponent(btnFindBorrower))
                     .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(798, Short.MAX_VALUE))
+                .addContainerGap(93, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1526,30 +1453,42 @@ private void generateReceipt(double total, double tendered, double change) {
                         .addComponent(btnFindBorrower, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(16, 16, 16)
+                .addGap(21, 21, 21)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(139, Short.MAX_VALUE))
+                .addContainerGap(129, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void cmbBorrowerNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbBorrowerNameActionPerformed
-        if (isUpdating) {
-        return;
-    }
+          // ✅ Only respond to mouse clicks, not keyboard/Enter events
+          
+          
+    if (!"comboBoxChanged".equals(evt.getActionCommand())) return;
+    if (isUpdating || isLoading) return;
 
     Object selectedItem = cmbBorrowerName.getSelectedItem();
 
     if (selectedItem instanceof Borrower) {
+        isLoading = true;
         isSelectingBorrower = true;
 
         Borrower selected = (Borrower) selectedItem;
         loadBorrowerDetails(selected.getId());
-        loadTransactions(selected.getId());   // ✅ ADD THIS LINE
-        updateFinesSummary();                 // ✅ ADD THIS LINE
+
+        if (selected.getId() != lastLoadedBorrowerId) {
+    overdueWarningShown = false;
+    lastLoadedBorrowerId = selected.getId();
+}
+        txtAmountTendered.setText("");
+        txtChange.setText("");
+        tblModel.clearSelection();
+
+        loadTransactions(selected.getId());
+        updateFinesSummary();
 
         JTextField editor = (JTextField) cmbBorrowerName.getEditor().getEditorComponent();
         isUpdating = true;
@@ -1559,7 +1498,9 @@ private void generateReceipt(double total, double tendered, double change) {
         isUpdating = false;
 
         isSelectingBorrower = false;
+        isLoading = false;
     }
+
     }//GEN-LAST:event_cmbBorrowerNameActionPerformed
 
     private void btnFindBorrowerMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnFindBorrowerMouseClicked
@@ -1567,16 +1508,31 @@ private void generateReceipt(double total, double tendered, double change) {
     }//GEN-LAST:event_btnFindBorrowerMouseClicked
 
     private void btnFindBorrowerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFindBorrowerActionPerformed
- Object selectedItem = cmbBorrowerName.getSelectedItem();
+  if (isLoading) return;
+
+    Object selectedItem = cmbBorrowerName.getSelectedItem();
 
     if (!(selectedItem instanceof Borrower)) {
-        JOptionPane.showMessageDialog(this, "Please select a valid borrower.", "No Borrower Selected", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(this, 
+            "Please select a valid borrower.", 
+            "No Borrower Selected", 
+            JOptionPane.WARNING_MESSAGE);
         return;
     }
 
+    isLoading = true;
     Borrower selected = (Borrower) selectedItem;
+    if (selected.getId() != lastLoadedBorrowerId) {
+    overdueWarningShown = false;
+    lastLoadedBorrowerId = selected.getId();
+}
+    txtAmountTendered.setText("");
+    txtChange.setText("");
+    tblModel.clearSelection();
     loadBorrowerDetails(selected.getId());
-    loadTransactions(selected.getId());       
+    loadTransactions(selected.getId());
+    updateFinesSummary();
+    isLoading = false;
     }//GEN-LAST:event_btnFindBorrowerActionPerformed
 
     private void txtAmountTenderedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtAmountTenderedActionPerformed
@@ -1665,25 +1621,22 @@ private void generateReceipt(double total, double tendered, double change) {
         ps.close();
         con.close();
 
+      // ✅ 1. Reload table FIRST (removes paid rows)
+        overdueWarningShown = true; // ✅ Prevent overdue warning from showing again on reload
+        if (cmbBorrowerName.getSelectedItem() instanceof Borrower) {
+            loadTransactions(((Borrower) cmbBorrowerName.getSelectedItem()).getId());
+        }
+        // ✅ 2. Clear fields
+        txtAmountTendered.setText("");
+        txtChange.setText("");
+        // ✅ 3. Show success message
         JOptionPane.showMessageDialog(this,
             "Payment processed successfully!\n"
             + "Change: ₱" + String.format("%.2f", (tendered - total)),
             "Payment Successful",
             JOptionPane.INFORMATION_MESSAGE);
-
-
-// ✅ Generate and auto-print receipt
-generateReceipt(total, tendered, tendered - total);
-
-// ✅ Reload table - reuse already declared selectedItem
-if (cmbBorrowerName.getSelectedItem() instanceof Borrower) {
-    loadTransactions(((Borrower) cmbBorrowerName.getSelectedItem()).getId());
-}
-
-// ✅ Clear fields
-txtAmountTendered.setText("");
-txtChange.setText("");
-
+        // ✅ 4. Generate receipt last
+        generateReceipt(total, tendered, tendered - total);
     } catch (Exception e) {
         e.printStackTrace();
         JOptionPane.showMessageDialog(this,
@@ -1735,6 +1688,14 @@ txtChange.setText("");
         book.setVisible(true); // show it
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked
+
+    private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
+ tblModel.clearSelection();
+    
+    // ✅ Clear text fields
+    txtAmountTendered.setText("");
+    txtChange.setText("");
+    }//GEN-LAST:event_btnClearActionPerformed
   
 
     /**
@@ -1765,7 +1726,6 @@ txtChange.setText("");
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnClear;
     private javax.swing.JButton btnFindBorrower;
-    private javax.swing.JButton btnPrint;
     private javax.swing.JButton btnProcess;
     private javax.swing.JComboBox<Borrower> cmbBorrowerName;
     private javax.swing.JLabel jLabel1;
@@ -1784,26 +1744,16 @@ txtChange.setText("");
     private javax.swing.JLabel jLabel23;
     private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel26;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel30;
-    private javax.swing.JLabel jLabel31;
-    private javax.swing.JLabel jLabel32;
-    private javax.swing.JLabel jLabel33;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel11;
-    private javax.swing.JPanel jPanel12;
-    private javax.swing.JPanel jPanel13;
-    private javax.swing.JPanel jPanel14;
     private javax.swing.JPanel jPanel16;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
-    private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
@@ -1818,7 +1768,6 @@ txtChange.setText("");
     private javax.swing.JLabel lblMemberType;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JTable tblModel;
-    private javax.swing.JLabel txtAmountPaid1;
     private javax.swing.JTextField txtAmountTendered;
     private javax.swing.JLabel txtBooks;
     private javax.swing.JTextField txtChange;
@@ -1826,10 +1775,6 @@ txtChange.setText("");
     private javax.swing.JLabel txtLogout1;
     private javax.swing.JLabel txtMembers;
     private javax.swing.JLabel txtRandom;
-    private javax.swing.JLabel txtRemainingBalance;
-    private javax.swing.JLabel txtRemainingBalance1;
-    private javax.swing.JLabel txtRemainingBalance2;
-    private javax.swing.JLabel txtRemainingBalance3;
     private javax.swing.JLabel txtReports;
     private javax.swing.JLabel txtTotalFine1;
     private javax.swing.JLabel txtTransactions;

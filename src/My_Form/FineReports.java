@@ -122,12 +122,15 @@ public class FineReports extends javax.swing.JFrame {
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
+        txtReports1 = new javax.swing.JLabel();
+        txtLogout2 = new javax.swing.JLabel();
         txtMembers = new javax.swing.JLabel();
         txtTransactions = new javax.swing.JLabel();
         txtReports = new javax.swing.JLabel();
         txtLogout1 = new javax.swing.JLabel();
         txtDashboard = new javax.swing.JLabel();
         txtBooks = new javax.swing.JLabel();
+        txtUser = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblModel = new javax.swing.JTable();
@@ -149,6 +152,24 @@ public class FineReports extends javax.swing.JFrame {
         jLabel1.setText("Library Inventory System");
 
         jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/Adobe_Express_-_file-removebg-preview.png"))); // NOI18N
+
+        txtReports1.setBackground(new java.awt.Color(204, 204, 204));
+        txtReports1.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtReports1.setText("Reports");
+        txtReports1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtReports1MouseClicked(evt);
+            }
+        });
+
+        txtLogout2.setBackground(new java.awt.Color(204, 204, 204));
+        txtLogout2.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtLogout2.setText("Logout");
+        txtLogout2.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtLogout2MouseClicked(evt);
+            }
+        });
 
         txtMembers.setBackground(new java.awt.Color(204, 204, 204));
         txtMembers.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
@@ -204,16 +225,27 @@ public class FineReports extends javax.swing.JFrame {
             }
         });
 
+        txtUser.setBackground(new java.awt.Color(255, 255, 255));
+        txtUser.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtUser.setText("User");
+        txtUser.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtUserMouseClicked(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(78, 78, 78)
+                .addGap(51, 51, 51)
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(120, 120, 120)
+                .addGap(96, 96, 96)
+                .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30)
                 .addComponent(txtDashboard)
                 .addGap(30, 30, 30)
                 .addComponent(txtBooks)
@@ -225,27 +257,37 @@ public class FineReports extends javax.swing.JFrame {
                 .addComponent(txtReports)
                 .addGap(30, 30, 30)
                 .addComponent(txtLogout1)
+                .addGap(623, 623, 623)
+                .addComponent(txtReports1)
+                .addGap(30, 30, 30)
+                .addComponent(txtLogout2)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(34, 34, 34)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtReports1)
+                    .addComponent(txtLogout2))
+                .addContainerGap(48, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGap(28, 28, 28)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(12, 12, 12)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                 .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(txtMembers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(txtTransactions)
                                 .addComponent(txtReports)
-                                .addComponent(txtLogout1))
-                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGap(16, 16, 16)
-                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(txtLogout1)
+                                .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
 
         getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 2189, -1));
@@ -355,8 +397,55 @@ public class FineReports extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnExportMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnExportMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnExportMouseClicked
+
+    private void btnExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportActionPerformed
+        // TODO add your handling code here:
+
+
+    }//GEN-LAST:event_btnExportActionPerformed
+
+    private void btnUnpaidActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUnpaidActionPerformed
+        loadFines("Unpaid");  // only unpaid fines
+        loadTotals();
+
+    }//GEN-LAST:event_btnUnpaidActionPerformed
+
+    private void btnPaidActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPaidActionPerformed
+        loadFines("Paid");    // only paid fines
+        loadTotals();
+    }//GEN-LAST:event_btnPaidActionPerformed
+
+    private void btnAllFinesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAllFinesMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnAllFinesMouseClicked
+
+    private void btnAllFinesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAllFinesActionPerformed
+        // TODO add your handling code here:
+        loadFines(null);      // null = no filter, show all
+        loadTotals();
+
+
+    }//GEN-LAST:event_btnAllFinesActionPerformed
+
+    private void txtReports1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReports1MouseClicked
+        Reports report = new Reports();
+        report.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtReports1MouseClicked
+
+    private void txtLogout2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtLogout2MouseClicked
+        // TODO add your handling code here:
+        // TODO add your handling code here:
+        LoginForm login = new LoginForm();
+        login.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtLogout2MouseClicked
+
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
-        FineReports member = new FineReports();
+        Members member = new Members();
         member.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
@@ -393,38 +482,9 @@ public class FineReports extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked
 
-    private void btnExportMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnExportMouseClicked
+    private void txtUserMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtUserMouseClicked
         // TODO add your handling code here:
-    }//GEN-LAST:event_btnExportMouseClicked
-
-    private void btnExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportActionPerformed
-        // TODO add your handling code here:
-
-
-    }//GEN-LAST:event_btnExportActionPerformed
-
-    private void btnUnpaidActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUnpaidActionPerformed
-        loadFines("Unpaid");  // only unpaid fines
-        loadTotals();
-
-    }//GEN-LAST:event_btnUnpaidActionPerformed
-
-    private void btnPaidActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPaidActionPerformed
-        loadFines("Paid");    // only paid fines
-        loadTotals();
-    }//GEN-LAST:event_btnPaidActionPerformed
-
-    private void btnAllFinesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAllFinesMouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnAllFinesMouseClicked
-
-    private void btnAllFinesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAllFinesActionPerformed
-        // TODO add your handling code here:
-        loadFines(null);      // null = no filter, show all
-        loadTotals();
-
-
-    }//GEN-LAST:event_btnAllFinesActionPerformed
+    }//GEN-LAST:event_txtUserMouseClicked
 
     /**
      * @param args the command line arguments
@@ -469,8 +529,11 @@ public class FineReports extends javax.swing.JFrame {
     private javax.swing.JLabel txtBooks;
     private javax.swing.JLabel txtDashboard;
     private javax.swing.JLabel txtLogout1;
+    private javax.swing.JLabel txtLogout2;
     private javax.swing.JLabel txtMembers;
     private javax.swing.JLabel txtReports;
+    private javax.swing.JLabel txtReports1;
     private javax.swing.JLabel txtTransactions;
+    private javax.swing.JLabel txtUser;
     // End of variables declaration//GEN-END:variables
 }
