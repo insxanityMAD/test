@@ -34,7 +34,7 @@ public class AddLoan1 extends javax.swing.JFrame {
     private boolean isSelectingBorrower = false;
     private String currentRole = "";
     
-    private AddLoan1(){
+    public AddLoan1(){
         this("user");
     }
         
@@ -946,7 +946,7 @@ public class AddLoan1 extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(35, 35, 35)
+                .addGap(85, 85, 85)
                 .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30)
                 .addComponent(txtDashboard)

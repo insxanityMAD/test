@@ -45,7 +45,7 @@
                   <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
                   <EmptySpace type="separate" max="-2" attributes="0"/>
                   <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace min="-2" pref="29" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="85" max="-2" attributes="0"/>
                   <Component id="txtUser" min="-2" pref="55" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
                   <Component id="txtDashboard" min="-2" max="-2" attributes="0"/>
@@ -59,7 +59,7 @@
                   <Component id="txtReports" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
                   <Component id="txtLogout1" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace min="-2" pref="690" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="636" max="-2" attributes="0"/>
                   <Component id="txtReports1" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
                   <Component id="txtLogout2" min="-2" max="-2" attributes="0"/>
@@ -75,7 +75,7 @@
                       <Component id="txtReports1" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="txtLogout2" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace pref="48" max="32767" attributes="0"/>
+                  <EmptySpace pref="54" max="32767" attributes="0"/>
               </Group>
               <Group type="102" alignment="1" attributes="0">
                   <EmptySpace max="32767" attributes="0"/>

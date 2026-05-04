@@ -209,7 +209,7 @@ public class Books extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(34, 34, 34)
+                .addGap(85, 85, 85)
                 .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30)
                 .addComponent(txtDashboard)
@@ -223,7 +223,7 @@ public class Books extends javax.swing.JFrame {
                 .addComponent(txtReports)
                 .addGap(30, 30, 30)
                 .addComponent(txtLogout1)
-                .addContainerGap(705, Short.MAX_VALUE))
+                .addContainerGap(653, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

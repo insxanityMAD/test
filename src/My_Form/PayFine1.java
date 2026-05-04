@@ -970,7 +970,7 @@ private void generateReceipt(double total, double tendered, double change) {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(29, 29, 29)
+                .addGap(85, 85, 85)
                 .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30)
                 .addComponent(txtDashboard)
