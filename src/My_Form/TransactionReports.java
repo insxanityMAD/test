@@ -490,7 +490,7 @@ ORDER BY t.returned_date DESC
         ));
         jScrollPane1.setViewportView(tblModel);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 390, 1440, 600));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 340, 1660, 600));
 
         btnExport.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         btnExport.setText("Export");
@@ -504,7 +504,7 @@ ORDER BY t.returned_date DESC
                 btnExportActionPerformed(evt);
             }
         });
-        getContentPane().add(btnExport, new org.netbeans.lib.awtextra.AbsoluteConstraints(1380, 340, 100, 44));
+        getContentPane().add(btnExport, new org.netbeans.lib.awtextra.AbsoluteConstraints(1380, 290, 100, 44));
 
         btnOverdueList.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         btnOverdueList.setText("Overdue List");
@@ -550,7 +550,7 @@ ORDER BY t.returned_date DESC
         jLabel10.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel10.setForeground(new java.awt.Color(51, 51, 51));
         jLabel10.setText("Current Loans");
-        getContentPane().add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 350, 240, 34));
+        getContentPane().add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 300, 240, 34));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents

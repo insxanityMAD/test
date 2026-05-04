@@ -37,15 +37,19 @@ public class AddCategory extends javax.swing.JFrame {
         this.currentRole = currentRole;
         txtUser1.setVisible(currentRole.equalsIgnoreCase("admin"));
         setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
-        tblCategory.getTableHeader().setPreferredSize(
-                new java.awt.Dimension(tblCategory.getTableHeader().getWidth(), 50)
-        );
-        tblCategory.getTableHeader().setFont(
-                tblCategory.getTableHeader().getFont().deriveFont(18f)
-        );
+       tblCategory.setRowHeight(30);
 
-        tblCategory.setFont(tblCategory.getFont().deriveFont(16f));
-        populateTable();
+tblCategory.getTableHeader().setPreferredSize(
+    new java.awt.Dimension(tblCategory.getTableHeader().getWidth(), 50)
+);
+
+tblCategory.getTableHeader().setFont(
+    new java.awt.Font("Tahoma", java.awt.Font.BOLD, 20)  // ← BOLD added here
+);
+
+tblCategory.setFont(tblCategory.getFont().deriveFont(25f));
+
+populateTable();
     }
 
     private void populateTable() {
@@ -303,6 +307,7 @@ public class AddCategory extends javax.swing.JFrame {
         jLabel16.setForeground(new java.awt.Color(51, 51, 51));
         jLabel16.setText("Enter New Category Name: ");
 
+        txtCategory.setFont(new java.awt.Font("Segoe UI", 0, 20)); // NOI18N
         txtCategory.setEnabled(false);
         txtCategory.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -315,27 +320,27 @@ public class AddCategory extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap(152, Short.MAX_VALUE)
+                .addContainerGap(182, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel9)
                         .addGap(307, 307, 307))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel16)
-                        .addGap(57, 57, 57)
+                        .addGap(18, 18, 18)
                         .addComponent(txtCategory, javax.swing.GroupLayout.PREFERRED_SIZE, 333, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(135, 135, 135))))
+                        .addGap(144, 144, 144))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(30, 30, 30)
                 .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(64, 64, 64)
+                .addGap(63, 63, 63)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtCategory, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel16))
-                .addContainerGap(93, Short.MAX_VALUE))
+                .addContainerGap(94, Short.MAX_VALUE))
         );
 
         getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 137, 1010, 260));
@@ -358,8 +363,9 @@ public class AddCategory extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(tblCategory);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 530, 1237, 325));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 510, 1237, 325));
 
+        txtSearch.setFont(new java.awt.Font("Segoe UI", 0, 20)); // NOI18N
         txtSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtSearchActionPerformed(evt);
@@ -370,15 +376,15 @@ public class AddCategory extends javax.swing.JFrame {
                 txtSearchKeyReleased(evt);
             }
         });
-        getContentPane().add(txtSearch, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 480, 301, 38));
+        getContentPane().add(txtSearch, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 460, 301, 40));
 
         jLabel15.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel15.setForeground(new java.awt.Color(51, 51, 51));
         jLabel15.setText("Search Category: ");
-        getContentPane().add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 440, 220, -1));
+        getContentPane().add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 420, 220, -1));
 
         jLabel17.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/1150612 (2).png"))); // NOI18N
-        getContentPane().add(jLabel17, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 480, -1, -1));
+        getContentPane().add(jLabel17, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 462, -1, 40));
 
         jPanel2.setBackground(new java.awt.Color(204, 204, 204));
 

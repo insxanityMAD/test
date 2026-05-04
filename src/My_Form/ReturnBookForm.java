@@ -53,11 +53,18 @@ public class ReturnBookForm extends javax.swing.JFrame {
     setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
     setLocationRelativeTo(null);
     
-    tblModel.setRowHeight(30);
-    tblModel.getTableHeader().setFont(
-        tblModel.getTableHeader().getFont().deriveFont(20f)
-    );
-    tblModel.setFont(tblModel.getFont().deriveFont(25f));
+     tblModel.setRowHeight(30);
+
+tblModel.getTableHeader().setPreferredSize(
+    new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 50)
+);
+
+tblModel.getTableHeader().setFont(
+    new java.awt.Font("Tahoma", java.awt.Font.BOLD, 20)  // ← BOLD added here
+);
+
+tblModel.setFont(tblModel.getFont().deriveFont(25f));
+
     
     txtID.setPreferredSize(txtID.getPreferredSize());
     txtName.setPreferredSize(txtName.getPreferredSize());

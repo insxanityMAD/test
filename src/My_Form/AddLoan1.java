@@ -75,14 +75,31 @@ public class AddLoan1 extends javax.swing.JFrame {
         tblTransaction.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         this.currentRole = currentRole;
         txtUser.setVisible(currentRole.equalsIgnoreCase("admin"));
-        tblModel.setRowHeight(30);
-           
-         tblModel.getTableHeader().setPreferredSize(
-        new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 50)
-    );
-           tblModel.getTableHeader().setFont(
-        tblModel.getTableHeader().getFont().deriveFont(20f)
-    );
+       tblModel.setRowHeight(30);
+
+tblModel.getTableHeader().setPreferredSize(
+    new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 50)
+);
+
+tblModel.getTableHeader().setFont(
+    new java.awt.Font("Tahoma", java.awt.Font.BOLD, 20)  // ← BOLD added here
+);
+
+tblModel.setFont(tblModel.getFont().deriveFont(25f));
+
+
+ tblTransaction.setRowHeight(30);
+
+tblTransaction.getTableHeader().setPreferredSize(
+    new java.awt.Dimension(tblTransaction.getTableHeader().getWidth(), 50)
+);
+
+tblTransaction.getTableHeader().setFont(
+    new java.awt.Font("Tahoma", java.awt.Font.BOLD, 20)  // ← BOLD added here
+);
+
+tblTransaction.setFont(tblTransaction.getFont().deriveFont(25f));
+
            
            tblTransaction.setFont(tblTransaction.getFont().deriveFont(25));
         

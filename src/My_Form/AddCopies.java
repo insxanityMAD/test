@@ -356,6 +356,7 @@ public class AddCopies extends javax.swing.JFrame {
         jLabel8.setForeground(new java.awt.Color(51, 51, 51));
         jLabel8.setText("SEARCH: ");
 
+        txtSearch.setFont(new java.awt.Font("Segoe UI", 0, 20)); // NOI18N
         txtSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtSearchActionPerformed(evt);
@@ -467,160 +468,95 @@ public class AddCopies extends javax.swing.JFrame {
         jScrollPane1.setViewportView(tblCopies);
 
         jPanel4.setBackground(new java.awt.Color(204, 204, 204));
+        jPanel4.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel10.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel10.setForeground(new java.awt.Color(51, 51, 51));
         jLabel10.setText("Add Copies");
+        jPanel4.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 10, -1, -1));
 
         jLabel18.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel18.setForeground(new java.awt.Color(51, 51, 51));
         jLabel18.setText("Status:");
+        jPanel4.add(jLabel18, new org.netbeans.lib.awtextra.AbsoluteConstraints(650, 140, -1, 30));
 
         jLabel20.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel20.setForeground(new java.awt.Color(51, 51, 51));
         jLabel20.setText("Date Acquired:");
+        jPanel4.add(jLabel20, new org.netbeans.lib.awtextra.AbsoluteConstraints(650, 210, -1, 40));
 
         jLabel21.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel21.setForeground(new java.awt.Color(51, 51, 51));
         jLabel21.setText("Acquisition Number:");
+        jPanel4.add(jLabel21, new org.netbeans.lib.awtextra.AbsoluteConstraints(650, 70, -1, 30));
 
+        txtAcquisition_number.setFont(new java.awt.Font("Segoe UI", 0, 20)); // NOI18N
         txtAcquisition_number.setEnabled(false);
         txtAcquisition_number.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtAcquisition_numberActionPerformed(evt);
             }
         });
+        jPanel4.add(txtAcquisition_number, new org.netbeans.lib.awtextra.AbsoluteConstraints(650, 100, 301, 40));
 
         cmbStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Available" }));
         cmbStatus.setEnabled(false);
+        jPanel4.add(cmbStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(650, 170, 301, 40));
 
         DateAcquired.setDateFormatString("yyyy- MM - dd");
         DateAcquired.setEnabled(false);
+        jPanel4.add(DateAcquired, new org.netbeans.lib.awtextra.AbsoluteConstraints(650, 240, 301, 40));
 
         lblISBN.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
         lblISBN.setForeground(new java.awt.Color(51, 51, 51));
         lblISBN.setText("ISBN:");
+        jPanel4.add(lblISBN, new org.netbeans.lib.awtextra.AbsoluteConstraints(134, 264, -1, -1));
 
         lblBookID.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
         lblBookID.setForeground(new java.awt.Color(51, 51, 51));
         lblBookID.setText("Book ID: ");
+        jPanel4.add(lblBookID, new org.netbeans.lib.awtextra.AbsoluteConstraints(134, 77, -1, -1));
 
         lblAuthor.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
         lblAuthor.setForeground(new java.awt.Color(51, 51, 51));
         lblAuthor.setText("Author:");
+        jPanel4.add(lblAuthor, new org.netbeans.lib.awtextra.AbsoluteConstraints(134, 198, -1, -1));
 
         jLabel9.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel9.setForeground(new java.awt.Color(51, 51, 51));
         jLabel9.setText("Book Details");
+        jPanel4.add(jLabel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 10, -1, -1));
 
         lblTitle.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
         lblTitle.setForeground(new java.awt.Color(51, 51, 51));
         lblTitle.setText("Title:");
+        jPanel4.add(lblTitle, new org.netbeans.lib.awtextra.AbsoluteConstraints(134, 139, -1, -1));
 
         lblAuthor1.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
         lblAuthor1.setForeground(new java.awt.Color(51, 51, 51));
         lblAuthor1.setText("Author:");
+        jPanel4.add(lblAuthor1, new org.netbeans.lib.awtextra.AbsoluteConstraints(301, 198, -1, -1));
 
         lblTitle1.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
         lblTitle1.setForeground(new java.awt.Color(51, 51, 51));
         lblTitle1.setText("Title:");
+        jPanel4.add(lblTitle1, new org.netbeans.lib.awtextra.AbsoluteConstraints(301, 139, -1, -1));
 
         lblISBN1.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
         lblISBN1.setForeground(new java.awt.Color(51, 51, 51));
         lblISBN1.setText("ISBN:");
+        jPanel4.add(lblISBN1, new org.netbeans.lib.awtextra.AbsoluteConstraints(301, 264, -1, -1));
 
         lblBookID1.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
         lblBookID1.setForeground(new java.awt.Color(51, 51, 51));
         lblBookID1.setText("Book ID: ");
-
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addGap(134, 134, 134)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblTitle)
-                    .addComponent(lblBookID)
-                    .addComponent(lblISBN)
-                    .addComponent(lblAuthor))
-                .addGap(41, 41, 41)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel9)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGap(32, 32, 32)
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblTitle1)
-                            .addComponent(lblBookID1)
-                            .addComponent(lblISBN1)
-                            .addComponent(lblAuthor1))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 235, Short.MAX_VALUE)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addComponent(jLabel10)
-                        .addGap(83, 83, 83))
-                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jLabel21)
-                        .addComponent(txtAcquisition_number)
-                        .addComponent(DateAcquired, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel20)
-                        .addComponent(jLabel18)
-                        .addComponent(cmbStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(134, 134, 134))
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addGap(27, 27, 27)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel9))
-                .addGap(21, 21, 21)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel21)
-                            .addComponent(lblBookID))
-                        .addGap(6, 6, 6)
-                        .addComponent(txtAcquisition_number, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel18)
-                            .addComponent(lblTitle))
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel4Layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cmbStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel4Layout.createSequentialGroup()
-                                .addGap(34, 34, 34)
-                                .addComponent(lblAuthor)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel20)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(DateAcquired, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(lblISBN)
-                                .addComponent(lblISBN1)))
-                        .addGap(101, 101, 101))
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addComponent(lblBookID1)
-                        .addGap(37, 37, 37)
-                        .addComponent(lblTitle1)
-                        .addGap(34, 34, 34)
-                        .addComponent(lblAuthor1)
-                        .addGap(167, 167, 167))))
-        );
+        jPanel4.add(lblBookID1, new org.netbeans.lib.awtextra.AbsoluteConstraints(301, 77, -1, -1));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(83, 83, 83)
-                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(27, 27, 27)
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addGroup(layout.createSequentialGroup()
                 .addGap(80, 80, 80)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -630,9 +566,15 @@ public class AddCopies extends javax.swing.JFrame {
                         .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(10, 10, 10)
                 .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 380, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGroup(layout.createSequentialGroup()
-                .addGap(80, 80, 80)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1360, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addGroup(layout.createSequentialGroup()
+                    .addGap(83, 83, 83)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, 1068, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(layout.createSequentialGroup()
+                    .addGap(80, 80, 80)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1360, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

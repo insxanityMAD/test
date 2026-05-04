@@ -87,14 +87,18 @@ public class PayFine1 extends javax.swing.JFrame {
         
         this.currentRole = currentRole;
         txtUser.setVisible(currentRole.equalsIgnoreCase("admin"));
-       tblModel.setRowHeight(30);
-           
-         tblModel.getTableHeader().setPreferredSize(
-        new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 70)
-    );
-           tblModel.getTableHeader().setFont(
-        tblModel.getTableHeader().getFont().deriveFont(20f)
-    );
+        tblModel.setRowHeight(30);
+
+tblModel.getTableHeader().setPreferredSize(
+    new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 50)
+);
+
+tblModel.getTableHeader().setFont(
+    new java.awt.Font("Tahoma", java.awt.Font.BOLD, 20)  // ← BOLD added here
+);
+
+tblModel.setFont(tblModel.getFont().deriveFont(25f));
+
            
            tblModel.setFont(tblModel.getFont().deriveFont(25));
         
@@ -1341,12 +1345,14 @@ private void generateReceipt(double total, double tendered, double change) {
         jLabel24.setForeground(new java.awt.Color(51, 51, 51));
         jLabel24.setText("Change ");
 
+        txtAmountTendered.setFont(new java.awt.Font("Segoe UI", 0, 20)); // NOI18N
         txtAmountTendered.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtAmountTenderedActionPerformed(evt);
             }
         });
 
+        btnClear.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         btnClear.setText("Clear");
         btnClear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1354,6 +1360,7 @@ private void generateReceipt(double total, double tendered, double change) {
             }
         });
 
+        btnProcess.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         btnProcess.setText("Process Payment");
         btnProcess.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1382,6 +1389,7 @@ private void generateReceipt(double total, double tendered, double change) {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
+        txtChange.setFont(new java.awt.Font("Segoe UI", 0, 20)); // NOI18N
         txtChange.setEnabled(false);
         txtChange.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

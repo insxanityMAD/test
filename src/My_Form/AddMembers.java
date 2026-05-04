@@ -37,18 +37,20 @@ public class AddMembers extends javax.swing.JFrame {
         setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         populateTable();
 
-        tblModel.getTableHeader().setPreferredSize(
-                new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 50)
-        );
-        tblModel.getTableHeader().setFont(
-                tblModel.getTableHeader().getFont().deriveFont(18f)
-        );
+      tblModel.setRowHeight(30);
 
-        tblModel.setFont(tblModel.getFont().deriveFont(18f));
-        tblModel.setFont(new java.awt.Font("Tahoma", java.awt.Font.PLAIN, 18));
+tblModel.getTableHeader().setPreferredSize(
+    new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 50)
+);
 
-        // 2. Increase the row height so the large text isn't cut off
-        tblModel.setRowHeight(35);
+tblModel.getTableHeader().setFont(
+    new java.awt.Font("Tahoma", java.awt.Font.BOLD, 20)  // ← BOLD added here
+);
+
+tblModel.setFont(tblModel.getFont().deriveFont(25f));
+
+
+populateTable();
         dateRegistered.setDate(new java.util.Date());
         dateBirthOfDate.setDate(new java.util.Date());
     }
@@ -486,6 +488,7 @@ public class AddMembers extends javax.swing.JFrame {
         jLabel10.setForeground(new java.awt.Color(51, 51, 51));
         jLabel10.setText("Membership Start Date");
 
+        txtPhoneNumber.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         txtPhoneNumber.setEnabled(false);
         txtPhoneNumber.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -497,6 +500,7 @@ public class AddMembers extends javax.swing.JFrame {
         jLabel12.setForeground(new java.awt.Color(51, 51, 51));
         jLabel12.setText("Last Name:");
 
+        txtLastName.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         txtLastName.setEnabled(false);
         txtLastName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -525,6 +529,7 @@ public class AddMembers extends javax.swing.JFrame {
         jLabel15.setForeground(new java.awt.Color(51, 51, 51));
         jLabel15.setText("First Name: ");
 
+        txtFirstName.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         txtFirstName.setEnabled(false);
         txtFirstName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -556,6 +561,7 @@ public class AddMembers extends javax.swing.JFrame {
         jLabel22.setForeground(new java.awt.Color(51, 51, 51));
         jLabel22.setText("Status");
 
+        txtAdress.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         txtAdress.setEnabled(false);
         txtAdress.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -563,6 +569,7 @@ public class AddMembers extends javax.swing.JFrame {
             }
         });
 
+        txtEmail.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         txtEmail.setEnabled(false);
         txtEmail.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -597,6 +604,7 @@ public class AddMembers extends javax.swing.JFrame {
             }
         });
 
+        txtIdNumber.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         txtIdNumber.setEnabled(false);
         txtIdNumber.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

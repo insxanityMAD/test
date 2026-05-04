@@ -40,16 +40,19 @@ public class Books extends javax.swing.JFrame {
         this.currentRole = currentRole;
         txtUser.setVisible(currentRole.equalsIgnoreCase("admin"));
         setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
-        tbl.getTableHeader().setPreferredSize(
-                new java.awt.Dimension(tbl.getTableHeader().getWidth(), 50)
-        );
-        tbl.getTableHeader().setFont(
-                tbl.getTableHeader().getFont().deriveFont(18f)
-        );
+      tbl.setRowHeight(30);
 
-        tbl.setFont(tbl.getFont().deriveFont(16f));
+tbl.getTableHeader().setPreferredSize(
+    new java.awt.Dimension(tbl.getTableHeader().getWidth(), 50)
+);
 
-        populateTable();
+tbl.getTableHeader().setFont(
+    new java.awt.Font("Tahoma", java.awt.Font.BOLD, 20)  // ← BOLD added here
+);
+
+tbl.setFont(tbl.getFont().deriveFont(25f));
+
+populateTable();
     }
 
     private void populateTable() {
@@ -249,7 +252,7 @@ public class Books extends javax.swing.JFrame {
 
         getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 2196, -1));
 
-        tbl.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        tbl.setFont(new java.awt.Font("Segoe UI", 0, 34)); // NOI18N
         tbl.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null, null, null, null, null, null, null, null},
@@ -268,13 +271,14 @@ public class Books extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(tbl);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 310, 1350, 547));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 310, 1710, 547));
 
         jLabel8.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel8.setForeground(new java.awt.Color(51, 51, 51));
         jLabel8.setText("SEARCH: ");
-        getContentPane().add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 270, -1, -1));
+        getContentPane().add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 270, -1, 30));
 
+        txtSearch.setFont(new java.awt.Font("Segoe UI", 0, 20)); // NOI18N
         txtSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtSearchActionPerformed(evt);
@@ -285,10 +289,10 @@ public class Books extends javax.swing.JFrame {
                 txtSearchKeyReleased(evt);
             }
         });
-        getContentPane().add(txtSearch, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 267, 231, 30));
+        getContentPane().add(txtSearch, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 270, 280, -1));
 
         jLabel14.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/1150612 (2).png"))); // NOI18N
-        getContentPane().add(jLabel14, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 260, -1, 40));
+        getContentPane().add(jLabel14, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 270, -1, 30));
 
         btnShowCopies.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         btnShowCopies.setText("Show Copies");
@@ -303,7 +307,7 @@ public class Books extends javax.swing.JFrame {
                 btnShowCopiesActionPerformed(evt);
             }
         });
-        getContentPane().add(btnShowCopies, new org.netbeans.lib.awtextra.AbsoluteConstraints(1130, 250, 150, 44));
+        getContentPane().add(btnShowCopies, new org.netbeans.lib.awtextra.AbsoluteConstraints(1420, 260, 150, 44));
 
         btnCategory.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         btnCategory.setText("Add Category");
@@ -317,11 +321,11 @@ public class Books extends javax.swing.JFrame {
                 btnCategoryActionPerformed(evt);
             }
         });
-        getContentPane().add(btnCategory, new org.netbeans.lib.awtextra.AbsoluteConstraints(1290, 250, -1, 44));
+        getContentPane().add(btnCategory, new org.netbeans.lib.awtextra.AbsoluteConstraints(1580, 260, -1, 44));
 
         jLabel6.setFont(new java.awt.Font("Tahoma", 1, 36)); // NOI18N
         jLabel6.setText("Books");
-        getContentPane().add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(720, 140, -1, -1));
+        getContentPane().add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(810, 150, -1, -1));
 
         jButton3.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jButton3.setText("Add Book");
@@ -335,7 +339,7 @@ public class Books extends javax.swing.JFrame {
                 jButton3ActionPerformed(evt);
             }
         });
-        getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(810, 250, 150, 44));
+        getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(1100, 260, 150, 44));
 
         btnAddCopies.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         btnAddCopies.setText("Add Copies");
@@ -350,7 +354,7 @@ public class Books extends javax.swing.JFrame {
                 btnAddCopiesActionPerformed(evt);
             }
         });
-        getContentPane().add(btnAddCopies, new org.netbeans.lib.awtextra.AbsoluteConstraints(970, 250, 150, 44));
+        getContentPane().add(btnAddCopies, new org.netbeans.lib.awtextra.AbsoluteConstraints(1260, 260, 150, 44));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
