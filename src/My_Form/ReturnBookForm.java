@@ -65,7 +65,7 @@ public class ReturnBookForm extends javax.swing.JFrame {
     
     
     private void scaleComponents(java.awt.Container container, double scaleX, double scaleY) {
-    for (java.awt.Component comp : container.getComponents()) {
+     for (java.awt.Component comp : container.getComponents()) {
         java.awt.Rectangle bounds = comp.getBounds();
         int newX      = (int)(bounds.x      * scaleX);
         int newY      = (int)(bounds.y      * scaleY);
@@ -79,7 +79,8 @@ public class ReturnBookForm extends javax.swing.JFrame {
             comp.setFont(originalFont.deriveFont(newFontSize));
         }
 
-        if (comp instanceof java.awt.Container) {
+        // ✅ Only recurse into JPanels, skip JScrollPane and JTable internals
+        if (comp instanceof javax.swing.JPanel) {
             scaleComponents((java.awt.Container) comp, scaleX, scaleY);
         }
     }
