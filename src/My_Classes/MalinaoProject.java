@@ -20,8 +20,8 @@ public class MalinaoProject {
     
     public static void main(String[] args) {
      
-   Transactions tr = new Transactions();
-   tr.setVisible(true);
+       LoginForm lf = new LoginForm();
+       lf.setVisible(true);
     
     }
     

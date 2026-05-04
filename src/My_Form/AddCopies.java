@@ -22,6 +22,8 @@ public class AddCopies extends javax.swing.JFrame {
     /**
      * Creates new form NewJFrame
      */
+    
+    private String currentRole = "";
     private String check = "";
     private int copyid;
     private int bookId;
@@ -33,9 +35,14 @@ public class AddCopies extends javax.swing.JFrame {
     private String originalAcquisitionNumber = "";
     private java.sql.Date originalDate;
 
-    public AddCopies(int bookId, String title, String author, String isbn) {
+    
+   
+    public AddCopies(int bookId, String title, String author, String isbn, String currentRole) {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
+        
+        this.currentRole = currentRole;
+        txtUser.setVisible(currentRole.equalsIgnoreCase("admin"));
         setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         tblCopies.getTableHeader().setPreferredSize(
                 new java.awt.Dimension(tblCopies.getTableHeader().getWidth(), 50)
@@ -188,6 +195,13 @@ public class AddCopies extends javax.swing.JFrame {
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
+        txtBooks = new javax.swing.JLabel();
+        txtMembers = new javax.swing.JLabel();
+        txtTransactions = new javax.swing.JLabel();
+        txtReports = new javax.swing.JLabel();
+        txtLogout1 = new javax.swing.JLabel();
+        txtDashboard = new javax.swing.JLabel();
+        txtUser = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
         txtSearch = new javax.swing.JTextField();
@@ -226,6 +240,69 @@ public class AddCopies extends javax.swing.JFrame {
 
         jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/My_Image/Adobe_Express_-_file-removebg-preview.png"))); // NOI18N
 
+        txtBooks.setBackground(new java.awt.Color(204, 204, 204));
+        txtBooks.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtBooks.setText("Books");
+        txtBooks.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtBooksMouseClicked(evt);
+            }
+        });
+
+        txtMembers.setBackground(new java.awt.Color(204, 204, 204));
+        txtMembers.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtMembers.setText("Members");
+        txtMembers.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtMembersMouseClicked(evt);
+            }
+        });
+
+        txtTransactions.setBackground(new java.awt.Color(204, 204, 204));
+        txtTransactions.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtTransactions.setText("Transactions");
+        txtTransactions.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtTransactionsMouseClicked(evt);
+            }
+        });
+
+        txtReports.setBackground(new java.awt.Color(204, 204, 204));
+        txtReports.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtReports.setText("Reports");
+        txtReports.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtReportsMouseClicked(evt);
+            }
+        });
+
+        txtLogout1.setBackground(new java.awt.Color(204, 204, 204));
+        txtLogout1.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtLogout1.setText("Logout");
+        txtLogout1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtLogout1MouseClicked(evt);
+            }
+        });
+
+        txtDashboard.setBackground(new java.awt.Color(255, 255, 255));
+        txtDashboard.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtDashboard.setText("Dashboard");
+        txtDashboard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtDashboardMouseClicked(evt);
+            }
+        });
+
+        txtUser.setBackground(new java.awt.Color(255, 255, 255));
+        txtUser.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        txtUser.setText("User");
+        txtUser.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtUserMouseClicked(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -235,7 +312,21 @@ public class AddCopies extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addContainerGap(1294, Short.MAX_VALUE))
+                .addGap(27, 27, 27)
+                .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30)
+                .addComponent(txtDashboard)
+                .addGap(30, 30, 30)
+                .addComponent(txtBooks)
+                .addGap(30, 30, 30)
+                .addComponent(txtMembers)
+                .addGap(30, 30, 30)
+                .addComponent(txtTransactions)
+                .addGap(30, 30, 30)
+                .addComponent(txtReports)
+                .addGap(30, 30, 30)
+                .addComponent(txtLogout1)
+                .addContainerGap(470, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -243,7 +334,16 @@ public class AddCopies extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(28, 28, 28)
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txtMembers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txtTransactions)
+                                .addComponent(txtReports)
+                                .addComponent(txtLogout1)
+                                .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(16, 16, 16)
                         .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -561,7 +661,7 @@ public class AddCopies extends javax.swing.JFrame {
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
         // TODO add your handling code here:
         if (btnClose.getText().trim().equalsIgnoreCase("Close")) {
-            Books book = new Books();
+            Books book = new Books(currentRole);
             book.setVisible(true);
             this.dispose();
         } else {
@@ -777,6 +877,51 @@ public class AddCopies extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_txtSearchKeyReleased
 
+    private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
+        Books book = new Books(currentRole); // create instance
+        book.setVisible(true); // show it
+        this.dispose();
+    }//GEN-LAST:event_txtBooksMouseClicked
+
+    private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
+        Members member = new Members(currentRole);
+        member.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtMembersMouseClicked
+
+    private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
+        Transactions transaction = new Transactions(currentRole);
+        transaction.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtTransactionsMouseClicked
+
+    private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
+        Reports report = new Reports(currentRole);
+        report.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtReportsMouseClicked
+
+    private void txtLogout1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtLogout1MouseClicked
+        // TODO add your handling code here:
+        // TODO add your handling code here:
+        LoginForm login = new LoginForm();
+        login.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtLogout1MouseClicked
+
+    private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
+        Dashboard dashboard = new Dashboard(currentRole);
+        dashboard.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtDashboardMouseClicked
+
+    private void txtUserMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtUserMouseClicked
+        // TODO add your handling code here:
+        UserMain user = new UserMain(currentRole);
+        user.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_txtUserMouseClicked
+
     /**
      * @param args the command line arguments
      */
@@ -812,6 +957,13 @@ public class AddCopies extends javax.swing.JFrame {
     private javax.swing.JLabel lblTitle1;
     private javax.swing.JTable tblCopies;
     private javax.swing.JTextField txtAcquisition_number;
+    private javax.swing.JLabel txtBooks;
+    private javax.swing.JLabel txtDashboard;
+    private javax.swing.JLabel txtLogout1;
+    private javax.swing.JLabel txtMembers;
+    private javax.swing.JLabel txtReports;
     private javax.swing.JTextField txtSearch;
+    private javax.swing.JLabel txtTransactions;
+    private javax.swing.JLabel txtUser;
     // End of variables declaration//GEN-END:variables
 }

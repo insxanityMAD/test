@@ -25,9 +25,17 @@ public class AddCategory extends javax.swing.JFrame {
     public String check = "";
     public int categoryid;
 
-    public AddCategory() {
+    private String currentRole = "";
+    
+    
+    public AddCategory(){
+        this("user");
+    }    
+    public AddCategory(String currentRole) {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
+        this.currentRole = currentRole;
+        txtUser1.setVisible(currentRole.equalsIgnoreCase("admin"));
         setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         tblCategory.getTableHeader().setPreferredSize(
                 new java.awt.Dimension(tblCategory.getTableHeader().getWidth(), 50)
@@ -248,7 +256,7 @@ public class AddCategory extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(96, 96, 96)
+                .addGap(35, 35, 35)
                 .addComponent(txtUser1, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30)
                 .addComponent(txtDashboard)
@@ -262,7 +270,7 @@ public class AddCategory extends javax.swing.JFrame {
                 .addComponent(txtReports)
                 .addGap(30, 30, 30)
                 .addComponent(txtLogout1)
-                .addContainerGap(790, Short.MAX_VALUE))
+                .addContainerGap(852, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -560,7 +568,7 @@ public class AddCategory extends javax.swing.JFrame {
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
         // TODO add your handling code here:
         if (btnClose.getText().equalsIgnoreCase("Close")) {
-            Books book = new Books();
+            Books book = new Books(currentRole);
             book.setVisible(true);
             this.dispose();
         } else {
@@ -620,19 +628,19 @@ public class AddCategory extends javax.swing.JFrame {
     }//GEN-LAST:event_tblCategoryMouseClicked
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
-        Members member = new Members();
+        Members member = new Members(currentRole);
         member.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
-        Transactions transaction = new Transactions();
+        Transactions transaction = new Transactions(currentRole);
         transaction.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
 
     private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
-        Reports report = new Reports();
+        Reports report = new Reports(currentRole);
         report.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtReportsMouseClicked
@@ -646,19 +654,23 @@ public class AddCategory extends javax.swing.JFrame {
     }//GEN-LAST:event_txtLogout1MouseClicked
 
     private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
+        Dashboard dashboard = new Dashboard(currentRole);
         dashboard.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtDashboardMouseClicked
 
     private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
+        Books book = new Books(currentRole); // create instance
         book.setVisible(true); // show it
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked
 
     private void txtUser1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtUser1MouseClicked
         // TODO add your handling code here:
+        
+        UserMain user = new UserMain(currentRole);
+        user.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtUser1MouseClicked
 
     /**
@@ -711,7 +723,6 @@ public class AddCategory extends javax.swing.JFrame {
     private javax.swing.JLabel txtReports;
     private javax.swing.JTextField txtSearch;
     private javax.swing.JLabel txtTransactions;
-    private javax.swing.JLabel txtUser;
     private javax.swing.JLabel txtUser1;
     // End of variables declaration//GEN-END:variables
 }

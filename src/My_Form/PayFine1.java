@@ -40,8 +40,14 @@ public class PayFine1 extends javax.swing.JFrame {
     private boolean borrowerJustLoaded = false;
     private int lastLoadedBorrowerId = -1;
 
+    private String currentRole = "";
     private void lockTextField(JLabel txtTotalFine1) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+    
+    
+    public PayFine1(){
+        this("user");
     }
 
     class Borrower {
@@ -75,10 +81,12 @@ public class PayFine1 extends javax.swing.JFrame {
         }
     }
 
-    public PayFine1() {
+    public PayFine1(String currentRole) {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
         
+        this.currentRole = currentRole;
+        txtUser.setVisible(currentRole.equalsIgnoreCase("admin"));
        tblModel.setRowHeight(30);
            
          tblModel.getTableHeader().setPreferredSize(
@@ -962,24 +970,21 @@ private void generateReceipt(double total, double tendered, double change) {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
+                .addGap(29, 29, 29)
+                .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30)
+                .addComponent(txtDashboard)
+                .addGap(30, 30, 30)
+                .addComponent(txtBooks)
+                .addGap(30, 30, 30)
+                .addComponent(txtMembers)
+                .addGap(30, 30, 30)
+                .addComponent(txtTransactions)
+                .addGap(30, 30, 30)
+                .addComponent(txtReports)
+                .addGap(30, 30, 30)
+                .addComponent(txtLogout1)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanel3Layout.createSequentialGroup()
-                    .addGap(759, 759, 759)
-                    .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(30, 30, 30)
-                    .addComponent(txtDashboard)
-                    .addGap(30, 30, 30)
-                    .addComponent(txtBooks)
-                    .addGap(30, 30, 30)
-                    .addComponent(txtMembers)
-                    .addGap(30, 30, 30)
-                    .addComponent(txtTransactions)
-                    .addGap(30, 30, 30)
-                    .addComponent(txtReports)
-                    .addGap(30, 30, 30)
-                    .addComponent(txtLogout1)
-                    .addContainerGap(760, Short.MAX_VALUE)))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -987,23 +992,20 @@ private void generateReceipt(double total, double tendered, double change) {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(28, 28, 28)
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txtMembers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txtTransactions)
+                                .addComponent(txtReports)
+                                .addComponent(txtLogout1)
+                                .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(16, 16, 16)
                         .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(17, 17, 17))
-            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanel3Layout.createSequentialGroup()
-                    .addGap(40, 40, 40)
-                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(txtMembers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(txtTransactions)
-                        .addComponent(txtReports)
-                        .addComponent(txtLogout1)
-                        .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGap(41, 41, 41)))
         );
 
         jPanel2.setBackground(new java.awt.Color(255, 255, 255));
@@ -1450,7 +1452,7 @@ private void generateReceipt(double total, double tendered, double change) {
                         .addGap(61, 61, 61)
                         .addComponent(btnFindBorrower))
                     .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(93, Short.MAX_VALUE))
+                .addContainerGap(793, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1659,23 +1661,26 @@ private void generateReceipt(double total, double tendered, double change) {
     }//GEN-LAST:event_btnProcessActionPerformed
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
-        Members member = new Members();
+        Members member = new Members(currentRole);
         member.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtUserMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtUserMouseClicked
         // TODO add your handling code here:
+        UserMain umf = new UserMain(currentRole);
+        umf.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtUserMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
-        Transactions transaction = new Transactions();
+        Transactions transaction = new Transactions(currentRole);
         transaction.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
 
     private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
-        Reports report = new Reports();
+        Reports report = new Reports(currentRole);
         report.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtReportsMouseClicked
@@ -1689,13 +1694,13 @@ private void generateReceipt(double total, double tendered, double change) {
     }//GEN-LAST:event_txtLogout1MouseClicked
 
     private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
+        Dashboard dashboard = new Dashboard(currentRole);
         dashboard.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtDashboardMouseClicked
 
     private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
+        Books book = new Books(currentRole); // create instance
         book.setVisible(true); // show it
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked
@@ -1732,7 +1737,7 @@ private void generateReceipt(double total, double tendered, double change) {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new PayFine1().setVisible(true));
-    }
+    }   
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnClear;

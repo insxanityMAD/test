@@ -26,11 +26,19 @@ public class UserMain extends javax.swing.JFrame {
     private int userid;
     private String check = "";
 
-    public UserMain() {
+    String currentRole = "";
+    
+    public UserMain(){
+       this("admin");
+    }
+    
+    
+   
+    public UserMain(String currentRole) {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
         setFocusableWindowState(true);
-
+        this.currentRole = currentRole;
         java.awt.EventQueue.invokeLater(() -> {
             this.requestFocusInWindow(); // removes focus from txtSearch
         });
@@ -297,8 +305,7 @@ public class UserMain extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(28, 28, 28)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                 .addComponent(txtDashboard, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addComponent(txtBooks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -306,7 +313,8 @@ public class UserMain extends javax.swing.JFrame {
                                 .addComponent(txtTransactions)
                                 .addComponent(txtReports)
                                 .addComponent(txtLogout1)
-                                .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(16, 16, 16)
                         .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -742,19 +750,19 @@ public class UserMain extends javax.swing.JFrame {
     }//GEN-LAST:event_txtConfirmPasswordActionPerformed
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
-        Members member = new Members();
+        Members member = new Members(currentRole);
         member.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
-        Transactions transaction = new Transactions();
+        Transactions transaction = new Transactions(currentRole);
         transaction.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
 
     private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
-        Reports report = new Reports();
+        Reports report = new Reports(currentRole);
         report.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtReportsMouseClicked
@@ -768,13 +776,13 @@ public class UserMain extends javax.swing.JFrame {
     }//GEN-LAST:event_txtLogout1MouseClicked
 
     private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
+        Dashboard dashboard = new Dashboard(currentRole);
         dashboard.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtDashboardMouseClicked
 
     private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
+        Books book = new Books(currentRole); // create instance
         book.setVisible(true); // show it
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked

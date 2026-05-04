@@ -24,12 +24,20 @@ public class Reports extends javax.swing.JFrame {
      * Creates new form NewJFrame
      */
     private int selectedFineId = -1;
-
-    public Reports() {
+    private String currentRole = "";
+    
+    public Reports(){
+        
+        this("user");
+        
+    }
+    public Reports(String currentRole) {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
         setFocusableWindowState(true);
-
+        this.currentRole = currentRole;
+        
+        txtUser.setVisible(currentRole.equalsIgnoreCase("admin"));
         java.awt.EventQueue.invokeLater(() -> {
             this.requestFocusInWindow(); // removes focus from txtSearch
         });
@@ -470,7 +478,7 @@ public class Reports extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(76, 76, 76)
+                .addGap(26, 26, 26)
                 .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30)
                 .addComponent(txtDashboard)
@@ -484,7 +492,7 @@ public class Reports extends javax.swing.JFrame {
                 .addComponent(txtReports)
                 .addGap(30, 30, 30)
                 .addComponent(txtLogout1)
-                .addContainerGap(289, Short.MAX_VALUE))
+                .addContainerGap(340, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -708,14 +716,14 @@ public class Reports extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
         pack();
@@ -736,21 +744,21 @@ public class Reports extends javax.swing.JFrame {
 
     private void btnMemberReportsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMemberReportsActionPerformed
         // TODO add your handling code here:
-        MemberReports mr = new MemberReports();
+        MemberReports mr = new MemberReports(currentRole);
         mr.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_btnMemberReportsActionPerformed
 
     private void btnTransactionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTransactionActionPerformed
         // TODO add your handling code here:
-        TransactionReports tr = new TransactionReports();
+        TransactionReports tr = new TransactionReports(currentRole);
         tr.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_btnTransactionActionPerformed
 
     private void btnBookActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBookActionPerformed
         // TODO add your handling code here:
-        BookReports Br = new BookReports();
+        BookReports Br = new BookReports(currentRole);
         Br.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_btnBookActionPerformed
@@ -833,7 +841,7 @@ public class Reports extends javax.swing.JFrame {
 
     private void btnFineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFineActionPerformed
         // TODO add your handling code here:
-        FineReports fr = new FineReports();
+        FineReports fr = new FineReports(currentRole);
         fr.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_btnFineActionPerformed
@@ -919,19 +927,19 @@ public class Reports extends javax.swing.JFrame {
     }//GEN-LAST:event_btnPayActionPerformed
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
-        Members member = new Members();
+        Members member = new Members(currentRole);
         member.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
-        Transactions transaction = new Transactions();
+        Transactions transaction = new Transactions(currentRole);
         transaction.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
 
     private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
-        Reports report = new Reports();
+        Reports report = new Reports(currentRole);
         report.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtReportsMouseClicked
@@ -945,19 +953,22 @@ public class Reports extends javax.swing.JFrame {
     }//GEN-LAST:event_txtLogout1MouseClicked
 
     private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
+        Dashboard dashboard = new Dashboard(currentRole);
         dashboard.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtDashboardMouseClicked
 
     private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
+        Books book = new Books(currentRole); // create instance
         book.setVisible(true); // show it
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked
 
     private void txtUserMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtUserMouseClicked
         // TODO add your handling code here:
+        UserMain user = new UserMain(currentRole);
+        user.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtUserMouseClicked
 
     /**

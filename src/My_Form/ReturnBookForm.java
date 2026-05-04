@@ -24,11 +24,20 @@ public class ReturnBookForm extends javax.swing.JFrame {
     /**
      * Creates new form NewJFrame
      */
+    
+    private String currentRole = "";
     private boolean isLoading = false;
 
-    public ReturnBookForm() {
+    public ReturnBookForm(){
+        this("user");
+    }
+    public ReturnBookForm(String currentRole) {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
+        
+        this.currentRole = currentRole;
+        txtUser.setVisible(currentRole.equalsIgnoreCase("admin"));
+        
    java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
     int screenWidth  = screenSize.width;
     int screenHeight = screenSize.height;
@@ -65,6 +74,7 @@ public class ReturnBookForm extends javax.swing.JFrame {
 private void scaleComponents(java.awt.Container container, double scaleX, double scaleY) {
      for (java.awt.Component comp : container.getComponents()) {
         java.awt.Rectangle bounds = comp.getBounds();
+        if (comp == jPanel3) continue;
         int newX      = (int)(bounds.x      * scaleX);
         int newY      = (int)(bounds.y      * scaleY);
         int newWidth  = (int)(bounds.width  * scaleX);
@@ -300,7 +310,7 @@ private void scaleComponents(java.awt.Container container, double scaleX, double
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(96, 96, 96)
+                .addGap(53, 53, 53)
                 .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30)
                 .addComponent(txtDashboard)
@@ -314,7 +324,7 @@ private void scaleComponents(java.awt.Container container, double scaleX, double
                 .addComponent(txtReports)
                 .addGap(30, 30, 30)
                 .addComponent(txtLogout1)
-                .addContainerGap(735, Short.MAX_VALUE))
+                .addContainerGap(778, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1118,19 +1128,19 @@ int[] selectedRows = tblModel.getSelectedRows();
     }//GEN-LAST:event_btnAddKeyPressed
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
-        Members member = new Members();
+        Members member = new Members(currentRole);
         member.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
-        Transactions transaction = new Transactions();
+        Transactions transaction = new Transactions(currentRole);
         transaction.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
 
     private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
-        Reports report = new Reports();
+        Reports report = new Reports(currentRole);
         report.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtReportsMouseClicked
@@ -1144,13 +1154,13 @@ int[] selectedRows = tblModel.getSelectedRows();
     }//GEN-LAST:event_txtLogout1MouseClicked
 
     private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
+        Dashboard dashboard = new Dashboard(currentRole);
         dashboard.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtDashboardMouseClicked
 
     private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
+        Books book = new Books(currentRole); // create instance
         book.setVisible(true); // show it
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked

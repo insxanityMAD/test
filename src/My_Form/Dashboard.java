@@ -22,11 +22,18 @@ public class Dashboard extends javax.swing.JFrame {
     /**
      * Creates new form NewJFrame
      */
-    public Dashboard() {
+    
+    String currentRole = "user";
+    
+    public Dashboard(){
+        this("user");
+    }
+    public Dashboard(String role) {
     setUndecorated(true); // REQUIRED for opacity 
         initComponents();
         setFocusableWindowState(true);
-
+        this.currentRole = role;
+         txtUser.setVisible(currentRole.equalsIgnoreCase("admin"));
         java.awt.EventQueue.invokeLater(() -> {
             this.requestFocusInWindow(); // removes focus from txtSearch
         });
@@ -641,7 +648,7 @@ public class Dashboard extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(95, 95, 95)
+                .addGap(39, 39, 39)
                 .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30)
                 .addComponent(txtDashboard)
@@ -655,7 +662,7 @@ public class Dashboard extends javax.swing.JFrame {
                 .addComponent(txtReports)
                 .addGap(30, 30, 30)
                 .addComponent(txtLogout1)
-                .addContainerGap(270, Short.MAX_VALUE))
+                .addContainerGap(327, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -884,19 +891,19 @@ public class Dashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_lblOverdueBooksMouseClicked
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
-        Members member = new Members();
+        Members member = new Members(currentRole);
         member.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
-        Transactions transaction = new Transactions();
+        Transactions transaction = new Transactions(currentRole);
         transaction.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
 
     private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
-        Reports report = new Reports();
+        Reports report = new Reports(currentRole);
         report.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtReportsMouseClicked
@@ -910,19 +917,22 @@ public class Dashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_txtLogout1MouseClicked
 
     private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
+        Dashboard dashboard = new Dashboard(currentRole);
         dashboard.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtDashboardMouseClicked
 
     private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
+        Books book = new Books(currentRole); // create instance
         book.setVisible(true); // show it
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked
 
     private void txtUserMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtUserMouseClicked
         // TODO add your handling code here:
+        UserMain umf = new UserMain(currentRole);
+        umf.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtUserMouseClicked
 
     /**

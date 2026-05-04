@@ -22,12 +22,17 @@ public class FineReports extends javax.swing.JFrame {
     /**
      * Creates new form NewJFrame
      */
+    private  String currentRole = "";
     private boolean isLoading = false;
     private String currentView = "inventory";
-
-    public FineReports() {
+    public FineReports(){
+        this("user");
+    }
+    public FineReports(String currentRole) {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
+        this.currentRole = currentRole;
+        txtUser.setVisible(currentRole.equalsIgnoreCase("admin"));
         setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         tblModel.getTableHeader().setPreferredSize(
                 new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 50)
@@ -246,7 +251,7 @@ public class FineReports extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(96, 96, 96)
+                .addGap(29, 29, 29)
                 .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30)
                 .addComponent(txtDashboard)
@@ -260,7 +265,7 @@ public class FineReports extends javax.swing.JFrame {
                 .addComponent(txtReports)
                 .addGap(30, 30, 30)
                 .addComponent(txtLogout1)
-                .addGap(623, 623, 623)
+                .addGap(690, 690, 690)
                 .addComponent(txtReports1)
                 .addGap(30, 30, 30)
                 .addComponent(txtLogout2)
@@ -454,13 +459,13 @@ public class FineReports extends javax.swing.JFrame {
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
-        Transactions transaction = new Transactions();
+        Transactions transaction = new Transactions(currentRole);
         transaction.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
 
     private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
-        Reports report = new Reports();
+        Reports report = new Reports(currentRole);
         report.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtReportsMouseClicked
@@ -474,19 +479,22 @@ public class FineReports extends javax.swing.JFrame {
     }//GEN-LAST:event_txtLogout1MouseClicked
 
     private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
+        Dashboard dashboard = new Dashboard(currentRole);
         dashboard.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtDashboardMouseClicked
 
     private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
+        Books book = new Books(currentRole); // create instance
         book.setVisible(true); // show it
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked
 
     private void txtUserMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtUserMouseClicked
         // TODO add your handling code here:
+        UserMain user = new UserMain(currentRole);
+        user.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtUserMouseClicked
 
     /**

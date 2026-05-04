@@ -20,9 +20,21 @@ public class Members extends javax.swing.JFrame {
     /**
      * Creates new form NewJFrame
      */
-    public Members() {
+    
+    private String currentRole = "";
+    
+    public Members(){
+        this("user");
+    }
+    public Members(String currentRole) {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
+        
+        
+        this.currentRole = currentRole;
+        
+        
+        txtUser.setVisible(currentRole.equalsIgnoreCase("admin"));
            setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
       tblModel.getTableHeader().setPreferredSize(
         new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 50)
@@ -199,7 +211,7 @@ public class Members extends javax.swing.JFrame {
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(95, 95, 95)
+                .addGap(40, 40, 40)
                 .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30)
                 .addComponent(txtDashboard)
@@ -213,7 +225,7 @@ public class Members extends javax.swing.JFrame {
                 .addComponent(txtReports)
                 .addGap(30, 30, 30)
                 .addComponent(txtLogout1)
-                .addContainerGap(636, Short.MAX_VALUE))
+                .addContainerGap(692, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -313,7 +325,7 @@ public class Members extends javax.swing.JFrame {
     }//GEN-LAST:event_txtsearchActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-            AddMembers addmember = new AddMembers();
+            AddMembers addmember = new AddMembers(currentRole);
             addmember.setVisible(true);
             this.dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
@@ -400,19 +412,19 @@ public class Members extends javax.swing.JFrame {
     }//GEN-LAST:event_txtsearchKeyReleased
 
     private void txtMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMembersMouseClicked
-        Members member = new Members();
+        Members member = new Members(currentRole);
         member.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtMembersMouseClicked
 
     private void txtTransactionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTransactionsMouseClicked
-        Transactions transaction = new Transactions();
+        Transactions transaction = new Transactions(currentRole);
         transaction.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtTransactionsMouseClicked
 
     private void txtReportsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtReportsMouseClicked
-        Reports report = new Reports();
+        Reports report = new Reports(currentRole);
         report.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtReportsMouseClicked
@@ -426,19 +438,22 @@ public class Members extends javax.swing.JFrame {
     }//GEN-LAST:event_txtLogout1MouseClicked
 
     private void txtDashboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDashboardMouseClicked
-        Dashboard dashboard = new Dashboard();
+        Dashboard dashboard = new Dashboard(currentRole);
         dashboard.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_txtDashboardMouseClicked
 
     private void txtBooksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtBooksMouseClicked
-        Books book = new Books(); // create instance
+        Books book = new Books(currentRole); // create instance
         book.setVisible(true); // show it
         this.dispose();
     }//GEN-LAST:event_txtBooksMouseClicked
 
     private void txtUserMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtUserMouseClicked
         // TODO add your handling code here:
+        UserMain umf = new UserMain(currentRole);
+        umf.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_txtUserMouseClicked
 
     /**

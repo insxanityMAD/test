@@ -230,14 +230,14 @@ public class LoginForm extends javax.swing.JFrame {
                 if(username.equals(dbuser)){
                     this.dispose();
                 if(role.equalsIgnoreCase("admin")){
-                  UserMain umf = new UserMain();
+                  Dashboard umf = new Dashboard(role);
                     umf.setVisible(true);
                 }else{
-                   Dashboard df = new Dashboard();
+                   Dashboard df = new Dashboard(role);
                     df.setVisible(true);
                 }
                 }else{
-                    JOptionPane.showMessageDialog(null, "Wrong password  or Username again!");
+                    JOptionPane.showMessageDialog(null, "Wrong password  or  Username again!");
                 }
 
             }else{

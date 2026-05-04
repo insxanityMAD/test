@@ -91,7 +91,7 @@
                   <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
                   <EmptySpace type="separate" max="-2" attributes="0"/>
                   <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace min="-2" pref="105" max="-2" attributes="0"/>
+                  <EmptySpace type="separate" max="-2" attributes="0"/>
                   <Component id="txtUser" min="-2" pref="55" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
                   <Component id="txtDashboard" min="-2" max="-2" attributes="0"/>
@@ -105,7 +105,7 @@
                   <Component id="txtReports" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
                   <Component id="txtLogout1" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace pref="892" max="32767" attributes="0"/>
+                  <EmptySpace pref="979" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
