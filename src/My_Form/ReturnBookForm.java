@@ -30,42 +30,61 @@ public class ReturnBookForm extends javax.swing.JFrame {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
         
-        tblModel.setRowHeight(30);
-           
-         tblModel.getTableHeader().setPreferredSize(
-        new java.awt.Dimension(tblModel.getTableHeader().getWidth(), 50)
+        
+    // ✅ Screen scaling
+    java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+    int screenWidth  = screenSize.width;
+    int screenHeight = screenSize.height;
+    double scaleX = screenWidth  / 1920.0;
+    double scaleY = screenHeight / 1080.0;
+    scaleComponents(getContentPane(), scaleX, scaleY);
+    setSize(screenWidth, screenHeight);
+    setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+    setLocationRelativeTo(null);
+
+    // ✅ Table scaling (no duplicate, no setPreferredSize on header)
+    tblModel.setRowHeight((int)(30 * scaleY));
+    tblModel.getTableHeader().setFont(
+        tblModel.getTableHeader().getFont().deriveFont((float)(20 * Math.min(scaleX, scaleY)))
     );
-           tblModel.getTableHeader().setFont(
-        tblModel.getTableHeader().getFont().deriveFont(20f)
-    );
-           
-           tblModel.setFont(tblModel.getFont().deriveFont(25));
-       // Lock borrower info label sizes
+    tblModel.setFont(tblModel.getFont().deriveFont((float)(25 * Math.min(scaleX, scaleY))));
+
+    // ✅ Lock label sizes
     txtID.setPreferredSize(txtID.getPreferredSize());
     txtName.setPreferredSize(txtName.getPreferredSize());
     txtEmail.setPreferredSize(txtEmail.getPreferredSize());
     txtContactNumber.setPreferredSize(txtContactNumber.getPreferredSize());
-
-    // ✅ Lock summary label sizes
     lblBorrowed.setPreferredSize(lblBorrowed.getPreferredSize());
     lblOverdue.setPreferredSize(lblOverdue.getPreferredSize());
     lblFine.setPreferredSize(lblFine.getPreferredSize());
     lblStatus.setPreferredSize(lblStatus.getPreferredSize());
-        
-        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
-//      
-        initTable();
-//        jTable1.getTableHeader().setPreferredSize(
-//        new java.awt.Dimension(jTable1.getTableHeader().getWidth(), 50)
-//    );
-//           jTable1.getTableHeader().setFont(
-//        jTable1.getTableHeader().getFont().deriveFont(18f)
-//    );
-//           
-//           jTable1.setFont(jTable1.getFont().deriveFont(16f));
 
+    initTable();
 
     }
+    
+    
+    private void scaleComponents(java.awt.Container container, double scaleX, double scaleY) {
+    for (java.awt.Component comp : container.getComponents()) {
+        java.awt.Rectangle bounds = comp.getBounds();
+        int newX      = (int)(bounds.x      * scaleX);
+        int newY      = (int)(bounds.y      * scaleY);
+        int newWidth  = (int)(bounds.width  * scaleX);
+        int newHeight = (int)(bounds.height * scaleY);
+        comp.setBounds(newX, newY, newWidth, newHeight);
+
+        java.awt.Font originalFont = comp.getFont();
+        if (originalFont != null) {
+            float newFontSize = (float)(originalFont.getSize() * Math.min(scaleX, scaleY));
+            comp.setFont(originalFont.deriveFont(newFontSize));
+        }
+
+        if (comp instanceof java.awt.Container) {
+            scaleComponents((java.awt.Container) comp, scaleX, scaleY);
+        }
+    }
+}
+    
     
     private void initTable() {
         
@@ -203,7 +222,6 @@ public class ReturnBookForm extends javax.swing.JFrame {
         jLabel22.setText("BORROWER INFORMATION");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jPanel3.setBackground(new java.awt.Color(204, 204, 255));
 
@@ -322,8 +340,6 @@ public class ReturnBookForm extends javax.swing.JFrame {
                 .addContainerGap(17, Short.MAX_VALUE))
         );
 
-        getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 2289, -1));
-
         jPanel4.setBackground(new java.awt.Color(204, 204, 204));
 
         jLabel3.setFont(new java.awt.Font("Tahoma", 1, 20)); // NOI18N
@@ -435,7 +451,7 @@ public class ReturnBookForm extends javax.swing.JFrame {
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
-                .addContainerGap(83, Short.MAX_VALUE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabel13)
                 .addGap(81, 81, 81))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
@@ -719,7 +735,7 @@ public class ReturnBookForm extends javax.swing.JFrame {
                             .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                 .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
-                .addContainerGap())
+                .addContainerGap(24, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -742,7 +758,22 @@ public class ReturnBookForm extends javax.swing.JFrame {
                 .addContainerGap(19, Short.MAX_VALUE))
         );
 
-        getContentPane().add(jPanel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 160, 1110, 780));
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(250, 250, 250)
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(38, 38, 38)
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
