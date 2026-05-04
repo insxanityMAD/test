@@ -29,27 +29,27 @@ public class ReturnBookForm extends javax.swing.JFrame {
     public ReturnBookForm() {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
-        
-        
-    // ✅ Screen scaling
-    java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+   java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
     int screenWidth  = screenSize.width;
     int screenHeight = screenSize.height;
     double scaleX = screenWidth  / 1920.0;
     double scaleY = screenHeight / 1080.0;
-    scaleComponents(getContentPane(), scaleX, scaleY);
+    
+    // ✅ ADD HERE — after scaleX and scaleY are calculated
+    if (screenWidth != 1920 || screenHeight != 1080) {
+        scaleComponents(getContentPane(), scaleX, scaleY);
+    }
+    
     setSize(screenWidth, screenHeight);
     setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
     setLocationRelativeTo(null);
-
-    // ✅ Table scaling (no duplicate, no setPreferredSize on header)
-    tblModel.setRowHeight((int)(30 * scaleY));
+    
+    tblModel.setRowHeight(30);
     tblModel.getTableHeader().setFont(
-        tblModel.getTableHeader().getFont().deriveFont((float)(20 * Math.min(scaleX, scaleY)))
+        tblModel.getTableHeader().getFont().deriveFont(20f)
     );
-    tblModel.setFont(tblModel.getFont().deriveFont((float)(25 * Math.min(scaleX, scaleY))));
-
-    // ✅ Lock label sizes
+    tblModel.setFont(tblModel.getFont().deriveFont(25f));
+    
     txtID.setPreferredSize(txtID.getPreferredSize());
     txtName.setPreferredSize(txtName.getPreferredSize());
     txtEmail.setPreferredSize(txtEmail.getPreferredSize());
@@ -58,13 +58,11 @@ public class ReturnBookForm extends javax.swing.JFrame {
     lblOverdue.setPreferredSize(lblOverdue.getPreferredSize());
     lblFine.setPreferredSize(lblFine.getPreferredSize());
     lblStatus.setPreferredSize(lblStatus.getPreferredSize());
-
+    
     initTable();
+}
 
-    }
-    
-    
-    private void scaleComponents(java.awt.Container container, double scaleX, double scaleY) {
+private void scaleComponents(java.awt.Container container, double scaleX, double scaleY) {
      for (java.awt.Component comp : container.getComponents()) {
         java.awt.Rectangle bounds = comp.getBounds();
         int newX      = (int)(bounds.x      * scaleX);
@@ -79,7 +77,6 @@ public class ReturnBookForm extends javax.swing.JFrame {
             comp.setFont(originalFont.deriveFont(newFontSize));
         }
 
-        // ✅ Only recurse into JPanels, skip JScrollPane and JTable internals
         if (comp instanceof javax.swing.JPanel) {
             scaleComponents((java.awt.Container) comp, scaleX, scaleY);
         }
