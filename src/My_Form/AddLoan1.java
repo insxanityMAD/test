@@ -963,7 +963,7 @@ tblTransaction.setFont(tblTransaction.getFont().deriveFont(25f));
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
-                .addGap(85, 85, 85)
+                .addGap(90, 90, 90)
                 .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30)
                 .addComponent(txtDashboard)
