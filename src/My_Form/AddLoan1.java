@@ -67,12 +67,18 @@ public class AddLoan1 extends javax.swing.JFrame {
     public AddLoan1() {
         setUndecorated(true); // REQUIRED for opacity
         initComponents();
+        
+        
+        
+        
 
         setupSearch();
         loadTransactions();
 
 // ✅ Load borrowers but no default selection
         loadBorrowers();
+        
+
 
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{"copy_id", "book_id", "Acquisition No.", "Title", "Author", "Category", "Status"}, 0
@@ -259,6 +265,24 @@ public class AddLoan1 extends javax.swing.JFrame {
             }
         });
     }
+    
+    private java.sql.Date calculateDueDate(int workingDays) {
+    java.time.LocalDate today = java.time.LocalDate.now();
+    java.time.LocalDate dueDate = today;
+    int daysAdded = 0;
+
+    while (daysAdded < workingDays) {
+        dueDate = dueDate.plusDays(1);
+
+      
+        if (dueDate.getDayOfWeek() == java.time.DayOfWeek.SUNDAY) continue;
+        if (My_Classes.FineCalculator.HOLIDAYS.contains(dueDate)) continue;
+
+        daysAdded++;
+    }
+
+    return java.sql.Date.valueOf(dueDate);
+}
 
     // REPLACE your filterBorrowers() method with this corrected version
     public void filterBorrowers(String keyword) {
@@ -650,7 +674,6 @@ public class AddLoan1 extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         tblModel = new javax.swing.JTable();
         jLabel24 = new javax.swing.JLabel();
-        btnFindBorrower = new javax.swing.JButton();
         jPanel6 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblTransaction = new javax.swing.JTable();
@@ -1007,19 +1030,6 @@ public class AddLoan1 extends javax.swing.JFrame {
                 .addGap(114, 114, 114))
         );
 
-        btnFindBorrower.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        btnFindBorrower.setText("Find Borrower");
-        btnFindBorrower.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                btnFindBorrowerMouseClicked(evt);
-            }
-        });
-        btnFindBorrower.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnFindBorrowerActionPerformed(evt);
-            }
-        });
-
         jPanel6.setBackground(new java.awt.Color(255, 255, 255));
         jPanel6.setForeground(new java.awt.Color(0, 0, 0));
         jPanel6.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -1139,9 +1149,7 @@ public class AddLoan1 extends javax.swing.JFrame {
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel9)
                                 .addGap(31, 31, 31)
-                                .addComponent(cmbBorrowerName, javax.swing.GroupLayout.PREFERRED_SIZE, 353, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(91, 91, 91)
-                                .addComponent(btnFindBorrower))
+                                .addComponent(cmbBorrowerName, javax.swing.GroupLayout.PREFERRED_SIZE, 353, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel23)
                                 .addGap(18, 18, 18)
@@ -1165,9 +1173,7 @@ public class AddLoan1 extends javax.swing.JFrame {
                 .addGap(27, 27, 27)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel9, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(cmbBorrowerName, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btnFindBorrower, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(cmbBorrowerName, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1253,55 +1259,6 @@ public class AddLoan1 extends javax.swing.JFrame {
             isSelectingBorrower = false;
         }
     }//GEN-LAST:event_cmbBorrowerNameActionPerformed
-
-    private void btnFindBorrowerMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnFindBorrowerMouseClicked
-        String selectedBorrower = cmbBorrowerName.getSelectedItem().toString();
-
-        try {
-            Connection con = DB_connect.getConnection();
-            String sql = "SELECT borrower_id FROM borrower "
-                    + "WHERE CONCAT(first_name, ' ', last_name) = ?";
-
-            PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, selectedBorrower);
-            ResultSet res = ps.executeQuery();
-
-            if (res.next()) {
-                int borrowerID = res.getInt("borrower_id");
-                loadBorrowerTransactions(borrowerID);
-            } else {
-                JOptionPane.showMessageDialog(null, "Borrower not found!");
-            }
-
-        } catch (SQLException error) {
-            JOptionPane.showMessageDialog(null, error);
-        }
-    }//GEN-LAST:event_btnFindBorrowerMouseClicked
-
-    private void btnFindBorrowerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFindBorrowerActionPerformed
-        String selectedBorrower = cmbBorrowerName.getSelectedItem().toString();
-
-        try {
-            Connection con = DB_connect.getConnection();
-            String sql = "SELECT borrower_id FROM borrower "
-                    + "WHERE CONCAT(first_name, ' ', last_name) = ?";
-
-            PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, selectedBorrower);
-            ResultSet res = ps.executeQuery();
-
-            if (res.next()) {
-                int borrowerID = res.getInt("borrower_id");
-                loadBorrowerTransactions(borrowerID); // ← this loads to tblTransaction
-            } else {
-                JOptionPane.showMessageDialog(null, "Borrower not found!");
-            }
-
-        } catch (SQLException error) {
-            JOptionPane.showMessageDialog(null, error);
-        }
-
-    }//GEN-LAST:event_btnFindBorrowerActionPerformed
 
     private void btnConfirmMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnConfirmMouseClicked
 
@@ -1443,6 +1400,10 @@ public class AddLoan1 extends javax.swing.JFrame {
             PreparedStatement psInsert = conn.prepareStatement(insertSQL);
             PreparedStatement psUpdate = conn.prepareStatement(updateSQL);
 
+            // ✅ Calculate rental and due date ONCE before the loop
+            java.sql.Date rentalDate = java.sql.Date.valueOf(java.time.LocalDate.now());
+            java.sql.Date dueDate = calculateDueDate(7); // ✅ excludes Sat, Sun, Holidays
+
             // ✅ Save count BEFORE clearing
             int totalBorrowed = queueModel.getRowCount();
 
@@ -1453,8 +1414,8 @@ public class AddLoan1 extends javax.swing.JFrame {
                 psInsert.setInt(1, borrowerId);
                 psInsert.setInt(2, bookId);
                 psInsert.setInt(3, copyId);
-                psInsert.setDate(4, Date.valueOf(LocalDate.now()));
-                psInsert.setDate(5, Date.valueOf(LocalDate.now().plusDays(7)));
+                psInsert.setDate(4, rentalDate); // ✅ today
+                psInsert.setDate(5, dueDate);    // ✅ 7 working days, no Sat/Sun/Holidays
                 psInsert.addBatch();
 
                 psUpdate.setInt(1, copyId);
@@ -1470,7 +1431,9 @@ public class AddLoan1 extends javax.swing.JFrame {
             loadTransactions(borrowerId);
 
             JOptionPane.showMessageDialog(this,
-                    "✅ " + totalBorrowed + " book(s) successfully borrowed!",
+                    "✅ " + totalBorrowed + " book(s) successfully borrowed!\n"
+                    + "Rental Date : " + rentalDate + "\n"
+                    + "Due Date    : " + dueDate,
                     "Success", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (SQLException e) {
@@ -1600,7 +1563,6 @@ public class AddLoan1 extends javax.swing.JFrame {
     private javax.swing.JButton btnAddBook;
     private javax.swing.JButton btnClear;
     private javax.swing.JButton btnConfirm;
-    private javax.swing.JButton btnFindBorrower;
     private javax.swing.JButton btnRemove;
     private javax.swing.JComboBox<Borrower> cmbBorrowerName;
     private javax.swing.JLabel jLabel1;

@@ -45,7 +45,9 @@
                   <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
                   <EmptySpace type="separate" max="-2" attributes="0"/>
                   <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace min="-2" pref="120" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="95" max="-2" attributes="0"/>
+                  <Component id="txtUser" min="-2" pref="55" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
                   <Component id="txtDashboard" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
                   <Component id="txtBooks" min="-2" max="-2" attributes="0"/>
@@ -57,7 +59,7 @@
                   <Component id="txtReports" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
                   <Component id="txtLogout1" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace pref="1127" max="32767" attributes="0"/>
+                  <EmptySpace pref="1066" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -69,16 +71,17 @@
                       <Component id="jLabel7" alignment="0" min="-2" pref="89" max="-2" attributes="0"/>
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Group type="103" alignment="0" groupAlignment="3" attributes="0">
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="jLabel1" alignment="3" min="-2" pref="62" max="-2" attributes="0"/>
+                              <Group type="103" alignment="3" groupAlignment="3" attributes="0">
                                   <Component id="txtDashboard" alignment="3" min="-2" pref="41" max="-2" attributes="0"/>
                                   <Component id="txtBooks" alignment="3" max="32767" attributes="0"/>
                                   <Component id="txtMembers" alignment="3" max="32767" attributes="0"/>
                                   <Component id="txtTransactions" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="txtReports" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="txtLogout1" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="txtUser" alignment="3" min="-2" pref="41" max="-2" attributes="0"/>
                               </Group>
-                              <Component id="jLabel1" min="-2" pref="62" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                   </Group>
@@ -185,6 +188,20 @@
           </Properties>
           <Events>
             <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="txtBooksMouseClicked"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JLabel" name="txtUser">
+          <Properties>
+            <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="ff" green="ff" red="ff" type="rgb"/>
+            </Property>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="24" style="0"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="User"/>
+          </Properties>
+          <Events>
+            <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="txtUserMouseClicked"/>
           </Events>
         </Component>
       </SubComponents>

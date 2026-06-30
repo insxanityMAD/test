@@ -18,7 +18,7 @@ public class FineCalculator {
    public static final double FINE_PER_DAY = 10.0;
 
     // 🇵🇭 Philippine Holidays (2026 sample)
-    private static final Set<LocalDate> HOLIDAYS = new HashSet<>();
+       public static final Set<LocalDate> HOLIDAYS = new HashSet<>();
 
     static {
         HOLIDAYS.add(LocalDate.of(2026, 1, 1));  // New Year
