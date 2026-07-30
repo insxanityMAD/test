@@ -233,7 +233,10 @@ public class Reports extends javax.swing.JFrame {
                 }
 
                 // Sort No Fine Yet rows by days overdue descending
-                rows.sort((a, b) -> Long.compare((long) b[5], (long) a[5]));
+              rows.sort((a, b) -> Long.compare(
+    ((Number) b[5]).longValue(),
+    ((Number) a[5]).longValue()
+));
             }
 
             // ── PART 3: Paid fines ────────────────────────────────────────────
@@ -272,7 +275,7 @@ public class Reports extends javax.swing.JFrame {
                         rs.getString("title"),
                         rs.getString("acquisition_number"),
                         sdf.format(rs.getDate("due_date")),
-                        rs.getInt("days_overdue"),
+                        rs.getLong("days_overdue"),
                         String.format("₱%.2f", rs.getDouble("amount")),
                         rs.getString("status")
                     });
@@ -847,7 +850,7 @@ public class Reports extends javax.swing.JFrame {
 
         if (row != -1) {
             selectedFineId = Integer.parseInt(tblDashboard.getValueAt(row, 0).toString());
-            String status = tblDashboard.getValueAt(row, 6).toString();
+          String status = tblDashboard.getValueAt(row, 7).toString();
 
             if (status.equalsIgnoreCase("Paid")) {
                 JOptionPane.showMessageDialog(this, "This fine is already paid.");

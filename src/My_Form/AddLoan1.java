@@ -1266,179 +1266,197 @@ public class AddLoan1 extends javax.swing.JFrame {
 
     private void btnConfirmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConfirmActionPerformed
 // ✅ 1. CHECK: Queue is not empty
-        if (tblModel.getRowCount() == 0) {
-            JOptionPane.showMessageDialog(this, "No books in the queue!", "Empty Queue", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+if (tblModel.getRowCount() == 0) {
+    JOptionPane.showMessageDialog(this, "No books in the queue!", "Empty Queue", JOptionPane.WARNING_MESSAGE);
+    return;
+}
 
 // ✅ 2. CHECK: Borrower is selected
-        if (!(cmbBorrowerName.getSelectedItem() instanceof Borrower)) {
+if (!(cmbBorrowerName.getSelectedItem() instanceof Borrower)) {
+    JOptionPane.showMessageDialog(this,
+            "Please select a borrower before proceeding.",
+            "No Borrower Selected", JOptionPane.WARNING_MESSAGE);
+    return;
+}
+
+// ✅ 3. CHECK: Duplicate in queue (same acquisition number or same title)
+DefaultTableModel queueModel = (DefaultTableModel) tblModel.getModel();
+for (int i = 0; i < queueModel.getRowCount(); i++) {
+    String acqI = queueModel.getValueAt(i, 2).toString();
+    String titleI = queueModel.getValueAt(i, 3).toString();
+
+    for (int j = i + 1; j < queueModel.getRowCount(); j++) {
+        String acqJ = queueModel.getValueAt(j, 2).toString();
+        String titleJ = queueModel.getValueAt(j, 3).toString();
+
+        if (acqI.equalsIgnoreCase(acqJ)) {
             JOptionPane.showMessageDialog(this,
-                    "Please select a borrower before proceeding.",
-                    "No Borrower Selected", JOptionPane.WARNING_MESSAGE);
+                    "❌ Duplicate found in queue!\n"
+                    + "Acquisition Number: " + acqI + " appears more than once.\n\n"
+                    + "Please remove the duplicate before proceeding.",
+                    "Duplicate Book", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-// ✅ 3. CHECK: Duplicate in queue (same acquisition number or same title)
-        DefaultTableModel queueModel = (DefaultTableModel) tblModel.getModel();
-        for (int i = 0; i < queueModel.getRowCount(); i++) {
-            String acqI = queueModel.getValueAt(i, 2).toString();
-            String titleI = queueModel.getValueAt(i, 3).toString();
-
-            for (int j = i + 1; j < queueModel.getRowCount(); j++) {
-                String acqJ = queueModel.getValueAt(j, 2).toString();
-                String titleJ = queueModel.getValueAt(j, 3).toString();
-
-                if (acqI.equalsIgnoreCase(acqJ)) {
-                    JOptionPane.showMessageDialog(this,
-                            "❌ Duplicate found in queue!\n"
-                            + "Acquisition Number: " + acqI + " appears more than once.\n\n"
-                            + "Please remove the duplicate before proceeding.",
-                            "Duplicate Book", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-
-                if (titleI.equalsIgnoreCase(titleJ)) {
-                    JOptionPane.showMessageDialog(this,
-                            "❌ Duplicate found in queue!\n"
-                            + "Book Title: \"" + titleI + "\" appears more than once.\n\n"
-                            + "Please remove the duplicate before proceeding.",
-                            "Duplicate Book", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-            }
-        }
-
-        try {
-            int borrowerId = getBorrowerIdFromCombo();
-            Connection conn = DB_connect.getConnection();
-
-            // ✅ 4. CHECK: Borrower status (Active/Inactive/Blocked)
-            String statusSQL = "SELECT status, borrower_type FROM borrower WHERE borrower_id = ?";
-            PreparedStatement psStatus = conn.prepareStatement(statusSQL);
-            psStatus.setInt(1, borrowerId);
-            ResultSet rsStatus = psStatus.executeQuery();
-
-            if (rsStatus.next()) {
-                String borrowerStatus = rsStatus.getString("status");
-                String borrowerType = rsStatus.getString("borrower_type");
-
-                if (!borrowerStatus.equalsIgnoreCase("Active")) {
-                    JOptionPane.showMessageDialog(this,
-                            "❌ This borrower is " + borrowerStatus + " and cannot borrow books.",
-                            "Borrower Blocked", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                // ✅ 5. CHECK: Same title already borrowed in transaction table
-                for (int i = 0; i < queueModel.getRowCount(); i++) {
-                    String queueTitle = queueModel.getValueAt(i, 3).toString();
-
-                    String dupSQL = "SELECT t.transaction_id FROM transaction t "
-                            + "JOIN book b ON t.book_id = b.book_id "
-                            + "WHERE t.borrower_id = ? AND t.status = 'Borrowed' "
-                            + "AND LOWER(b.title) = LOWER(?)";
-                    PreparedStatement psDup = conn.prepareStatement(dupSQL);
-                    psDup.setInt(1, borrowerId);
-                    psDup.setString(2, queueTitle);
-                    ResultSet rsDup = psDup.executeQuery();
-
-                    if (rsDup.next()) {
-                        JOptionPane.showMessageDialog(this,
-                                "❌ Cannot proceed!\n"
-                                + "\"" + queueTitle + "\" is already currently borrowed by this borrower.\n\n"
-                                + "A borrower can only borrow one copy of the same title at a time.",
-                                "Duplicate Title", JOptionPane.WARNING_MESSAGE);
-                        return;
-                    }
-                }
-
-                // ✅ 6. CHECK: Borrow limit based on borrower_type
-                int borrowLimit;
-                switch (borrowerType.toLowerCase()) {
-                    case "teacher":
-                        borrowLimit = 5;
-                        break;
-                    case "guest":
-                        borrowLimit = 3;
-                        break;
-                    case "student":
-                    default:
-                        borrowLimit = 4;
-                        break;
-                }
-
-                String countSQL = "SELECT COUNT(*) FROM transaction WHERE borrower_id = ? AND status = 'Borrowed'";
-                PreparedStatement psCount = conn.prepareStatement(countSQL);
-                psCount.setInt(1, borrowerId);
-                ResultSet rsCount = psCount.executeQuery();
-                rsCount.next();
-                int currentlyBorrowed = rsCount.getInt(1);
-                int queueCount = queueModel.getRowCount();
-                int totalAfterBorrow = currentlyBorrowed + queueCount;
-
-                if (totalAfterBorrow > borrowLimit) {
-                    JOptionPane.showMessageDialog(this,
-                            "❌ Borrow limit exceeded!\n"
-                            + "Borrower Type      : " + borrowerType + "\n"
-                            + "Borrow Limit       : " + borrowLimit + "\n"
-                            + "Currently Borrowed : " + currentlyBorrowed + "\n"
-                            + "Trying to Borrow   : " + queueCount + "\n\n"
-                            + "Please reduce the number of books in the queue.",
-                            "Limit Exceeded", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-            }
-
-            // ✅ 7. BATCH INSERT
-            conn.setAutoCommit(false);
-
-            String insertSQL = "INSERT INTO transaction (borrower_id, book_id, copy_id, rental_date, due_date, status) "
-                    + "VALUES (?, ?, ?, ?, ?, 'Borrowed')";
-            String updateSQL = "UPDATE book_copy SET status = 'Borrowed' WHERE copy_id = ?";
-
-            PreparedStatement psInsert = conn.prepareStatement(insertSQL);
-            PreparedStatement psUpdate = conn.prepareStatement(updateSQL);
-
-            // ✅ Calculate rental and due date ONCE before the loop
-            java.sql.Date rentalDate = java.sql.Date.valueOf(java.time.LocalDate.now());
-            java.sql.Date dueDate = calculateDueDate(7); // ✅ excludes Sat, Sun, Holidays
-
-            // ✅ Save count BEFORE clearing
-            int totalBorrowed = queueModel.getRowCount();
-
-            for (int i = 0; i < queueModel.getRowCount(); i++) {
-                int copyId = (int) queueModel.getValueAt(i, 0);
-                int bookId = (int) queueModel.getValueAt(i, 1);
-
-                psInsert.setInt(1, borrowerId);
-                psInsert.setInt(2, bookId);
-                psInsert.setInt(3, copyId);
-                psInsert.setDate(4, rentalDate); // ✅ today
-                psInsert.setDate(5, dueDate);    // ✅ 7 working days, no Sat/Sun/Holidays
-                psInsert.addBatch();
-
-                psUpdate.setInt(1, copyId);
-                psUpdate.addBatch();
-            }
-
-            psInsert.executeBatch();
-            psUpdate.executeBatch();
-            conn.commit();
-
-            // ✅ Use saved count, not queueModel.getRowCount() which is 0 after clear
-            queueModel.setRowCount(0);
-            loadTransactions(borrowerId);
-
+        if (titleI.equalsIgnoreCase(titleJ)) {
             JOptionPane.showMessageDialog(this,
-                    "✅ " + totalBorrowed + " book(s) successfully borrowed!\n"
-                    + "Rental Date : " + rentalDate + "\n"
-                    + "Due Date    : " + dueDate,
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "❌ Error: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+                    "❌ Duplicate found in queue!\n"
+                    + "Book Title: \"" + titleI + "\" appears more than once.\n\n"
+                    + "Please remove the duplicate before proceeding.",
+                    "Duplicate Book", JOptionPane.WARNING_MESSAGE);
+            return;
         }
+    }
+}
+
+try {
+    int borrowerId = getBorrowerIdFromCombo();
+    Connection conn = DB_connect.getConnection();
+
+    // ✅ 4. CHECK: Borrower status (Active/Inactive/Blocked)
+    String statusSQL = "SELECT status, borrower_type FROM borrower WHERE borrower_id = ?";
+    PreparedStatement psStatus = conn.prepareStatement(statusSQL);
+    psStatus.setInt(1, borrowerId);
+    ResultSet rsStatus = psStatus.executeQuery();
+
+    if (rsStatus.next()) {
+        String borrowerStatus = rsStatus.getString("status");
+        String borrowerType = rsStatus.getString("borrower_type");
+
+        if (!borrowerStatus.equalsIgnoreCase("Active")) {
+            JOptionPane.showMessageDialog(this,
+                    "❌ This borrower is " + borrowerStatus + " and cannot borrow books.",
+                    "Borrower Blocked", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // ✅ 4.5 CHECK: Unpaid fines
+        String unpaidFineSQL = "SELECT SUM(amount) FROM fine WHERE borrower_id = ? AND status = 'Unpaid'";
+        PreparedStatement psUnpaid = conn.prepareStatement(unpaidFineSQL);
+        psUnpaid.setInt(1, borrowerId);
+        ResultSet rsUnpaid = psUnpaid.executeQuery();
+
+        if (rsUnpaid.next()) {
+            double unpaidAmount = rsUnpaid.getDouble(1);
+            if (unpaidAmount > 0) {
+                JOptionPane.showMessageDialog(this,
+                        "❌ Cannot proceed!\n"
+                        + "This borrower has an unpaid fine of ₱" + String.format("%.2f", unpaidAmount) + ".\n\n"
+                        + "Please settle the fine before borrowing.",
+                        "Unpaid Fine", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+
+        // ✅ 5. CHECK: Same title already borrowed in transaction table
+        for (int i = 0; i < queueModel.getRowCount(); i++) {
+            String queueTitle = queueModel.getValueAt(i, 3).toString();
+
+            String dupSQL = "SELECT t.transaction_id FROM transaction t "
+                    + "JOIN book b ON t.book_id = b.book_id "
+                    + "WHERE t.borrower_id = ? AND t.status = 'Borrowed' "
+                    + "AND LOWER(b.title) = LOWER(?)";
+            PreparedStatement psDup = conn.prepareStatement(dupSQL);
+            psDup.setInt(1, borrowerId);
+            psDup.setString(2, queueTitle);
+            ResultSet rsDup = psDup.executeQuery();
+
+            if (rsDup.next()) {
+                JOptionPane.showMessageDialog(this,
+                        "❌ Cannot proceed!\n"
+                        + "\"" + queueTitle + "\" is already currently borrowed by this borrower.\n\n"
+                        + "A borrower can only borrow one copy of the same title at a time.",
+                        "Duplicate Title", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        }
+
+        // ✅ 6. CHECK: Borrow limit based on borrower_type
+        int borrowLimit;
+        switch (borrowerType.toLowerCase()) {
+            case "teacher":
+                borrowLimit = 5;
+                break;
+            case "guest":
+                borrowLimit = 3;
+                break;
+            case "student":
+            default:
+                borrowLimit = 4;
+                break;
+        }
+
+        String countSQL = "SELECT COUNT(*) FROM transaction WHERE borrower_id = ? AND status = 'Borrowed'";
+        PreparedStatement psCount = conn.prepareStatement(countSQL);
+        psCount.setInt(1, borrowerId);
+        ResultSet rsCount = psCount.executeQuery();
+        rsCount.next();
+        int currentlyBorrowed = rsCount.getInt(1);
+        int queueCount = queueModel.getRowCount();
+        int totalAfterBorrow = currentlyBorrowed + queueCount;
+
+        if (totalAfterBorrow > borrowLimit) {
+            JOptionPane.showMessageDialog(this,
+                    "❌ Borrow limit exceeded!\n"
+                    + "Borrower Type      : " + borrowerType + "\n"
+                    + "Borrow Limit       : " + borrowLimit + "\n"
+                    + "Currently Borrowed : " + currentlyBorrowed + "\n"
+                    + "Trying to Borrow   : " + queueCount + "\n\n"
+                    + "Please reduce the number of books in the queue.",
+                    "Limit Exceeded", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+    }
+
+    // ✅ 7. BATCH INSERT
+    conn.setAutoCommit(false);
+
+    String insertSQL = "INSERT INTO transaction (borrower_id, book_id, copy_id, rental_date, due_date, status) "
+            + "VALUES (?, ?, ?, ?, ?, 'Borrowed')";
+    String updateSQL = "UPDATE book_copy SET status = 'Borrowed' WHERE copy_id = ?";
+
+    PreparedStatement psInsert = conn.prepareStatement(insertSQL);
+    PreparedStatement psUpdate = conn.prepareStatement(updateSQL);
+
+    // ✅ Calculate rental and due date ONCE before the loop
+    java.sql.Date rentalDate = java.sql.Date.valueOf(java.time.LocalDate.now());
+    java.sql.Date dueDate = calculateDueDate(7); // ✅ excludes Sat, Sun, Holidays
+
+    // ✅ Save count BEFORE clearing
+    int totalBorrowed = queueModel.getRowCount();
+
+    for (int i = 0; i < queueModel.getRowCount(); i++) {
+        int copyId = (int) queueModel.getValueAt(i, 0);
+        int bookId = (int) queueModel.getValueAt(i, 1);
+
+        psInsert.setInt(1, borrowerId);
+        psInsert.setInt(2, bookId);
+        psInsert.setInt(3, copyId);
+        psInsert.setDate(4, rentalDate); // ✅ today
+        psInsert.setDate(5, dueDate);    // ✅ 7 working days, no Sat/Sun/Holidays
+        psInsert.addBatch();
+
+        psUpdate.setInt(1, copyId);
+        psUpdate.addBatch();
+    }
+
+    psInsert.executeBatch();
+    psUpdate.executeBatch();
+    conn.commit();
+
+    // ✅ Use saved count, not queueModel.getRowCount() which is 0 after clear
+    queueModel.setRowCount(0);
+    loadTransactions(borrowerId);
+
+    JOptionPane.showMessageDialog(this,
+            "✅ " + totalBorrowed + " book(s) successfully borrowed!\n"
+            + "Rental Date : " + rentalDate + "\n"
+            + "Due Date    : " + dueDate,
+            "Success", JOptionPane.INFORMATION_MESSAGE);
+
+} catch (SQLException e) {
+    JOptionPane.showMessageDialog(this, "❌ Error: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+}
     }//GEN-LAST:event_btnConfirmActionPerformed
     private boolean overdue(int borrowerId) {
         boolean isOverdue = false;
